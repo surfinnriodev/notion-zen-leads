@@ -1,0 +1,91 @@
+import { Tables } from "@/integrations/supabase/types";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Calendar, 
+  Mail, 
+  Phone, 
+  User, 
+  Users
+} from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+type Lead = Tables<"notion_reservas">;
+
+interface LeadCardProps {
+  lead: Lead;
+}
+
+export const LeadCard = ({ lead }: LeadCardProps) => {
+  const getStatusColor = (status: string | null) => {
+    switch (status?.toLowerCase()) {
+      case "confirmado":
+        return "bg-accent text-accent-foreground";
+      case "proposta":
+        return "bg-zen-blue text-zen-blue-foreground";
+      case "cancelado":
+        return "bg-destructive text-destructive-foreground";
+      default:
+        return "bg-muted text-muted-foreground";
+    }
+  };
+
+  return (
+    <Card className="cursor-pointer hover:shadow-sm transition-all duration-200">
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <User className="w-4 h-4 text-muted-foreground" />
+            <h4 className="font-medium text-sm text-foreground truncate">
+              {lead.name || "Nome não informado"}
+            </h4>
+          </div>
+          {lead.status && (
+            <Badge className={`${getStatusColor(lead.status)} text-xs`}>
+              {lead.status}
+            </Badge>
+          )}
+        </div>
+
+        <div className="space-y-2 text-xs text-muted-foreground">
+          {lead.email && (
+            <div className="flex items-center gap-2 truncate">
+              <Mail className="w-3 h-3 flex-shrink-0" />
+              <span className="truncate">{lead.email}</span>
+            </div>
+          )}
+          
+          {lead.telefone && (
+            <div className="flex items-center gap-2">
+              <Phone className="w-3 h-3 flex-shrink-0" />
+              <span>{lead.telefone}</span>
+            </div>
+          )}
+          
+          {lead.number_of_people && (
+            <div className="flex items-center gap-2">
+              <Users className="w-3 h-3 flex-shrink-0" />
+              <span>{lead.number_of_people} pessoas</span>
+            </div>
+          )}
+          
+          {lead.check_in_start && (
+            <div className="flex items-center gap-2">
+              <Calendar className="w-3 h-3 flex-shrink-0" />
+              <span>{format(new Date(lead.check_in_start), "dd/MM", { locale: ptBR })}</span>
+            </div>
+          )}
+        </div>
+
+        {lead.pacote && (
+          <div className="pt-2 border-t border-border">
+            <span className="text-xs font-medium text-foreground">
+              {lead.pacote}
+            </span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
