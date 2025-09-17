@@ -100,12 +100,12 @@ export const PriceCalculatorForm = ({ config }: PriceCalculatorFormProps) => {
       {/* Pacotes */}
       <div>
         <Label htmlFor="package">Pacote (opcional)</Label>
-        <Select value={input.packageId || ""} onValueChange={(value) => handleInputChange("packageId", value || undefined)}>
+        <Select value={input.packageId || "none"} onValueChange={(value) => handleInputChange("packageId", value === "none" ? undefined : value)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione um pacote (opcional)" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Sem pacote</SelectItem>
+            <SelectItem value="none">Sem pacote</SelectItem>
             {config.packages.map((pkg) => (
               <SelectItem key={pkg.id} value={pkg.id}>
                 {pkg.name} - {formatCurrency(pkg.fixedPrice)}
