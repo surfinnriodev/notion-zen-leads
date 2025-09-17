@@ -1,54 +1,39 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Calendar, 
-  Mail, 
-  Phone, 
-  User, 
-  MapPin,
-  Users
-} from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { LeadWithCalculation, calculateLeadPrice } from "@/types/leads";
+import { usePricingConfig } from "@/hooks/usePricingConfig";
+import { LeadListItem } from "./LeadListItem";
 
 type Lead = Tables<"notion_reservas">;
 
 export const LeadsList = () => {
+  const { config } = usePricingConfig();
+
   const { data: leads, isLoading } = useQuery({
-    queryKey: ["leads"],
+    queryKey: ["leads", config],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("notion_reservas")
         .select("*")
         .order("created_at", { ascending: false });
-      
+
       if (error) throw error;
-      return data as Lead[];
+
+      const leadsWithCalculation: LeadWithCalculation[] = data.map(lead =>
+        calculateLeadPrice(lead, config)
+      );
+
+      return leadsWithCalculation;
     },
   });
-
-  const getStatusColor = (status: string | null) => {
-    switch (status?.toLowerCase()) {
-      case "confirmado":
-        return "bg-accent text-accent-foreground";
-      case "pendente":
-        return "bg-zen-blue text-zen-blue-foreground";
-      case "cancelado":
-        return "bg-destructive text-destructive-foreground";
-      default:
-        return "bg-muted text-muted-foreground";
-    }
-  };
 
   if (isLoading) {
     return (
       <div className="p-6">
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-40 bg-muted animate-pulse rounded-lg" />
           ))}
         </div>
       </div>
@@ -59,68 +44,7 @@ export const LeadsList = () => {
     <div className="p-6">
       <div className="space-y-4">
         {leads?.map((lead) => (
-          <Card key={lead.id} className="hover:shadow-sm transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="space-y-3 flex-1">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <User className="w-4 h-4 text-muted-foreground" />
-                        <h3 className="font-medium text-foreground">
-                          {lead.name || "Nome não informado"}
-                        </h3>
-                        {lead.status && (
-                          <Badge className={getStatusColor(lead.status)}>
-                            {lead.status}
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                        {lead.email && (
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-4 h-4" />
-                            {lead.email}
-                          </div>
-                        )}
-                        {lead.telefone && (
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4" />
-                            {lead.telefone}
-                          </div>
-                        )}
-                        {lead.number_of_people && (
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            {lead.number_of_people} pessoas
-                          </div>
-                        )}
-                        {lead.pacote && (
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4" />
-                            {lead.pacote}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {lead.check_in_start && lead.check_in_end && (
-                        <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                          <Calendar className="w-4 h-4" />
-                          {format(new Date(lead.check_in_start), "dd/MM/yyyy", { locale: ptBR })} - {" "}
-                          {format(new Date(lead.check_in_end), "dd/MM/yyyy", { locale: ptBR })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="text-xs text-muted-foreground">
-                  {format(new Date(lead.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <LeadListItem key={lead.id} lead={lead} />
         )) || (
           <div className="text-center py-12 text-muted-foreground">
             Nenhum lead encontrado
