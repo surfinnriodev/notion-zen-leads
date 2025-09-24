@@ -32,14 +32,20 @@ export const LeadsList = () => {
 
   const getStatusColor = (status: string | null) => {
     switch (status?.toLowerCase()) {
+      case "lead":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "novo":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      case "contato":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "proposta":
+        return "bg-orange-100 text-orange-800 border-orange-200";
       case "confirmado":
-        return "bg-accent text-accent-foreground";
-      case "pendente":
-        return "bg-zen-blue text-zen-blue-foreground";
+        return "bg-green-100 text-green-800 border-green-200";
       case "cancelado":
-        return "bg-destructive text-destructive-foreground";
+        return "bg-red-100 text-red-800 border-red-200";
       default:
-        return "bg-muted text-muted-foreground";
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 

@@ -6,6 +6,7 @@ import { LeadCard } from "./LeadCard";
 type Lead = Tables<"reservas">;
 
 const columns = [
+  { id: "lead", title: "Lead", status: "lead" },
   { id: "novo", title: "Novos", status: "novo" },
   { id: "contato", title: "Em Contato", status: "contato" },
   { id: "proposta", title: "Proposta Enviada", status: "proposta" },
@@ -38,7 +39,7 @@ export const LeadsBoard = () => {
   if (isLoading) {
     return (
       <div className="p-6">
-        <div className="grid grid-cols-5 gap-6">
+        <div className="grid grid-cols-6 gap-4">
           {columns.map((column) => (
             <div key={column.id} className="space-y-4">
               <div className="h-6 bg-muted animate-pulse rounded" />
@@ -54,7 +55,7 @@ export const LeadsBoard = () => {
 
   return (
     <div className="p-6">
-      <div className="grid grid-cols-5 gap-6">
+      <div className="grid grid-cols-6 gap-4">
         {columns.map((column) => (
           <div key={column.id} className="space-y-4">
             <div className="flex items-center gap-2">
