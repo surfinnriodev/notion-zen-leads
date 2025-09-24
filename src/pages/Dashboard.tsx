@@ -8,7 +8,7 @@ const Dashboard = () => {
     queryKey: ["leads-count"],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from("notion_reservas")
+        .from("reservas")
         .select("*", { count: "exact", head: true });
       
       if (error) throw error;
@@ -20,13 +20,13 @@ const Dashboard = () => {
     queryKey: ["status-stats"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("notion_reservas")
-        .select("status");
+        .from("reservas")
+        .select("property_status");
       
       if (error) throw error;
       
       const stats = data.reduce((acc, lead) => {
-        const status = lead.status || "novo";
+        const status = lead.property_status || "novo";
         acc[status] = (acc[status] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);

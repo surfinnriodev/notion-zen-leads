@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { LeadCard } from "./LeadCard";
 
-type Lead = Tables<"notion_reservas">;
+type Lead = Tables<"reservas">;
 
 const columns = [
   { id: "novo", title: "Novos", status: "novo" },
@@ -18,9 +18,9 @@ export const LeadsBoard = () => {
     queryKey: ["leads"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("notion_reservas")
+        .from("reservas")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("property_criado_em", { ascending: false });
       
       if (error) throw error;
       return data as Lead[];
@@ -30,8 +30,8 @@ export const LeadsBoard = () => {
   const getLeadsByStatus = (status: string) => {
     if (!leads) return [];
     return leads.filter((lead) => 
-      lead.status?.toLowerCase() === status.toLowerCase() || 
-      (!lead.status && status === "novo")
+      lead.property_status?.toLowerCase() === status.toLowerCase() || 
+      (!lead.property_status && status === "novo")
     );
   };
 

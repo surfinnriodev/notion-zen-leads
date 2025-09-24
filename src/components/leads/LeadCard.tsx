@@ -11,7 +11,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-type Lead = Tables<"notion_reservas">;
+type Lead = Tables<"reservas">;
 
 interface LeadCardProps {
   lead: Lead;
@@ -38,50 +38,50 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-muted-foreground" />
             <h4 className="font-medium text-sm text-foreground truncate">
-              {lead.name || "Nome não informado"}
+              {lead.property_name || "Nome não informado"}
             </h4>
           </div>
-          {lead.status && (
-            <Badge className={`${getStatusColor(lead.status)} text-xs`}>
-              {lead.status}
+          {lead.property_status && (
+            <Badge className={`${getStatusColor(lead.property_status)} text-xs`}>
+              {lead.property_status}
             </Badge>
           )}
         </div>
 
         <div className="space-y-2 text-xs text-muted-foreground">
-          {lead.email && (
+          {lead.property_email && (
             <div className="flex items-center gap-2 truncate">
               <Mail className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate">{lead.email}</span>
+              <span className="truncate">{lead.property_email}</span>
             </div>
           )}
           
-          {lead.telefone && (
+          {lead.property_telefone && (
             <div className="flex items-center gap-2">
               <Phone className="w-3 h-3 flex-shrink-0" />
-              <span>{lead.telefone}</span>
+              <span>{lead.property_telefone}</span>
             </div>
           )}
           
-          {lead.number_of_people && (
+          {lead.property_number_of_people && (
             <div className="flex items-center gap-2">
               <Users className="w-3 h-3 flex-shrink-0" />
-              <span>{lead.number_of_people} pessoas</span>
+              <span>{lead.property_number_of_people} pessoas</span>
             </div>
           )}
           
-          {lead.check_in_start && (
+          {lead.property_check_in && (
             <div className="flex items-center gap-2">
               <Calendar className="w-3 h-3 flex-shrink-0" />
-              <span>{format(new Date(lead.check_in_start), "dd/MM", { locale: ptBR })}</span>
+              <span>Check-in</span>
             </div>
           )}
         </div>
 
-        {lead.pacote && (
+        {lead.property_pacote && (
           <div className="pt-2 border-t border-border">
             <span className="text-xs font-medium text-foreground">
-              {lead.pacote}
+              {lead.property_pacote}
             </span>
           </div>
         )}

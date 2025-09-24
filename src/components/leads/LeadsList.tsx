@@ -14,16 +14,16 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-type Lead = Tables<"notion_reservas">;
+type Lead = Tables<"reservas">;
 
 export const LeadsList = () => {
   const { data: leads, isLoading } = useQuery({
     queryKey: ["leads"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("notion_reservas")
+        .from("reservas")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("property_criado_em", { ascending: false });
       
       if (error) throw error;
       return data as Lead[];
@@ -67,57 +67,59 @@ export const LeadsList = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <User className="w-4 h-4 text-muted-foreground" />
-                        <h3 className="font-medium text-foreground">
-                          {lead.name || "Nome não informado"}
-                        </h3>
-                        {lead.status && (
-                          <Badge className={getStatusColor(lead.status)}>
-                            {lead.status}
+                         <h3 className="font-medium text-foreground">
+                           {lead.property_name || "Nome não informado"}
+                         </h3>
+                         {lead.property_status && (
+                           <Badge className={getStatusColor(lead.property_status)}>
+                             {lead.property_status}
                           </Badge>
                         )}
                       </div>
                       
                       <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                        {lead.email && (
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-4 h-4" />
-                            {lead.email}
-                          </div>
-                        )}
-                        {lead.telefone && (
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4" />
-                            {lead.telefone}
-                          </div>
-                        )}
-                        {lead.number_of_people && (
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            {lead.number_of_people} pessoas
-                          </div>
-                        )}
-                        {lead.pacote && (
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4" />
-                            {lead.pacote}
+                         {lead.property_email && (
+                           <div className="flex items-center gap-2">
+                             <Mail className="w-4 h-4" />
+                             {lead.property_email}
+                           </div>
+                         )}
+                         {lead.property_telefone && (
+                           <div className="flex items-center gap-2">
+                             <Phone className="w-4 h-4" />
+                             {lead.property_telefone}
+                           </div>
+                         )}
+                         {lead.property_number_of_people && (
+                           <div className="flex items-center gap-2">
+                             <Users className="w-4 h-4" />
+                             {lead.property_number_of_people} pessoas
+                           </div>
+                         )}
+                         {lead.property_pacote && (
+                           <div className="flex items-center gap-2">
+                             <MapPin className="w-4 h-4" />
+                             {lead.property_pacote}
                           </div>
                         )}
                       </div>
                       
-                      {lead.check_in_start && lead.check_in_end && (
-                        <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                          <Calendar className="w-4 h-4" />
-                          {format(new Date(lead.check_in_start), "dd/MM/yyyy", { locale: ptBR })} - {" "}
-                          {format(new Date(lead.check_in_end), "dd/MM/yyyy", { locale: ptBR })}
-                        </div>
-                      )}
+                       {lead.property_check_in && (
+                         <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                           <Calendar className="w-4 h-4" />
+                           Check-in disponível
+                         </div>
+                       )}
                     </div>
                   </div>
                 </div>
                 
-                <div className="text-xs text-muted-foreground">
-                  {format(new Date(lead.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                </div>
+                 <div className="text-xs text-muted-foreground">
+                   {lead.property_criado_em ? 
+                     format(new Date(lead.property_criado_em), "dd/MM/yyyy HH:mm", { locale: ptBR }) :
+                     "Data não disponível"
+                   }
+                 </div>
               </div>
             </CardContent>
           </Card>
