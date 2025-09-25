@@ -38,11 +38,11 @@ const Leads = () => {
   const leadCount = leads?.length || 0;
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {/* Header com título e controles */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-1">
-          <h1 className="text-2xl font-semibold text-foreground">Leads</h1>
+      <div className="mb-4 sm:mb-6">
+        <div className="flex items-center justify-between gap-3 mb-1">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Leads</h1>
           {/* View Toggle */}
           <div className="flex gap-1">
             <Button

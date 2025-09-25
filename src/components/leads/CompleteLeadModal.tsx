@@ -209,7 +209,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-6xl h-[95vh] max-h-[95vh] overflow-hidden flex flex-col p-0">
+      <DialogContent className="w-[95vw] max-w-6xl h-[95vh] max-h-[95vh] overflow-hidden flex flex-col p-0 sm:w-[90vw] sm:max-w-5xl">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
         <div className="flex-1 overflow-hidden flex flex-col px-6 min-h-0">
           <Tabs defaultValue="basic" className="w-full flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 gap-1 h-auto p-1">
+            <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 gap-1 h-auto p-1 overflow-x-auto">
               <TabsTrigger value="basic" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 px-2 text-xs sm:text-sm">
                 <User className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Básico</span>

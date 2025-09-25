@@ -57,19 +57,19 @@ const Dashboard = () => {
   }));
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-semibold text-foreground mb-2">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-foreground mb-2">
           Dashboard
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           Visão geral das métricas de leads e receita
         </p>
       </div>
 
       {/* Métricas Principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <MetricCard
           title="Total de Leads"
           value={metrics.totalLeads}
@@ -103,7 +103,7 @@ const Dashboard = () => {
       </div>
 
       {/* Gráficos e Análises */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Distribuição por Status */}
         <SimpleChart
           title="Leads por Status"
