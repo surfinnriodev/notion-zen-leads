@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageTemplate, MessageTemplateInsert, MessageTemplateUpdate } from '@/types/database';
 import { toast } from 'sonner';
@@ -59,7 +60,7 @@ Equipe Surf Inn Rio`,
   ];
 
   // Buscar templates
-  const { data: templates = DEFAULT_TEMPLATES, isLoading, error } = useQuery({
+  const { data: rawTemplates, isLoading, error } = useQuery({
     queryKey: ['message-templates'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -76,6 +77,11 @@ Equipe Surf Inn Rio`,
       return data && data.length > 0 ? data as MessageTemplate[] : DEFAULT_TEMPLATES;
     },
   });
+
+  // Memoizar templates para evitar loops
+  const templates = useMemo(() => {
+    return rawTemplates || DEFAULT_TEMPLATES;
+  }, [rawTemplates]);
 
   // Adicionar template
   const addTemplateMutation = useMutation({

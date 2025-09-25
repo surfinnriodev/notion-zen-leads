@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { PricingConfig, PricingConfigInsert, PricingConfigUpdate, PricingConfigData } from '@/types/database';
 import { PricingItem } from '@/types/pricing';
@@ -104,12 +105,14 @@ export const usePricingConfig = () => {
     ]
   };
 
-  // Converter dados do banco para o formato esperado
-  const parsedConfig: PricingConfigData = config ? {
-    roomCategories: config.room_categories as any,
-    packages: config.packages as any,
-    items: config.items as any,
-  } : DEFAULT_CONFIG_DATA;
+  // Converter dados do banco para o formato esperado (memoizado para evitar loops)
+  const parsedConfig: PricingConfigData = useMemo(() => {
+    return config ? {
+      roomCategories: config.room_categories as any,
+      packages: config.packages as any,
+      items: config.items as any,
+    } : DEFAULT_CONFIG_DATA;
+  }, [config]);
 
   // Atualizar configuração
   const updateConfigMutation = useMutation({
