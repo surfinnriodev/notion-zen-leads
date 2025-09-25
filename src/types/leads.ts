@@ -74,6 +74,10 @@ export function convertLeadToCalculationInput(lead: NotionReserva): CalculationI
 
 
 export function calculateLeadPrice(lead: NotionReserva, config: any): LeadWithCalculation {
+  console.log("🔥 calculateLeadPrice CHAMADA!");
+  console.log("👤 Lead:", lead.name);
+  console.log("⚙️ Config:", config);
+  
   try {
     const input = convertLeadToCalculationInput(lead);
 
