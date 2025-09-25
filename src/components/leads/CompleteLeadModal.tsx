@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { LeadWithCalculation, calculateLeadPrice, getLeadDisplayPrice } from "@/types/leads";
+import { LeadWithCalculation, calculateLeadPrice, getLeadDisplayPrice, mapReservaToLegacyFormat } from "@/types/leads";
 import { usePricingConfig } from "@/hooks/usePricingConfig";
+import { useMessageTemplates } from "@/hooks/useMessageTemplates";
+import { useMessageHistory } from "@/hooks/useMessageHistory";
+import { processTemplate } from "@/utils/messageProcessor";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DollarSign, Save, User, Calendar, Home, Activity, MessageSquare } from "lucide-react";
+import { DollarSign, Save, User, Calendar, Home, Activity, MessageSquare, Send, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 interface CompleteLeadModalProps {
@@ -28,16 +31,30 @@ interface CompleteLeadModalProps {
 
 export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalProps) => {
   const { config } = usePricingConfig();
+  const { templates } = useMessageTemplates();
+  const { addMessage } = useMessageHistory();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<LeadWithCalculation>>({});
   const [calculatedLead, setCalculatedLead] = useState<LeadWithCalculation | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [messageContent, setMessageContent] = useState("");
+  const [messageSubject, setMessageSubject] = useState("");
+  const [customMessage, setCustomMessage] = useState("");
 
   // Inicializar formData quando o lead muda
   useEffect(() => {
     if (lead) {
       console.log("🔍 Complete Lead data:", lead);
-      setFormData(lead);
+      // Mapear para o formato legado para compatibilidade
+      const legacyLead = mapReservaToLegacyFormat(lead);
+      setFormData(legacyLead);
       setCalculatedLead(calculateLeadPrice(lead, config));
+
+      // Reset message states when lead changes
+      setSelectedTemplate("");
+      setMessageContent("");
+      setMessageSubject("");
+      setCustomMessage("");
     }
   }, [lead, config]);
 
@@ -45,9 +62,47 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
     mutationFn: async (updatedData: Partial<LeadWithCalculation>) => {
       if (!lead) throw new Error("No lead to update");
 
+      // Mapear campos para a nova estrutura da tabela reservations
+      const mappedData: any = {};
+
+      if (updatedData.name !== undefined) mappedData.name = updatedData.name;
+      if (updatedData.email !== undefined) mappedData.email = updatedData.email;
+      if (updatedData.telefone !== undefined) mappedData.telefone = updatedData.telefone;
+      if (updatedData.status !== undefined) mappedData.status = updatedData.status;
+      if (updatedData.number_of_people !== undefined) mappedData.number_of_people = updatedData.number_of_people;
+      if (updatedData.tipo_de_quarto !== undefined) mappedData.tipo_de_quarto = updatedData.tipo_de_quarto;
+      if (updatedData.pacote !== undefined) mappedData.pacote = updatedData.pacote;
+      if (updatedData.obs_do_cliente !== undefined) mappedData.obs_do_cliente = updatedData.obs_do_cliente;
+      if (updatedData.resumo_dos_servicos !== undefined) mappedData.resumo_dos_servicos = updatedData.resumo_dos_servicos;
+      if (updatedData.nivel_de_surf !== undefined) mappedData.nivel_de_surf = updatedData.nivel_de_surf;
+      if (updatedData.notion_page_id !== undefined) mappedData.notion_page_id = updatedData.notion_page_id;
+
+      // Atividades - mapear para os campos corretos da tabela reservations
+      if (updatedData.aulas_de_surf !== undefined) mappedData.aulas_de_surf = updatedData.aulas_de_surf;
+      if (updatedData.aulas_de_yoga !== undefined) mappedData.aulas_de_yoga = updatedData.aulas_de_yoga;
+      if (updatedData.skate !== undefined) mappedData.skate = updatedData.skate;
+      if (updatedData.analise_de_video_extra !== undefined) mappedData.analise_de_video = updatedData.analise_de_video_extra;
+      if (updatedData.analise_de_video_package !== undefined) mappedData.analise_de_video_package = updatedData.analise_de_video_package;
+      if (updatedData.massagem_extra !== undefined) mappedData.massagem_extra = Boolean(updatedData.massagem_extra);
+      if (updatedData.massagem_package !== undefined) mappedData.massagem_package = updatedData.massagem_package;
+      if (updatedData.surf_guide_package !== undefined) mappedData.surf_guide_package = updatedData.surf_guide_package;
+      if (updatedData.transfer_extra !== undefined) mappedData.transfer_extra = Boolean(updatedData.transfer_extra);
+      if (updatedData.transfer_package !== undefined) mappedData.transfer_package = updatedData.transfer_package;
+
+      // Booleans fields - mapping to correct database field names
+      if (updatedData.include_breakfast !== undefined) mappedData.breakfast = Boolean(updatedData.include_breakfast);
+      if (updatedData.aluguel_prancha_ilimitado !== undefined) mappedData.aluguel_de_prancha = Boolean(updatedData.aluguel_prancha_ilimitado);
+      if (updatedData.hike_extra !== undefined) mappedData.hike_extra = Boolean(updatedData.hike_extra);
+      if (updatedData.rio_city_tour_extra !== undefined) mappedData.rio_city_tour = Boolean(updatedData.rio_city_tour_extra);
+      if (updatedData.carioca_experience_extra !== undefined) mappedData.carioca_experience = Boolean(updatedData.carioca_experience_extra);
+
+      // Datas - usar campos diretos ao invés de JSON
+      if (updatedData.check_in_start !== undefined) mappedData.check_in_start = updatedData.check_in_start;
+      if (updatedData.check_in_end !== undefined) mappedData.check_in_end = updatedData.check_in_end;
+
       const { data, error } = await supabase
-        .from("notion_reservas")
-        .update(updatedData)
+        .from("reservations")
+        .update(mappedData)
         .eq("id", lead.id)
         .select()
         .single();
@@ -82,6 +137,50 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
     // Remover campos calculados que não existem no banco
     const { calculatedPrice, totalPrice, ...dataToSave } = formData;
     updateMutation.mutate(dataToSave);
+  };
+
+  const handleTemplateSelect = (templateId: string) => {
+    console.log("🎯 Template selected:", templateId);
+    setSelectedTemplate(templateId);
+    const template = templates.find(t => t.id === templateId);
+    console.log("📝 Found template:", template);
+    if (template && calculatedLead) {
+      console.log("🔄 Processing template with lead:", calculatedLead);
+      const processed = processTemplate(template, calculatedLead);
+      console.log("✅ Processed message:", processed);
+      setMessageSubject(processed.subject);
+      setMessageContent(processed.content);
+    }
+  };
+
+  const handleCopyMessage = () => {
+    const fullMessage = `Assunto: ${messageSubject}\n\n${messageContent}`;
+    navigator.clipboard.writeText(fullMessage);
+    toast.success("Mensagem copiada para a área de transferência!");
+  };
+
+  const handleSendMessage = () => {
+    if (!lead) return;
+
+    // Registrar mensagem no histórico
+    const messageData = {
+      lead_id: lead.id,
+      template_id: selectedTemplate || null,
+      subject: messageSubject || customMessage.split('\n')[0] || 'Mensagem personalizada',
+      content: messageContent || customMessage,
+      message_type: selectedTemplate ? 'template' : 'custom',
+      sent_via: 'manual',
+    };
+
+    addMessage(messageData);
+
+    // Limpar campos
+    setSelectedTemplate("");
+    setMessageContent("");
+    setMessageSubject("");
+    setCustomMessage("");
+
+    toast.success("Mensagem registrada no histórico!");
   };
 
   if (!lead) return null;
@@ -124,7 +223,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
         <div className="flex-1 overflow-hidden flex flex-col px-6">
           <Tabs defaultValue="basic" className="w-full flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1 h-auto p-1">
+            <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 gap-1 h-auto p-1">
               <TabsTrigger value="basic" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 px-2 text-xs sm:text-sm">
                 <User className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Básico</span>
@@ -147,7 +246,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
               </TabsTrigger>
               <TabsTrigger value="comments" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 px-2 text-xs sm:text-sm relative">
                 <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Comentários</span>
+                <span className="hidden sm:inline">Mensagens</span>
                 <span className="sm:hidden">Msg</span>
                 {formData.obs_do_cliente && (
                   <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -301,38 +400,40 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 </div>
 
                 <div>
-                  <Label htmlFor="include_breakfast">Dias com Café da Manhã (Quantidade)</Label>
-                  <Input
-                    id="include_breakfast"
-                    type="number"
-                    min="0"
-                    value={formData.include_breakfast?.length || 0}
-                    onChange={(e) => {
-                      const count = parseInt(e.target.value) || 0;
-                      const array = count > 0 ? Array(count).fill("dia") : null;
-                      handleInputChange("include_breakfast", array);
-                    }}
-                  />
+                  <Label htmlFor="include_breakfast">Café da Manhã Incluído</Label>
+                  <Select
+                    value={formData.include_breakfast ? "sim" : "nao"}
+                    onValueChange={(value) => handleInputChange("include_breakfast", value === "sim")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nao">Não</SelectItem>
+                      <SelectItem value="sim">Sim</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Número de dias com café da manhã incluído
+                    Incluir café da manhã na hospedagem
                   </p>
                 </div>
 
                 <div>
-                  <Label htmlFor="aluguel_prancha_ilimitado">Dias com Prancha Ilimitada (Quantidade)</Label>
-                  <Input
-                    id="aluguel_prancha_ilimitado"
-                    type="number"
-                    min="0"
-                    value={formData.aluguel_prancha_ilimitado?.length || 0}
-                    onChange={(e) => {
-                      const count = parseInt(e.target.value) || 0;
-                      const array = count > 0 ? Array(count).fill("dia") : null;
-                      handleInputChange("aluguel_prancha_ilimitado", array);
-                    }}
-                  />
+                  <Label htmlFor="aluguel_prancha_ilimitado">Aluguel de Prancha Ilimitado</Label>
+                  <Select
+                    value={formData.aluguel_prancha_ilimitado ? "sim" : "nao"}
+                    onValueChange={(value) => handleInputChange("aluguel_prancha_ilimitado", value === "sim")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nao">Não</SelectItem>
+                      <SelectItem value="sim">Sim</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Número de dias com prancha ilimitada
+                    Incluir aluguel de prancha ilimitado
                   </p>
                 </div>
               </div>
@@ -424,14 +525,19 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 </div>
 
                 <div>
-                  <Label htmlFor="massagem_extra">Massagens Extra</Label>
-                  <Input
-                    id="massagem_extra"
-                    type="number"
-                    min="0"
-                    value={formData.massagem_extra || 0}
-                    onChange={(e) => handleInputChange("massagem_extra", parseInt(e.target.value) || 0)}
-                  />
+                  <Label htmlFor="massagem_extra">Massagem Extra</Label>
+                  <Select
+                    value={formData.massagem_extra ? "sim" : "nao"}
+                    onValueChange={(value) => handleInputChange("massagem_extra", value === "sim")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nao">Não</SelectItem>
+                      <SelectItem value="sim">Sim</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
@@ -474,13 +580,18 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="transfer_extra">Transfer Extra</Label>
-                  <Input
-                    id="transfer_extra"
-                    type="number"
-                    min="0"
-                    value={formData.transfer_extra || 0}
-                    onChange={(e) => handleInputChange("transfer_extra", parseInt(e.target.value) || 0)}
-                  />
+                  <Select
+                    value={formData.transfer_extra ? "sim" : "nao"}
+                    onValueChange={(value) => handleInputChange("transfer_extra", value === "sim")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nao">Não</SelectItem>
+                      <SelectItem value="sim">Sim</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
@@ -503,87 +614,226 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
               <h3 className="font-medium text-base sm:text-lg">Experiências e Tours</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="hike_extra">Trilhas (Quantidade)</Label>
-                  <Input
-                    id="hike_extra"
-                    type="number"
-                    min="0"
-                    value={formData.hike_extra || 0}
-                    onChange={(e) => handleInputChange("hike_extra", parseInt(e.target.value) || 0)}
-                  />
+                  <Label htmlFor="hike_extra">Trilha</Label>
+                  <Select
+                    value={formData.hike_extra ? "sim" : "nao"}
+                    onValueChange={(value) => handleInputChange("hike_extra", value === "sim")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nao">Não</SelectItem>
+                      <SelectItem value="sim">Sim</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Número de trilhas contratadas
+                    Incluir trilha
                   </p>
                 </div>
 
                 <div>
-                  <Label htmlFor="rio_city_tour_extra">Rio City Tour (Quantidade)</Label>
-                  <Input
-                    id="rio_city_tour_extra"
-                    type="number"
-                    min="0"
-                    value={formData.rio_city_tour_extra || 0}
-                    onChange={(e) => handleInputChange("rio_city_tour_extra", parseInt(e.target.value) || 0)}
-                  />
+                  <Label htmlFor="rio_city_tour_extra">Rio City Tour</Label>
+                  <Select
+                    value={formData.rio_city_tour_extra ? "sim" : "nao"}
+                    onValueChange={(value) => handleInputChange("rio_city_tour_extra", value === "sim")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nao">Não</SelectItem>
+                      <SelectItem value="sim">Sim</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Número de city tours contratados
+                    Incluir city tour
                   </p>
                 </div>
 
                 <div>
-                  <Label htmlFor="carioca_experience_extra">Carioca Experience (Quantidade)</Label>
-                  <Input
-                    id="carioca_experience_extra"
-                    type="number"
-                    min="0"
-                    value={formData.carioca_experience_extra || 0}
-                    onChange={(e) => handleInputChange("carioca_experience_extra", parseInt(e.target.value) || 0)}
-                  />
+                  <Label htmlFor="carioca_experience_extra">Carioca Experience</Label>
+                  <Select
+                    value={formData.carioca_experience_extra ? "sim" : "nao"}
+                    onValueChange={(value) => handleInputChange("carioca_experience_extra", value === "sim")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nao">Não</SelectItem>
+                      <SelectItem value="sim">Sim</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Número de experiências contratadas
+                    Incluir experiência carioca
                   </p>
                 </div>
               </div>
             </div>
           </TabsContent>
 
-          {/* Tab 5: Comentários */}
+          {/* Tab 5: Mensagens */}
           <TabsContent value="comments" className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-primary" />
-                <h3 className="font-medium text-base sm:text-lg">Comentários e Observações</h3>
-              </div>
-
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Sistema de Mensagens */}
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="obs_do_cliente">Observações do Cliente</Label>
-                  <Textarea
-                    id="obs_do_cliente"
-                    value={formData.obs_do_cliente || ""}
-                    onChange={(e) => handleInputChange("obs_do_cliente", e.target.value)}
-                    placeholder="Adicione comentários, observações especiais, preferências do cliente..."
-                    rows={6}
-                    className="resize-vertical"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Use este espaço para registrar informações importantes sobre o cliente, pedidos especiais, restrições alimentares, etc.
-                  </p>
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-primary" />
+                  <h3 className="font-medium text-base sm:text-lg">Enviar Mensagem</h3>
                 </div>
 
                 <div>
-                  <Label htmlFor="resumo_dos_servicos">Resumo dos Serviços</Label>
+                  <Label htmlFor="template">Escolher Template</Label>
+                  <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um template ou escreva sua própria mensagem" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templates.map((template) => (
+                        <SelectItem key={template.id} value={template.id}>
+                          {template.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedTemplate && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="messageSubject">Assunto</Label>
+                      <Input
+                        id="messageSubject"
+                        value={messageSubject}
+                        onChange={(e) => setMessageSubject(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="messageContent">Mensagem</Label>
+                      <Textarea
+                        id="messageContent"
+                        value={messageContent}
+                        onChange={(e) => setMessageContent(e.target.value)}
+                        rows={8}
+                        className="min-h-[200px]"
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleCopyMessage}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <Copy className="w-4 h-4" />
+                        Copiar
+                      </Button>
+                      <Button
+                        onClick={handleSendMessage}
+                        className="flex items-center gap-2"
+                      >
+                        <Send className="w-4 h-4" />
+                        Enviar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <Separator />
+
+                <div>
+                  <Label htmlFor="customMessage">Ou escreva uma mensagem personalizada</Label>
                   <Textarea
-                    id="resumo_dos_servicos"
-                    value={formData.resumo_dos_servicos || ""}
-                    onChange={(e) => handleInputChange("resumo_dos_servicos", e.target.value)}
-                    placeholder="Descreva o resumo dos serviços contratados..."
-                    rows={4}
-                    className="resize-vertical"
+                    id="customMessage"
+                    value={customMessage}
+                    onChange={(e) => setCustomMessage(e.target.value)}
+                    placeholder="Digite sua mensagem aqui..."
+                    rows={6}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Resumo detalhado dos serviços que foram ou serão prestados ao cliente.
-                  </p>
+                  {customMessage && (
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        onClick={() => {
+                          navigator.clipboard.writeText(customMessage);
+                          toast.success("Mensagem copiada!");
+                        }}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <Copy className="w-4 h-4" />
+                        Copiar
+                      </Button>
+                      <Button
+                        onClick={handleSendMessage}
+                        className="flex items-center gap-2"
+                      >
+                        <Send className="w-4 h-4" />
+                        Enviar
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Informações do Lead e Observações */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-base sm:text-lg">Informações do Lead</h3>
+                <div className="p-4 bg-gray-50 rounded-lg space-y-2 text-sm">
+                  <div><strong>Nome:</strong> {lead.name || "N/A"}</div>
+                  <div><strong>Email:</strong> {lead.email || "N/A"}</div>
+                  <div><strong>Telefone:</strong> {lead.telefone || "N/A"}</div>
+                  <div><strong>Check-in:</strong> {lead.check_in_start ? new Date(lead.check_in_start).toLocaleDateString('pt-BR') : "N/A"}</div>
+                  <div><strong>Check-out:</strong> {lead.check_in_end ? new Date(lead.check_in_end).toLocaleDateString('pt-BR') : "N/A"}</div>
+                  <div><strong>Pessoas:</strong> {lead.number_of_people || 0}</div>
+                  <div><strong>Quarto:</strong> {lead.tipo_de_quarto || "N/A"}</div>
+                  <div><strong>Pacote:</strong> {lead.pacote || "Sem pacote"}</div>
+                  <div><strong>Preço Total:</strong> {calculatedLead ? getLeadDisplayPrice(calculatedLead) : "Calculando..."}</div>
+                </div>
+
+                {templates.length === 0 && (
+                  <div className="p-4 border rounded-lg text-center text-muted-foreground">
+                    <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Nenhum template disponível</p>
+                    <p className="text-xs">Crie templates na seção Mensagens</p>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Observações do Cliente */}
+                <div className="space-y-4">
+                  <h3 className="font-medium text-base sm:text-lg">Observações do Cliente</h3>
+                  <div>
+                    <Label htmlFor="obs_do_cliente">Observações</Label>
+                    <Textarea
+                      id="obs_do_cliente"
+                      value={formData.obs_do_cliente || ""}
+                      onChange={(e) => handleInputChange("obs_do_cliente", e.target.value)}
+                      placeholder="Adicione comentários, observações especiais, preferências do cliente..."
+                      rows={4}
+                      className="resize-vertical"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Use este espaço para registrar informações importantes sobre o cliente, pedidos especiais, restrições alimentares, etc.
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="resumo_dos_servicos">Resumo dos Serviços</Label>
+                    <Textarea
+                      id="resumo_dos_servicos"
+                      value={formData.resumo_dos_servicos || ""}
+                      onChange={(e) => handleInputChange("resumo_dos_servicos", e.target.value)}
+                      placeholder="Descreva o resumo dos serviços contratados..."
+                      rows={3}
+                      className="resize-vertical"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Resumo detalhado dos serviços que foram ou serão prestados ao cliente.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

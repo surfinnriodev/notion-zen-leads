@@ -317,6 +317,237 @@ export type Database = {
         }
         Relationships: []
       }
+      reservations: {
+        Row: {
+          id: number
+          notion_page_id: string | null
+          created_at: string
+          updated_at: string
+          name: string | null
+          check_in_start: string | null
+          check_in_end: string | null
+          email: string | null
+          number_of_people: number | null
+          nivel_de_surf: string | null
+          obs_do_cliente: string | null
+          pacote: string | null
+          resumo_dos_servicos: string | null
+          status: string | null
+          telefone: string | null
+          tipo_de_quarto: string | null
+          aulas_de_surf: number | null
+          aulas_de_yoga: number | null
+          skate: number | null
+          surf_guide_package: number | null
+          analise_de_video_package: number | null
+          massagem_package: number | null
+          massagem_extra: boolean | null
+          transfer_package: number | null
+          transfer_extra: boolean | null
+          rio_city_tour: boolean | null
+          carioca_experience: boolean | null
+          hike_extra: boolean | null
+          aluguel_de_prancha: boolean | null
+          breakfast: boolean | null
+          surf_guide: number | null
+          analise_de_video: number | null
+          yoga: number | null
+          transfer: boolean | null
+        }
+        Insert: {
+          id?: number
+          notion_page_id?: string | null
+          created_at?: string
+          updated_at?: string
+          name?: string | null
+          check_in_start?: string | null
+          check_in_end?: string | null
+          email?: string | null
+          number_of_people?: number | null
+          nivel_de_surf?: string | null
+          obs_do_cliente?: string | null
+          pacote?: string | null
+          resumo_dos_servicos?: string | null
+          status?: string | null
+          telefone?: string | null
+          tipo_de_quarto?: string | null
+          aulas_de_surf?: number | null
+          aulas_de_yoga?: number | null
+          skate?: number | null
+          surf_guide_package?: number | null
+          analise_de_video_package?: number | null
+          massagem_package?: number | null
+          massagem_extra?: boolean | null
+          transfer_package?: number | null
+          transfer_extra?: boolean | null
+          rio_city_tour?: boolean | null
+          carioca_experience?: boolean | null
+          hike_extra?: boolean | null
+          aluguel_de_prancha?: boolean | null
+          breakfast?: boolean | null
+          surf_guide?: number | null
+          analise_de_video?: number | null
+          yoga?: number | null
+          transfer?: boolean | null
+        }
+        Update: {
+          id?: number
+          notion_page_id?: string | null
+          created_at?: string
+          updated_at?: string
+          name?: string | null
+          check_in_start?: string | null
+          check_in_end?: string | null
+          email?: string | null
+          number_of_people?: number | null
+          nivel_de_surf?: string | null
+          obs_do_cliente?: string | null
+          pacote?: string | null
+          resumo_dos_servicos?: string | null
+          status?: string | null
+          telefone?: string | null
+          tipo_de_quarto?: string | null
+          aulas_de_surf?: number | null
+          aulas_de_yoga?: number | null
+          skate?: number | null
+          surf_guide_package?: number | null
+          analise_de_video_package?: number | null
+          massagem_package?: number | null
+          massagem_extra?: boolean | null
+          transfer_package?: number | null
+          transfer_extra?: boolean | null
+          rio_city_tour?: boolean | null
+          carioca_experience?: boolean | null
+          hike_extra?: boolean | null
+          aluguel_de_prancha?: boolean | null
+          breakfast?: boolean | null
+          surf_guide?: number | null
+          analise_de_video?: number | null
+          yoga?: number | null
+          transfer?: boolean | null
+        }
+        Relationships: []
+      }
+      pricing_config: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+          room_categories: Json
+          packages: Json
+          items: Json
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+          room_categories?: Json
+          packages?: Json
+          items?: Json
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+          room_categories?: Json
+          packages?: Json
+          items?: Json
+        }
+        Relationships: []
+      }
+      message_templates: {
+        Row: {
+          id: string
+          name: string
+          subject: string
+          content: string
+          variables: string[]
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          subject: string
+          content: string
+          variables?: string[]
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          subject?: string
+          content?: string
+          variables?: string[]
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      message_history: {
+        Row: {
+          id: string
+          lead_id: number
+          template_id: string | null
+          subject: string
+          content: string
+          message_type: string
+          sent_via: string
+          sent_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          lead_id: number
+          template_id?: string | null
+          subject: string
+          content: string
+          message_type?: string
+          sent_via?: string
+          sent_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          lead_id?: number
+          template_id?: string | null
+          subject?: string
+          content?: string
+          message_type?: string
+          sent_via?: string
+          sent_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_message_history_lead"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_message_history_template"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "message_templates"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

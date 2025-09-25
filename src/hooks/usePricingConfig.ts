@@ -1,79 +1,165 @@
-import { useState, useEffect } from 'react';
-import { PricingConfig } from '@/types/pricing';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { PricingConfig, PricingConfigInsert, PricingConfigUpdate, PricingConfigData } from '@/types/database';
+import { PricingItem } from '@/types/pricing';
+import { toast } from 'sonner';
 
-const DEFAULT_CONFIG: PricingConfig = {
-  roomCategories: [
-    { id: 'private-double', name: 'Private: Double', pricePerNight: 150, perPerson: false },
-    { id: 'private-single', name: 'Private: Single', pricePerNight: 120, perPerson: false },
-    { id: 'shared-mixed', name: 'Shared: Mixed Standard', pricePerNight: 80, perPerson: true },
-    { id: 'shared-female', name: 'Shared: Female Only', pricePerNight: 85, perPerson: true },
-  ],
-  packages: [
-    {
-      id: 'basic-package',
-      name: 'Pacote Básico',
-      fixedPrice: 300,
-      includedItems: {
-        breakfast: true,
-        unlimitedBoardRental: true,
-        surfLessons: 2,
-      }
-    },
-    {
-      id: 'complete-package',
-      name: 'Pacote Completo',
-      fixedPrice: 500,
-      includedItems: {
-        breakfast: true,
-        unlimitedBoardRental: true,
-        surfLessons: 5,
-        yogaLessons: 3,
-        surfSkate: 2,
-        videoAnalysis: 1,
-      }
-    }
-  ],
-  dailyItems: {
-    breakfast: { price: 25, perPerson: true },
-    unlimitedBoardRental: { price: 30, perPerson: true },
-  },
-  fixedItems: {
-    surfLessons: {
-      tier1_3: { price: 80, perPerson: true },
-      tier4_7: { price: 70, perPerson: true },
-      tier8plus: { price: 60, perPerson: true },
-    },
-    yogaLessons: { price: 40, perPerson: true },
-    surfSkate: { price: 35, perPerson: true },
-    videoAnalysis: { price: 50, perPerson: true },
-    massage: { price: 80, perPerson: true },
-    surfGuide: { price: 120, perPerson: true },
-    transfer: { price: 100, perReservation: true },
-    activities: {
-      hike: { price: 60, perPerson: true },
-      rioCityTour: { price: 80, perPerson: true },
-      cariocaExperience: { price: 100, perPerson: true },
-    },
-  },
-};
+// Todos os itens de cobrança disponíveis baseados no banco
+export const AVAILABLE_PRICING_ITEMS: PricingItem[] = [
+  // Itens diários/booleanos
+  { id: 'breakfast', name: 'Café da manhã', price: 25, billingType: 'per_person', category: 'boolean', dbColumn: 'breakfast' },
+  { id: 'aluguel_prancha', name: 'Aluguel prancha', price: 30, billingType: 'per_person', category: 'boolean', dbColumn: 'aluguel_de_prancha' },
+  { id: 'transfer', name: 'Transfer', price: 100, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer' },
+  { id: 'transfer_extra', name: 'Transfer extra', price: 100, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer_extra' },
+  { id: 'massagem_extra', name: 'Massagem extra', price: 80, billingType: 'per_person', category: 'boolean', dbColumn: 'massagem_extra' },
+  { id: 'rio_city_tour', name: 'Rio City Tour', price: 80, billingType: 'per_person', category: 'boolean', dbColumn: 'rio_city_tour' },
+  { id: 'carioca_experience', name: 'Carioca Experience', price: 100, billingType: 'per_person', category: 'boolean', dbColumn: 'carioca_experience' },
+  { id: 'hike_extra', name: 'Trilha extra', price: 60, billingType: 'per_person', category: 'boolean', dbColumn: 'hike_extra' },
+
+  // Itens numéricos (quantidade)
+  { id: 'aulas_de_surf', name: 'Aulas de surf', price: 80, billingType: 'per_person', category: 'fixed', dbColumn: 'aulas_de_surf' },
+  { id: 'aulas_de_yoga', name: 'Aulas de yoga', price: 40, billingType: 'per_person', category: 'fixed', dbColumn: 'aulas_de_yoga' },
+  { id: 'yoga', name: 'Yoga individual', price: 40, billingType: 'per_person', category: 'fixed', dbColumn: 'yoga' },
+  { id: 'skate', name: 'Surf-skate', price: 35, billingType: 'per_person', category: 'fixed', dbColumn: 'skate' },
+  { id: 'surf_guide', name: 'Surf guide', price: 120, billingType: 'per_person', category: 'fixed', dbColumn: 'surf_guide' },
+  { id: 'surf_guide_package', name: 'Surf guide (pacote)', price: 100, billingType: 'per_person', category: 'fixed', dbColumn: 'surf_guide_package' },
+  { id: 'analise_de_video', name: 'Análise de vídeo', price: 50, billingType: 'per_person', category: 'fixed', dbColumn: 'analise_de_video' },
+  { id: 'analise_de_video_package', name: 'Análise vídeo (pacote)', price: 40, billingType: 'per_person', category: 'fixed', dbColumn: 'analise_de_video_package' },
+  { id: 'massagem_package', name: 'Massagem (pacote)', price: 70, billingType: 'per_person', category: 'fixed', dbColumn: 'massagem_package' },
+  { id: 'transfer_package', name: 'Transfer (pacote)', price: 80, billingType: 'per_reservation', category: 'fixed', dbColumn: 'transfer_package' },
+];
 
 export const usePricingConfig = () => {
-  const [config, setConfig] = useState<PricingConfig>(() => {
-    const saved = localStorage.getItem('pricing-config');
-    return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+  const queryClient = useQueryClient();
+
+  // Buscar configuração ativa
+  const { data: config, isLoading, error } = useQuery({
+    queryKey: ['pricing-config'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('pricing_config')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) {
+        // Se não encontrar configuração ativa, buscar a primeira disponível
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('pricing_config')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (fallbackError) throw fallbackError;
+        return fallbackData;
+      }
+
+      return data;
+    },
   });
 
-  useEffect(() => {
-    localStorage.setItem('pricing-config', JSON.stringify(config));
-  }, [config]);
+  // Converter dados do banco para o formato esperado
+  const parsedConfig: PricingConfigData | null = config ? {
+    roomCategories: config.room_categories as any,
+    packages: config.packages as any,
+    items: config.items as any,
+  } : null;
 
-  const updateConfig = (newConfig: Partial<PricingConfig>) => {
-    setConfig(prev => ({ ...prev, ...newConfig }));
+  // Atualizar configuração
+  const updateConfigMutation = useMutation({
+    mutationFn: async (newConfig: PricingConfigData) => {
+      if (!config) {
+        // Criar nova configuração
+        const { data, error } = await supabase
+          .from('pricing_config')
+          .insert({
+            name: 'Configuração Atualizada',
+            description: 'Configuração de preços atualizada',
+            room_categories: newConfig.roomCategories,
+            packages: newConfig.packages,
+            items: newConfig.items,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } else {
+        // Atualizar configuração existente
+        const { data, error } = await supabase
+          .from('pricing_config')
+          .update({
+            room_categories: newConfig.roomCategories,
+            packages: newConfig.packages,
+            items: newConfig.items,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', config.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pricing-config'] });
+      toast.success('Configuração de preços atualizada com sucesso!');
+    },
+    onError: (error) => {
+      toast.error('Erro ao atualizar configuração: ' + error.message);
+    },
+  });
+
+  // Criar nova configuração
+  const createConfigMutation = useMutation({
+    mutationFn: async (configData: PricingConfigInsert) => {
+      const { data, error } = await supabase
+        .from('pricing_config')
+        .insert(configData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pricing-config'] });
+      toast.success('Nova configuração criada com sucesso!');
+    },
+    onError: (error) => {
+      toast.error('Erro ao criar configuração: ' + error.message);
+    },
+  });
+
+  // Funções wrapper para compatibilidade
+  const updateConfig = (newConfig: Partial<PricingConfigData>) => {
+    if (!parsedConfig) return;
+    
+    const updatedConfig = {
+      ...parsedConfig,
+      ...newConfig,
+    };
+    
+    updateConfigMutation.mutate(updatedConfig);
   };
 
   const resetToDefault = () => {
-    setConfig(DEFAULT_CONFIG);
+    // Implementar reset para configuração padrão se necessário
+    toast.info('Função de reset será implementada em breve');
   };
 
-  return { config, updateConfig, resetToDefault };
+  return {
+    config: parsedConfig,
+    isLoading,
+    error,
+    updateConfig,
+    resetToDefault,
+    // Expor mutations para controle mais fino
+    updateConfigMutation,
+    createConfigMutation,
+  };
 };

@@ -14,6 +14,7 @@ interface DroppableColumnProps {
   isEditing?: boolean;
   onStartEdit?: () => void;
   onCancelEdit?: () => void;
+  color?: string;
 }
 
 export const DroppableColumn = ({
@@ -23,7 +24,8 @@ export const DroppableColumn = ({
   onTitleEdit,
   isEditing,
   onStartEdit,
-  onCancelEdit
+  onCancelEdit,
+  color
 }: DroppableColumnProps) => {
   const { isOver, setNodeRef } = useDroppable({
     id,
@@ -48,6 +50,12 @@ export const DroppableColumn = ({
   return (
     <div className="space-y-3 sm:space-y-4 group">
       <div className="flex items-center gap-2">
+        {color && (
+          <div
+            className="w-3 h-3 rounded-full flex-shrink-0"
+            style={{ backgroundColor: color }}
+          />
+        )}
         {isEditing ? (
           <div className="flex items-center gap-1 flex-1">
             <Input

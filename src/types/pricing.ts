@@ -2,13 +2,14 @@ export interface RoomCategory {
   id: string;
   name: string; // ex: "Private: Double", "Shared: Mixed Standard"
   pricePerNight: number;
-  perPerson: boolean; // se cobra por pessoa ou por quarto
+  billingType: 'per_room' | 'per_person'; // como cobra: por quarto ou por pessoa
 }
 
 export interface PackageConfig {
   id: string;
   name: string;
   fixedPrice: number;
+  overridesIndividualPricing: boolean; // se true, substitui preços individuais; se false, soma com preços individuais
   includedItems: {
     breakfast?: boolean;
     unlimitedBoardRental?: boolean;
@@ -22,35 +23,20 @@ export interface PackageConfig {
   };
 }
 
+// Item dinâmico de cobrança
+export interface PricingItem {
+  id: string;
+  name: string;
+  price: number;
+  billingType: 'per_unit' | 'per_person' | 'per_room' | 'per_reservation' | 'per_day' | 'per_night' | 'boolean';
+  category: 'daily' | 'fixed' | 'boolean';
+  dbColumn?: string; // coluna correspondente no banco
+}
+
 export interface PricingConfig {
   roomCategories: RoomCategory[];
   packages: PackageConfig[];
-  
-  // Itens que multiplicam por dias e pessoas
-  dailyItems: {
-    breakfast: { price: number; perPerson: boolean };
-    unlimitedBoardRental: { price: number; perPerson: boolean };
-  };
-  
-  // Itens com valor fixo por unidade
-  fixedItems: {
-    surfLessons: {
-      tier1_3: { price: number; perPerson: boolean }; // 1-3 aulas
-      tier4_7: { price: number; perPerson: boolean }; // 4-7 aulas  
-      tier8plus: { price: number; perPerson: boolean }; // 8+ aulas
-    };
-    yogaLessons: { price: number; perPerson: boolean };
-    surfSkate: { price: number; perPerson: boolean };
-    videoAnalysis: { price: number; perPerson: boolean };
-    massage: { price: number; perPerson: boolean };
-    surfGuide: { price: number; perPerson: boolean };
-    transfer: { price: number; perReservation: boolean }; // por trecho/viagem
-    activities: {
-      hike: { price: number; perPerson: boolean };
-      rioCityTour: { price: number; perPerson: boolean };
-      cariocaExperience: { price: number; perPerson: boolean };
-    };
-  };
+  items: PricingItem[]; // todos os itens de cobrança
 }
 
 export interface CalculationInput {

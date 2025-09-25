@@ -41,8 +41,8 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
 
   return (
     <>
-      <Card className="cursor-pointer hover:shadow-sm transition-all duration-200 w-full" onClick={() => setIsModalOpen(true)}>
-        <CardContent className="p-3 sm:p-4 space-y-3">
+      <Card className="cursor-pointer hover:shadow-md hover:shadow-black/5 transition-all duration-200 w-full border border-border hover:border-border-hover bg-card" onClick={() => setIsModalOpen(true)}>
+        <CardContent className="p-3 space-y-3 overflow-hidden">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
@@ -57,59 +57,69 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
           )}
         </div>
 
-        <div className="space-y-2 text-xs text-muted-foreground">
+        <div className="space-y-2 text-xs text-muted-foreground overflow-hidden">
           {lead.email && (
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 overflow-hidden">
               <Mail className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate">{lead.email}</span>
+              <span className="truncate max-w-full">{lead.email}</span>
             </div>
           )}
 
           {lead.telefone && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0 overflow-hidden">
               <Phone className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate">{lead.telefone}</span>
+              <span className="truncate max-w-full">{lead.telefone}</span>
             </div>
           )}
 
           {lead.number_of_people && (
             <div className="flex items-center gap-2">
               <Users className="w-3 h-3 flex-shrink-0" />
-              <span>{lead.number_of_people} pessoas</span>
+              <span className="truncate">{lead.number_of_people} pessoas</span>
             </div>
           )}
 
           {lead.tipo_de_quarto && (
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 overflow-hidden">
               <Home className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate">{lead.tipo_de_quarto}</span>
+              <span className="truncate max-w-full">{lead.tipo_de_quarto}</span>
             </div>
           )}
 
-          {lead.check_in_start && lead.check_in_end && (
-            <div className="flex items-center gap-2">
+          {(lead.check_in_start || lead.check_in_end) && (
+            <div className="flex items-center gap-2 min-w-0 overflow-hidden">
               <Calendar className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate">
-                {format(new Date(lead.check_in_start), "dd/MM", { locale: ptBR })} -
-                {format(new Date(lead.check_in_end), "dd/MM", { locale: ptBR })}
+              <span className="truncate max-w-full">
+                {(() => {
+                  try {
+                    if (lead.check_in_start) {
+                      const startDate = format(new Date(lead.check_in_start), "dd/MM", { locale: ptBR });
+                      const endDate = lead.check_in_end ? format(new Date(lead.check_in_end), "dd/MM", { locale: ptBR }) : startDate;
+                      return `${startDate} - ${endDate}`;
+                    }
+                  } catch (e) {
+                    return "Datas inválidas";
+                  }
+                  return "Sem data";
+                })()}
               </span>
             </div>
           )}
         </div>
 
         {lead.pacote && (
-          <div className="pt-2 border-t border-border">
-            <span className="text-xs font-medium text-foreground block truncate">
+          <div className="pt-2 border-t border-border overflow-hidden">
+            <span className="text-xs font-medium text-foreground block truncate max-w-full">
               {lead.pacote}
             </span>
           </div>
         )}
 
-        <div className="pt-2 border-t border-border">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
+        <div className="pt-2 border-t border-border overflow-hidden">
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 overflow-hidden flex-1">
               <DollarSign className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-              <span className="text-xs font-medium text-foreground truncate">
+              <span className="text-xs font-medium text-foreground truncate max-w-full">
                 {displayPrice}
               </span>
             </div>

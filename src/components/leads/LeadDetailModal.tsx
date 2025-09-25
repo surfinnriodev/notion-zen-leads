@@ -3,12 +3,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { LeadWithCalculation, calculateLeadPrice, getLeadDisplayPrice } from "@/types/leads";
 import { usePricingConfig } from "@/hooks/usePricingConfig";
+import { useMessageTemplates } from "@/hooks/useMessageTemplates";
+import { processTemplate } from "@/utils/messageProcessor";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { DollarSign, Save } from "lucide-react";
+import { DollarSign, Save, MessageCircle, User, Send, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 interface LeadDetailModalProps {
@@ -27,9 +30,14 @@ interface LeadDetailModalProps {
 
 export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps) => {
   const { config } = usePricingConfig();
+  const { templates } = useMessageTemplates();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<LeadWithCalculation>>({});
   const [calculatedLead, setCalculatedLead] = useState<LeadWithCalculation | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [messageContent, setMessageContent] = useState("");
+  const [messageSubject, setMessageSubject] = useState("");
+  const [customMessage, setCustomMessage] = useState("");
 
   // Inicializar formData quando o lead muda
   useEffect(() => {
@@ -42,6 +50,12 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
 
       setFormData(lead);
       setCalculatedLead(calculateLeadPrice(lead, config));
+
+      // Reset message states when lead changes
+      setSelectedTemplate("");
+      setMessageContent("");
+      setMessageSubject("");
+      setCustomMessage("");
     }
   }, [lead, config]);
 
@@ -85,6 +99,31 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
     updateMutation.mutate(formData);
   };
 
+  const handleTemplateSelect = (templateId: string) => {
+    console.log("🎯 Template selected:", templateId);
+    setSelectedTemplate(templateId);
+    const template = templates.find(t => t.id === templateId);
+    console.log("📝 Found template:", template);
+    if (template && calculatedLead) {
+      console.log("🔄 Processing template with lead:", calculatedLead);
+      const processed = processTemplate(template, calculatedLead);
+      console.log("✅ Processed message:", processed);
+      setMessageSubject(processed.subject);
+      setMessageContent(processed.content);
+    }
+  };
+
+  const handleCopyMessage = () => {
+    const fullMessage = `Assunto: ${messageSubject}\n\n${messageContent}`;
+    navigator.clipboard.writeText(fullMessage);
+    toast.success("Mensagem copiada para a área de transferência!");
+  };
+
+  const handleSendMessage = () => {
+    // Aqui futuramente poderia integrar com WhatsApp API ou email
+    toast.info("Funcionalidade de envio será implementada em breve!");
+  };
+
   if (!lead) return null;
 
   const statusOptions = [
@@ -99,7 +138,7 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Detalhes do Lead: {lead.name || "Lead sem nome"}
@@ -107,7 +146,20 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Tabs defaultValue="details" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details" className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Detalhes
+            </TabsTrigger>
+            <TabsTrigger value="messages" className="flex items-center gap-2">
+              <MessageCircle className="w-4 h-4" />
+              Mensagens
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="details">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Informações Básicas */}
           <div className="space-y-4">
             <h3 className="font-medium text-lg">Informações Básicas</h3>
@@ -357,6 +409,134 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
             {updateMutation.isPending ? "Salvando..." : "Salvar"}
           </Button>
         </div>
+          </TabsContent>
+
+          <TabsContent value="messages" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Seleção de Template */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-lg">Enviar Mensagem</h3>
+
+                <div>
+                  <Label htmlFor="template">Escolher Template</Label>
+                  <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um template ou escreva sua própria mensagem" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templates.map((template) => (
+                        <SelectItem key={template.id} value={template.id}>
+                          {template.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedTemplate && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="messageSubject">Assunto</Label>
+                      <Input
+                        id="messageSubject"
+                        value={messageSubject}
+                        onChange={(e) => setMessageSubject(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="messageContent">Mensagem</Label>
+                      <Textarea
+                        id="messageContent"
+                        value={messageContent}
+                        onChange={(e) => setMessageContent(e.target.value)}
+                        rows={10}
+                        className="min-h-[200px]"
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleCopyMessage}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <Copy className="w-4 h-4" />
+                        Copiar
+                      </Button>
+                      <Button
+                        onClick={handleSendMessage}
+                        className="flex items-center gap-2"
+                      >
+                        <Send className="w-4 h-4" />
+                        Enviar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <Separator />
+
+                <div>
+                  <Label htmlFor="customMessage">Ou escreva uma mensagem personalizada</Label>
+                  <Textarea
+                    id="customMessage"
+                    value={customMessage}
+                    onChange={(e) => setCustomMessage(e.target.value)}
+                    placeholder="Digite sua mensagem aqui..."
+                    rows={6}
+                  />
+                  {customMessage && (
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        onClick={() => {
+                          navigator.clipboard.writeText(customMessage);
+                          toast.success("Mensagem copiada!");
+                        }}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <Copy className="w-4 h-4" />
+                        Copiar
+                      </Button>
+                      <Button
+                        onClick={handleSendMessage}
+                        className="flex items-center gap-2"
+                      >
+                        <Send className="w-4 h-4" />
+                        Enviar
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Informações do Lead para Referência */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-lg">Informações do Lead</h3>
+                <div className="p-4 bg-gray-50 rounded-lg space-y-2 text-sm">
+                  <div><strong>Nome:</strong> {lead.name || "N/A"}</div>
+                  <div><strong>Email:</strong> {lead.email || "N/A"}</div>
+                  <div><strong>Telefone:</strong> {lead.telefone || "N/A"}</div>
+                  <div><strong>Check-in:</strong> {lead.check_in_start ? new Date(lead.check_in_start).toLocaleDateString('pt-BR') : "N/A"}</div>
+                  <div><strong>Check-out:</strong> {lead.check_in_end ? new Date(lead.check_in_end).toLocaleDateString('pt-BR') : "N/A"}</div>
+                  <div><strong>Pessoas:</strong> {lead.number_of_people || 0}</div>
+                  <div><strong>Quarto:</strong> {lead.tipo_de_quarto || "N/A"}</div>
+                  <div><strong>Pacote:</strong> {lead.pacote || "Sem pacote"}</div>
+                  <div><strong>Preço Total:</strong> {calculatedLead ? getLeadDisplayPrice(calculatedLead) : "Calculando..."}</div>
+                </div>
+
+                {templates.length === 0 && (
+                  <div className="p-4 border rounded-lg text-center text-muted-foreground">
+                    <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Nenhum template disponível</p>
+                    <p className="text-xs">Crie templates na seção Mensagens</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

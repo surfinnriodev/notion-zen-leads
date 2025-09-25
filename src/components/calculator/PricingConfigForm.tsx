@@ -1,12 +1,13 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { PricingConfig, RoomCategory, PackageConfig } from "@/types/pricing";
-import { Trash2, Plus, RotateCcw } from "lucide-react";
+import { PricingConfig, RoomCategory, PackageConfig, PricingItem } from "@/types/pricing";
+import { AVAILABLE_PRICING_ITEMS } from "@/hooks/usePricingConfig";
+import { X, Plus, RotateCcw } from "lucide-react";
 
 interface PricingConfigFormProps {
   config: PricingConfig;
@@ -17,6 +18,14 @@ interface PricingConfigFormProps {
 export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingConfigFormProps) => {
   const [editingRoom, setEditingRoom] = useState<RoomCategory | null>(null);
   const [editingPackage, setEditingPackage] = useState<PackageConfig | null>(null);
+  const [availableItems, setAvailableItems] = useState<PricingItem[]>([]);
+
+  // Atualizar itens disponíveis quando config muda
+  React.useEffect(() => {
+    setAvailableItems(
+      AVAILABLE_PRICING_ITEMS.filter(item => !(config.items || []).find(configItem => configItem.id === item.id))
+    );
+  }, [config.items]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -51,60 +60,83 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
     });
   };
 
-  const updateDailyItem = (item: 'breakfast' | 'unlimitedBoardRental', field: 'price' | 'perPerson', value: any) => {
+  // Funções para gerenciar itens dinâmicos
+  const addItemFromAvailable = (availableItem: PricingItem) => {
+    const newItem = { ...availableItem };
     onUpdateConfig({
-      dailyItems: {
-        ...config.dailyItems,
-        [item]: {
-          ...config.dailyItems[item],
-          [field]: value,
-        },
-      },
+      items: [...(config.items || []), newItem],
+    });
+    setAvailableItems(prev => prev.filter(item => item.id !== availableItem.id));
+  };
+
+  const addCustomItem = () => {
+    const newItem: PricingItem = {
+      id: `custom-${Date.now()}`,
+      name: "Novo item personalizado",
+      price: 0,
+      billingType: 'per_unit',
+      category: 'fixed',
+    };
+    onUpdateConfig({
+      items: [...(config.items || []), newItem],
     });
   };
 
-  const updateFixedItem = (category: string, item: string, field: string, value: any) => {
-    if (category) {
-      onUpdateConfig({
-        fixedItems: {
-          ...config.fixedItems,
-          [category]: {
-            ...config.fixedItems[category as keyof typeof config.fixedItems],
-            [item]: {
-              ...(config.fixedItems[category as keyof typeof config.fixedItems] as any)[item],
-              [field]: value,
-            },
-          },
-        },
-      });
-    } else {
-      onUpdateConfig({
-        fixedItems: {
-          ...config.fixedItems,
-          [item]: {
-            ...(config.fixedItems as any)[item],
-            [field]: value,
-          },
-        },
-      });
+  const updateItem = (itemId: string, updates: Partial<PricingItem>) => {
+    onUpdateConfig({
+      items: (config.items || []).map(item =>
+        item.id === itemId ? { ...item, ...updates } : item
+      ),
+    });
+  };
+
+  const removeItem = (itemId: string) => {
+    const removedItem = (config.items || []).find(item => item.id === itemId);
+    onUpdateConfig({
+      items: (config.items || []).filter(item => item.id !== itemId),
+    });
+    // Volta para itens disponíveis se for um item predefinido
+    if (removedItem && AVAILABLE_PRICING_ITEMS.find(item => item.id === removedItem.id)) {
+      setAvailableItems(prev => [...prev, AVAILABLE_PRICING_ITEMS.find(item => item.id === removedItem.id)!]);
     }
   };
 
+  // Funções para gerenciar pacotes
+  const addPackage = () => {
+    const newPackage: PackageConfig = {
+      id: `package-${Date.now()}`,
+      name: "Novo Pacote",
+      fixedPrice: 0,
+      overridesIndividualPricing: true,
+      includedItems: {},
+    };
+    onUpdateConfig({
+      packages: [...config.packages, newPackage],
+    });
+  };
+
+  const updatePackage = (packageId: string, updates: Partial<PackageConfig>) => {
+    onUpdateConfig({
+      packages: config.packages.map(pkg =>
+        pkg.id === packageId ? { ...pkg, ...updates } : pkg
+      ),
+    });
+  };
+
+  const removePackage = (packageId: string) => {
+    onUpdateConfig({
+      packages: config.packages.filter(pkg => pkg.id !== packageId),
+    });
+  };
+
+
   return (
     <div className="space-y-6">
-      {/* Reset Button */}
-      <div className="flex justify-end">
-        <Button variant="outline" onClick={onReset} className="gap-2">
-          <RotateCcw className="w-4 h-4" />
-          Restaurar Padrões
-        </Button>
-      </div>
-
       {/* Categorias de Quarto */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Categorias de Quartos</CardTitle>
-          <Button size="sm" onClick={addRoom} className="gap-2">
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-base font-medium">Categorias de Quartos</CardTitle>
+          <Button size="sm" variant="ghost" onClick={addRoom} className="gap-2 text-muted-foreground hover:text-foreground">
             <Plus className="w-4 h-4" />
             Adicionar
           </Button>
@@ -128,201 +160,210 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                     onChange={(e) => updateRoom(room.id, { pricePerNight: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={room.perPerson}
-                    onCheckedChange={(checked) => updateRoom(room.id, { perPerson: checked })}
-                  />
-                  <Label>Por pessoa</Label>
+                <div>
+                  <Label>Tipo de cobrança</Label>
+                  <Select
+                    value={room.billingType}
+                    onValueChange={(value: any) => updateRoom(room.id, { billingType: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="per_room">Por quarto</SelectItem>
+                      <SelectItem value="per_person">Por pessoa</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <Button
                 size="sm"
-                variant="destructive"
+                variant="ghost"
                 onClick={() => removeRoom(room.id)}
+                className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 transition-colors"
               >
-                <Trash2 className="w-4 h-4" />
+                <X className="w-4 h-4" />
               </Button>
             </div>
           ))}
         </CardContent>
       </Card>
 
-      {/* Itens Diários */}
+      {/* Pacotes */}
       <Card>
-        <CardHeader>
-          <CardTitle>Itens que multiplicam por dias</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-base font-medium">Pacotes</CardTitle>
+          <Button size="sm" variant="ghost" onClick={addPackage} className="gap-2 text-muted-foreground hover:text-foreground">
+            <Plus className="w-4 h-4" />
+            Adicionar
+          </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label>Café da manhã</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  value={config.dailyItems.breakfast.price}
-                  onChange={(e) => updateDailyItem('breakfast', 'price', parseFloat(e.target.value) || 0)}
-                />
-                <Switch
-                  checked={config.dailyItems.breakfast.perPerson}
-                  onCheckedChange={(checked) => updateDailyItem('breakfast', 'perPerson', checked)}
-                />
-                <Label>Por pessoa</Label>
+          {config.packages.map((pkg) => (
+            <div key={pkg.id} className="flex items-center gap-4 p-4 border rounded-lg">
+              <div className="flex-1 grid grid-cols-4 gap-4">
+                <div>
+                  <Label>Nome do pacote</Label>
+                  <Input
+                    value={pkg.name}
+                    onChange={(e) => updatePackage(pkg.id, { name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Preço total</Label>
+                  <Input
+                    type="number"
+                    value={pkg.fixedPrice}
+                    onChange={(e) => updatePackage(pkg.id, { fixedPrice: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div>
+                  <Label>Comportamento</Label>
+                  <Select
+                    value={pkg.overridesIndividualPricing ? "override" : "add"}
+                    onValueChange={(value) => updatePackage(pkg.id, { overridesIndividualPricing: value === "override" })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="override">Substitui preços individuais</SelectItem>
+                      <SelectItem value="add">Soma com preços individuais</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end">
+                  <div className="text-xs text-muted-foreground">
+                    {pkg.overridesIndividualPricing
+                      ? "Preço fixo total do pacote"
+                      : "Preço adicional + itens individuais"}
+                  </div>
+                </div>
               </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => removePackage(pkg.id)}
+                className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
-            
-            <div className="space-y-2">
-              <Label>Aluguel prancha ilimitado</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  value={config.dailyItems.unlimitedBoardRental.price}
-                  onChange={(e) => updateDailyItem('unlimitedBoardRental', 'price', parseFloat(e.target.value) || 0)}
-                />
-                <Switch
-                  checked={config.dailyItems.unlimitedBoardRental.perPerson}
-                  onCheckedChange={(checked) => updateDailyItem('unlimitedBoardRental', 'perPerson', checked)}
-                />
-                <Label>Por pessoa</Label>
-              </div>
+          ))}
+          {config.packages.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-sm">Nenhum pacote configurado</p>
+              <p className="text-xs mt-1">Use o botão acima para criar pacotes personalizados</p>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Itens Fixos */}
+      {/* Itens de Cobrança */}
       <Card>
-        <CardHeader>
-          <CardTitle>Itens com valor fixo (por unidade)</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-base font-medium">Itens de Cobrança</CardTitle>
+          <div className="flex gap-2">
+            {availableItems.length > 0 && (
+              <Select onValueChange={(value) => {
+                const item = availableItems.find(i => i.id === value);
+                if (item) addItemFromAvailable(item);
+              }}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Do banco de dados..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableItems.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={addCustomItem}
+              className="gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <Plus className="w-4 h-4" />
+              Adicionar
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Aulas de Surf com Faixas */}
-          <div>
-            <h4 className="font-medium mb-3">Aulas de Surf (por faixas)</h4>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>1-3 aulas</Label>
-                <div className="flex items-center gap-2">
+        <CardContent className="space-y-4">
+          {(config.items || []).map((item) => (
+            <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
+              <div className="flex-1 grid grid-cols-4 gap-4">
+                <div>
+                  <Label>Nome do item</Label>
                   <Input
-                    type="number"
-                    value={config.fixedItems.surfLessons.tier1_3.price}
-                    onChange={(e) => updateFixedItem('surfLessons', 'tier1_3', 'price', parseFloat(e.target.value) || 0)}
-                  />
-                  <Switch
-                    checked={config.fixedItems.surfLessons.tier1_3.perPerson}
-                    onCheckedChange={(checked) => updateFixedItem('surfLessons', 'tier1_3', 'perPerson', checked)}
+                    value={item.name}
+                    onChange={(e) => updateItem(item.id, { name: e.target.value })}
                   />
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>4-7 aulas</Label>
-                <div className="flex items-center gap-2">
+                <div>
+                  <Label>Preço</Label>
                   <Input
                     type="number"
-                    value={config.fixedItems.surfLessons.tier4_7.price}
-                    onChange={(e) => updateFixedItem('surfLessons', 'tier4_7', 'price', parseFloat(e.target.value) || 0)}
-                  />
-                  <Switch
-                    checked={config.fixedItems.surfLessons.tier4_7.perPerson}
-                    onCheckedChange={(checked) => updateFixedItem('surfLessons', 'tier4_7', 'perPerson', checked)}
+                    value={item.price}
+                    onChange={(e) => updateItem(item.id, { price: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>8+ aulas</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    value={config.fixedItems.surfLessons.tier8plus.price}
-                    onChange={(e) => updateFixedItem('surfLessons', 'tier8plus', 'price', parseFloat(e.target.value) || 0)}
-                  />
-                  <Switch
-                    checked={config.fixedItems.surfLessons.tier8plus.perPerson}
-                    onCheckedChange={(checked) => updateFixedItem('surfLessons', 'tier8plus', 'perPerson', checked)}
-                  />
+                <div>
+                  <Label>Tipo de cobrança</Label>
+                  <Select
+                    value={item.billingType}
+                    onValueChange={(value: any) => updateItem(item.id, { billingType: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="per_unit">Por unidade</SelectItem>
+                      <SelectItem value="per_person">Por pessoa</SelectItem>
+                      <SelectItem value="per_room">Por quarto</SelectItem>
+                      <SelectItem value="per_reservation">Por reserva</SelectItem>
+                      <SelectItem value="per_day">Por dia</SelectItem>
+                      <SelectItem value="per_night">Por noite</SelectItem>
+                      <SelectItem value="boolean">Sim/Não</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Categoria</Label>
+                  <Select
+                    value={item.category}
+                    onValueChange={(value: any) => updateItem(item.id, { category: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fixed">Quantidade fixa</SelectItem>
+                      <SelectItem value="daily">Multiplica por dias</SelectItem>
+                      <SelectItem value="boolean">Opcional (Sim/Não)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => removeItem(item.id)}
+                className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
-          </div>
-
-          <Separator />
-
-          {/* Outros Itens Fixos */}
-          <div className="grid grid-cols-2 gap-6">
-            {Object.entries({
-              yogaLessons: 'Aulas de yoga',
-              surfSkate: 'Surf-skate',
-              videoAnalysis: 'Análise de vídeo',
-              massage: 'Massagem',
-              surfGuide: 'Surf guide',
-            }).map(([key, label]) => (
-              <div key={key} className="space-y-2">
-                <Label>{label}</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    value={(config.fixedItems as any)[key].price}
-                    onChange={(e) => updateFixedItem('', key, 'price', parseFloat(e.target.value) || 0)}
-                  />
-                  <Switch
-                    checked={(config.fixedItems as any)[key].perPerson}
-                    onCheckedChange={(checked) => updateFixedItem('', key, 'perPerson', checked)}
-                  />
-                  <Label className="text-xs">Por pessoa</Label>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <Separator />
-
-          {/* Transfer */}
-          <div className="space-y-2">
-            <Label>Transfer (por trecho/reserva)</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                value={config.fixedItems.transfer.price}
-                onChange={(e) => updateFixedItem('', 'transfer', 'price', parseFloat(e.target.value) || 0)}
-              />
-              <Switch
-                checked={config.fixedItems.transfer.perReservation}
-                onCheckedChange={(checked) => updateFixedItem('', 'transfer', 'perReservation', checked)}
-              />
-              <Label className="text-xs">Por reserva</Label>
+          ))}
+          {(!config.items || config.items.length === 0) && (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-sm">Nenhum item de cobrança configurado</p>
+              <p className="text-xs mt-1">Use o seletor acima para adicionar itens do banco de dados</p>
             </div>
-          </div>
-
-          <Separator />
-
-          {/* Atividades */}
-          <div>
-            <h4 className="font-medium mb-3">Atividades</h4>
-            <div className="grid grid-cols-3 gap-4">
-              {Object.entries({
-                hike: 'Trilha',
-                rioCityTour: 'Rio City Tour',
-                cariocaExperience: 'Carioca Experience',
-              }).map(([key, label]) => (
-                <div key={key} className="space-y-2">
-                  <Label>{label}</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      value={(config.fixedItems.activities as any)[key].price}
-                      onChange={(e) => updateFixedItem('activities', key, 'price', parseFloat(e.target.value) || 0)}
-                    />
-                    <Switch
-                      checked={(config.fixedItems.activities as any)[key].perPerson}
-                      onCheckedChange={(checked) => updateFixedItem('activities', key, 'perPerson', checked)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
