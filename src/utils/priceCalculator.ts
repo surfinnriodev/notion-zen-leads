@@ -67,7 +67,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
 
   // Aluguel de prancha ilimitado
   if (input.unlimitedBoardRental && !packageIncludes.unlimitedBoardRental) {
-    const boardItem = config.items.find(item => item.id === 'aluguel_prancha');
+    const boardItem = config.items.find(item => item.id === 'unlimited-board-rental');
     if (boardItem) {
       const cost = boardItem.price * numberOfNights * (boardItem.billingType === 'per_person' ? numberOfPeople : 1);
       result.dailyItemsCost += cost;
@@ -88,7 +88,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     const extraLessons = Math.max(0, input.surfLessons - includedLessons);
     
     if (extraLessons > 0) {
-      const surfItem = config.items.find(item => item.id === 'aulas_de_surf');
+      const surfItem = config.items.find(item => item.id === 'surf-lesson');
       if (surfItem) {
         const cost = surfItem.price * extraLessons * (surfItem.billingType === 'per_person' ? numberOfPeople : 1);
         result.fixedItemsCost += cost;
@@ -133,11 +133,11 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   };
 
   // Aplicar para outros itens fixos
-  addFixedItem(input.yogaLessons, packageIncludes.yogaLessons, 'aulas_de_yoga', 'Aulas de yoga');
-  addFixedItem(input.surfSkate, packageIncludes.surfSkate, 'skate', 'Surf-skate');
-  addFixedItem(input.videoAnalysis, packageIncludes.videoAnalysis, 'analise_de_video', 'Análise de vídeo');
-  addFixedItem(input.massage, packageIncludes.massage, 'massagem_extra', 'Massagem');
-  addFixedItem(input.surfGuide, packageIncludes.surfGuide, 'surf_guide', 'Surf guide');
+  addFixedItem(input.yogaLessons, packageIncludes.yogaLessons, 'yoga-lesson', 'Aulas de yoga');
+  addFixedItem(input.surfSkate, packageIncludes.surfSkate, 'surf-skate', 'Surf-skate');
+  addFixedItem(input.videoAnalysis, packageIncludes.videoAnalysis, 'video-analysis', 'Análise de vídeo');
+  addFixedItem(input.massage, packageIncludes.massage, 'massage', 'Massagem');
+  addFixedItem(input.surfGuide, packageIncludes.surfGuide, 'surf-guide', 'Surf guide');
 
   // Transfer (por reserva)
   if (input.transfer) {
@@ -159,9 +159,9 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
 
   // Atividades
   const activities = [
-    { key: 'hike', name: 'Trilha', value: input.hike, itemId: 'hike_extra' },
-    { key: 'rioCityTour', name: 'Rio City Tour', value: input.rioCityTour, itemId: 'rio_city_tour' },
-    { key: 'cariocaExperience', name: 'Carioca Experience', value: input.cariocaExperience, itemId: 'carioca_experience' },
+    { key: 'hike', name: 'Trilha', value: input.hike, itemId: 'hike' },
+    { key: 'rioCityTour', name: 'Rio City Tour', value: input.rioCityTour, itemId: 'rio-city-tour' },
+    { key: 'cariocaExperience', name: 'Carioca Experience', value: input.cariocaExperience, itemId: 'carioca-experience' },
   ];
 
   activities.forEach(activity => {
