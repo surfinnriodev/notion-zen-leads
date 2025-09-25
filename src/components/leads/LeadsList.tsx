@@ -123,20 +123,32 @@ export const LeadsList = () => {
 
       switch (sortConfig.field) {
         case 'name':
-          aValue = a.name || a.nome || '';
-          bValue = b.name || b.nome || '';
+          aValue = (a.name || a.nome || '').toLowerCase();
+          bValue = (b.name || b.nome || '').toLowerCase();
+          break;
+        case 'email':
+          aValue = (a.email || '').toLowerCase();
+          bValue = (b.email || '').toLowerCase();
           break;
         case 'status':
-          aValue = a.status || '';
-          bValue = b.status || '';
+          aValue = (a.status || '').toLowerCase();
+          bValue = (b.status || '').toLowerCase();
           break;
         case 'created':
           aValue = new Date(a.created_at || 0).getTime();
           bValue = new Date(b.created_at || 0).getTime();
           break;
+        case 'checkin':
+          aValue = new Date(a.check_in_start || 0).getTime();
+          bValue = new Date(b.check_in_start || 0).getTime();
+          break;
         case 'price':
           aValue = a.totalPrice || 0;
           bValue = b.totalPrice || 0;
+          break;
+        case 'people':
+          aValue = a.number_of_people || 0;
+          bValue = b.number_of_people || 0;
           break;
         default:
           return 0;

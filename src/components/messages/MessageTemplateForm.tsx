@@ -4,13 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageTemplate, AVAILABLE_VARIABLES } from "@/types/messages";
+import { MessageTemplate } from "@/types/database";
+import { AVAILABLE_VARIABLES } from "@/types/messages";
 import { extractVariablesFromText } from "@/utils/messageProcessor";
 import { X, Plus } from "lucide-react";
 
 interface MessageTemplateFormProps {
   template?: MessageTemplate | null;
-  onSave: (template: Omit<MessageTemplate, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onSave: (template: Omit<MessageTemplate, 'id' | 'created_at' | 'updated_at'>) => void;
   onCancel: () => void;
 }
 

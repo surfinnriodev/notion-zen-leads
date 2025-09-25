@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageCircle, Settings, Plus, Edit, Trash2, Eye } from "lucide-react";
 import { useMessageTemplates } from "@/hooks/useMessageTemplates";
-import { MessageTemplate } from "@/types/messages";
+import { MessageTemplate } from "@/types/database";
 import { MessageTemplateForm } from "@/components/messages/MessageTemplateForm";
 import { MessagePreviewDialog } from "@/components/messages/MessagePreviewDialog";
 
@@ -14,7 +14,7 @@ const Messages = () => {
   const [showTemplateForm, setShowTemplateForm] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<MessageTemplate | null>(null);
 
-  const handleSaveTemplate = (templateData: Omit<MessageTemplate, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const handleSaveTemplate = (templateData: Omit<MessageTemplate, 'id' | 'created_at' | 'updated_at'>) => {
     if (editingTemplate) {
       updateTemplate(editingTemplate.id, templateData);
       setEditingTemplate(null);
@@ -91,7 +91,7 @@ const Messages = () => {
                           Assunto: {template.subject}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {template.variables.length} variáveis: {template.variables.join(', ')}
+                          {template.variables?.length || 0} variáveis: {template.variables?.join(', ') || 'Nenhuma'}
                         </p>
                       </div>
                       <div className="flex gap-2">

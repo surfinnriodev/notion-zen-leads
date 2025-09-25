@@ -247,8 +247,14 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
                   id="number_of_people"
                   type="number"
                   min="1"
+                  step="1"
+                  className="w-full"
                   value={formData.number_of_people || 1}
-                  onChange={(e) => handleInputChange("number_of_people", parseInt(e.target.value) || 1)}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 1 : parseInt(e.target.value) || 1;
+                    handleInputChange("number_of_people", value);
+                  }}
+                  onFocus={(e) => e.target.select()}
                 />
               </div>
 
@@ -304,8 +310,14 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
                   id="aulas_de_surf"
                   type="number"
                   min="0"
+                  step="1"
+                  className="w-full"
                   value={formData.aulas_de_surf || 0}
-                  onChange={(e) => handleInputChange("aulas_de_surf", parseInt(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                    handleInputChange("aulas_de_surf", value);
+                  }}
+                  onFocus={(e) => e.target.select()}
                 />
               </div>
 
@@ -315,8 +327,14 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
                   id="aulas_de_yoga"
                   type="number"
                   min="0"
+                  step="1"
+                  className="w-full"
                   value={formData.aulas_de_yoga || 0}
-                  onChange={(e) => handleInputChange("aulas_de_yoga", parseInt(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                    handleInputChange("aulas_de_yoga", value);
+                  }}
+                  onFocus={(e) => e.target.select()}
                 />
               </div>
             </div>
@@ -328,8 +346,14 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
                   id="skate"
                   type="number"
                   min="0"
+                  step="1"
+                  className="w-full"
                   value={formData.skate || 0}
-                  onChange={(e) => handleInputChange("skate", parseInt(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                    handleInputChange("skate", value);
+                  }}
+                  onFocus={(e) => e.target.select()}
                 />
               </div>
 
@@ -339,8 +363,14 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
                   id="analise_de_video_extra"
                   type="number"
                   min="0"
+                  step="1"
+                  className="w-full"
                   value={formData.analise_de_video_extra || 0}
-                  onChange={(e) => handleInputChange("analise_de_video_extra", parseInt(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                    handleInputChange("analise_de_video_extra", value);
+                  }}
+                  onFocus={(e) => e.target.select()}
                 />
               </div>
             </div>
@@ -352,8 +382,14 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
                   id="massagem_extra"
                   type="number"
                   min="0"
+                  step="1"
+                  className="w-full"
                   value={formData.massagem_extra || 0}
-                  onChange={(e) => handleInputChange("massagem_extra", parseInt(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                    handleInputChange("massagem_extra", value);
+                  }}
+                  onFocus={(e) => e.target.select()}
                 />
               </div>
 
@@ -363,8 +399,14 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
                   id="transfer_extra"
                   type="number"
                   min="0"
+                  step="1"
+                  className="w-full"
                   value={formData.transfer_extra || 0}
-                  onChange={(e) => handleInputChange("transfer_extra", parseInt(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                    handleInputChange("transfer_extra", value);
+                  }}
+                  onFocus={(e) => e.target.select()}
                 />
               </div>
             </div>

@@ -376,13 +376,19 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="number_of_people">Número de Pessoas *</Label>
-                  <Input
-                    id="number_of_people"
-                    type="number"
-                    min="1"
-                    value={formData.number_of_people || 1}
-                    onChange={(e) => handleInputChange("number_of_people", parseInt(e.target.value) || 1)}
-                  />
+                    <Input
+                      id="number_of_people"
+                      type="number"
+                      min="1"
+                      step="1"
+                      className="w-full"
+                      value={formData.number_of_people || 1}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 1 : parseInt(e.target.value) || 1;
+                        handleInputChange("number_of_people", value);
+                      }}
+                      onFocus={(e) => e.target.select()}
+                    />
                 </div>
               </div>
 
@@ -477,35 +483,53 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="aulas_de_surf">Aulas de Surf</Label>
-                  <Input
-                    id="aulas_de_surf"
-                    type="number"
-                    min="0"
-                    value={formData.aulas_de_surf || 0}
-                    onChange={(e) => handleInputChange("aulas_de_surf", parseInt(e.target.value) || 0)}
-                  />
+                    <Input
+                      id="aulas_de_surf"
+                      type="number"
+                      min="0"
+                      step="1"
+                      className="w-full"
+                      value={formData.aulas_de_surf || 0}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                        handleInputChange("aulas_de_surf", value);
+                      }}
+                      onFocus={(e) => e.target.select()}
+                    />
                 </div>
 
                 <div>
                   <Label htmlFor="skate">Surf-Skate (sessões)</Label>
-                  <Input
-                    id="skate"
-                    type="number"
-                    min="0"
-                    value={formData.skate || 0}
-                    onChange={(e) => handleInputChange("skate", parseInt(e.target.value) || 0)}
-                  />
+                    <Input
+                      id="skate"
+                      type="number"
+                      min="0"
+                      step="1"
+                      className="w-full"
+                      value={formData.skate || 0}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                        handleInputChange("skate", value);
+                      }}
+                      onFocus={(e) => e.target.select()}
+                    />
                 </div>
 
                 <div>
                   <Label htmlFor="surf_guide_package">Surf Guide (dias)</Label>
-                  <Input
-                    id="surf_guide_package"
-                    type="number"
-                    min="0"
-                    value={formData.surf_guide_package || 0}
-                    onChange={(e) => handleInputChange("surf_guide_package", parseInt(e.target.value) || 0)}
-                  />
+                    <Input
+                      id="surf_guide_package"
+                      type="number"
+                      min="0"
+                      step="1"
+                      className="w-full"
+                      value={formData.surf_guide_package || 0}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                        handleInputChange("surf_guide_package", value);
+                      }}
+                      onFocus={(e) => e.target.select()}
+                    />
                 </div>
               </div>
 
@@ -515,13 +539,19 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="aulas_de_yoga">Aulas de Yoga</Label>
-                  <Input
-                    id="aulas_de_yoga"
-                    type="number"
-                    min="0"
-                    value={formData.aulas_de_yoga || 0}
-                    onChange={(e) => handleInputChange("aulas_de_yoga", parseInt(e.target.value) || 0)}
-                  />
+                    <Input
+                      id="aulas_de_yoga"
+                      type="number"
+                      min="0"
+                      step="1"
+                      className="w-full"
+                      value={formData.aulas_de_yoga || 0}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                        handleInputChange("aulas_de_yoga", value);
+                      }}
+                      onFocus={(e) => e.target.select()}
+                    />
                 </div>
 
                 <div>
@@ -542,13 +572,19 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="massagem_package">Massagens (Pacote)</Label>
-                  <Input
-                    id="massagem_package"
-                    type="number"
-                    min="0"
-                    value={formData.massagem_package || 0}
-                    onChange={(e) => handleInputChange("massagem_package", parseInt(e.target.value) || 0)}
-                  />
+                    <Input
+                      id="massagem_package"
+                      type="number"
+                      min="0"
+                      step="1"
+                      className="w-full"
+                      value={formData.massagem_package || 0}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                        handleInputChange("massagem_package", value);
+                      }}
+                      onFocus={(e) => e.target.select()}
+                    />
                 </div>
               </div>
 
@@ -558,24 +594,36 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="analise_de_video_extra">Análise de Vídeo Extra</Label>
-                  <Input
-                    id="analise_de_video_extra"
-                    type="number"
-                    min="0"
-                    value={formData.analise_de_video_extra || 0}
-                    onChange={(e) => handleInputChange("analise_de_video_extra", parseInt(e.target.value) || 0)}
-                  />
+                    <Input
+                      id="analise_de_video_extra"
+                      type="number"
+                      min="0"
+                      step="1"
+                      className="w-full"
+                      value={formData.analise_de_video_extra || 0}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                        handleInputChange("analise_de_video_extra", value);
+                      }}
+                      onFocus={(e) => e.target.select()}
+                    />
                 </div>
 
                 <div>
                   <Label htmlFor="analise_de_video_package">Análise de Vídeo (Pacote)</Label>
-                  <Input
-                    id="analise_de_video_package"
-                    type="number"
-                    min="0"
-                    value={formData.analise_de_video_package || 0}
-                    onChange={(e) => handleInputChange("analise_de_video_package", parseInt(e.target.value) || 0)}
-                  />
+                    <Input
+                      id="analise_de_video_package"
+                      type="number"
+                      min="0"
+                      step="1"
+                      className="w-full"
+                      value={formData.analise_de_video_package || 0}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                        handleInputChange("analise_de_video_package", value);
+                      }}
+                      onFocus={(e) => e.target.select()}
+                    />
                 </div>
 
                 <div>
@@ -596,13 +644,19 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="transfer_package">Transfer (Pacote)</Label>
-                  <Input
-                    id="transfer_package"
-                    type="number"
-                    min="0"
-                    value={formData.transfer_package || 0}
-                    onChange={(e) => handleInputChange("transfer_package", parseInt(e.target.value) || 0)}
-                  />
+                    <Input
+                      id="transfer_package"
+                      type="number"
+                      min="0"
+                      step="1"
+                      className="w-full"
+                      value={formData.transfer_package || 0}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                        handleInputChange("transfer_package", value);
+                      }}
+                      onFocus={(e) => e.target.select()}
+                    />
                 </div>
               </div>
             </div>

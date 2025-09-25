@@ -366,20 +366,20 @@ export const LeadsBoard = () => {
 
       switch (sortConfig.field) {
         case 'name':
-          aValue = a.name || '';
-          bValue = b.name || '';
+          aValue = (a.name || '').toLowerCase();
+          bValue = (b.name || '').toLowerCase();
           break;
         case 'email':
-          aValue = a.email || '';
-          bValue = b.email || '';
+          aValue = (a.email || '').toLowerCase();
+          bValue = (b.email || '').toLowerCase();
           break;
         case 'created':
-          aValue = new Date(a.created_at || 0);
-          bValue = new Date(b.created_at || 0);
+          aValue = new Date(a.created_at || 0).getTime();
+          bValue = new Date(b.created_at || 0).getTime();
           break;
         case 'checkin':
-          aValue = new Date(a.check_in_start || 0);
-          bValue = new Date(b.check_in_start || 0);
+          aValue = new Date(a.check_in_start || 0).getTime();
+          bValue = new Date(b.check_in_start || 0).getTime();
           break;
         case 'price':
           aValue = a.totalPrice || 0;

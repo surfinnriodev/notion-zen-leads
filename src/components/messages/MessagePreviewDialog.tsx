@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageTemplate } from "@/types/messages";
+import { MessageTemplate } from "@/types/database";
 import { processTemplate } from "@/utils/messageProcessor";
 import { X } from "lucide-react";
 
