@@ -220,8 +220,8 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden flex flex-col px-6">
-          <Tabs defaultValue="basic" className="w-full flex-1 flex flex-col">
+        <div className="flex-1 overflow-hidden flex flex-col px-6 min-h-0">
+          <Tabs defaultValue="basic" className="w-full flex-1 flex flex-col min-h-0">
             <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 gap-1 h-auto p-1">
               <TabsTrigger value="basic" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 px-2 text-xs sm:text-sm">
                 <User className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -259,7 +259,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
             </TabsList>
 
           {/* Tab 1: Informações Básicas */}
-          <TabsContent value="basic" className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4">
+          <TabsContent value="basic" className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4 min-h-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="font-medium text-base sm:text-lg">Dados Pessoais</h3>
@@ -348,7 +348,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
           </TabsContent>
 
           {/* Tab 2: Reserva */}
-          <TabsContent value="reservation" className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4">
+          <TabsContent value="reservation" className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4 min-h-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="font-medium text-base sm:text-lg">Datas da Reserva</h3>
@@ -446,7 +446,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
           </TabsContent>
 
           {/* Tab 3: Hospedagem */}
-          <TabsContent value="accommodation" className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4">
+          <TabsContent value="accommodation" className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4 min-h-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="font-medium text-base sm:text-lg">Tipo de Acomodação</h3>
@@ -474,7 +474,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
           </TabsContent>
 
           {/* Tab 4: Atividades e Extras */}
-          <TabsContent value="activities" className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4">
+          <TabsContent value="activities" className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4 min-h-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Atividades de Surf */}
               <div className="space-y-3 sm:space-y-4">
@@ -727,7 +727,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
           </TabsContent>
 
           {/* Tab 5: Mensagens */}
-          <TabsContent value="comments" className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4">
+          <TabsContent value="comments" className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4 min-h-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Sistema de Mensagens */}
               <div className="space-y-4">
@@ -893,7 +893,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
           </TabsContent>
 
           {/* Tab 6: Preços */}
-          <TabsContent value="pricing" className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4">
+          <TabsContent value="pricing" className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4 min-h-0">
             {/* Resumo Total */}
             <div className="bg-primary/5 p-4 sm:p-6 rounded-lg">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
