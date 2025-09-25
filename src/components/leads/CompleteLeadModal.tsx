@@ -43,16 +43,10 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
   // Inicializar formData quando o lead muda
   useEffect(() => {
-    console.log("🔄 CompleteLeadModal useEffect executado");
-    console.log("👤 Lead presente:", !!lead);
-    console.log("⚙️ Config presente:", !!config);
-    
     if (lead) {
-      console.log("🔍 Complete Lead data:", lead);
       // Mapear para o formato legado para compatibilidade
       const legacyLead = mapReservaToLegacyFormat(lead);
       setFormData(legacyLead);
-      console.log("🚀 Chamando calculateLeadPrice...");
       setCalculatedLead(calculateLeadPrice(lead, config));
 
       // Reset message states when lead changes

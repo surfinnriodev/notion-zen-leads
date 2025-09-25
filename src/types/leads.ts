@@ -74,26 +74,8 @@ export function convertLeadToCalculationInput(lead: NotionReserva): CalculationI
 
 
 export function calculateLeadPrice(lead: NotionReserva, config: any): LeadWithCalculation {
-  console.log("🔥 calculateLeadPrice CHAMADA!");
-  console.log("👤 Lead:", lead.name);
-  console.log("⚙️ Config:", config);
-  
   try {
     const input = convertLeadToCalculationInput(lead);
-
-    console.log("💰 Calculando preço para lead:", lead.name);
-    console.log("📊 Input de cálculo:", input);
-    console.log("🎯 Atividades extraídas:", {
-      surfLessons: input.surfLessons,
-      yogaLessons: input.yogaLessons,
-      surfSkate: input.surfSkate,
-      videoAnalysis: input.videoAnalysis,
-      massage: input.massage,
-      hike: input.hike,
-      rioCityTour: input.rioCityTour,
-      cariocaExperience: input.cariocaExperience
-    });
-    console.log("🏨 Config:", config);
 
     // Update daily items to use actual number of days
     if (input.checkInStart && input.checkInEnd) {
@@ -109,7 +91,6 @@ export function calculateLeadPrice(lead: NotionReserva, config: any): LeadWithCa
 
     // Always try to calculate, even with partial data
     if (!input.checkInStart || !input.checkInEnd) {
-      console.log("⚠️ Sem datas definidas, calculando apenas extras");
       // Calculate only extras without accommodation
       const calculatedPrice = {
         numberOfNights: 0,
@@ -130,8 +111,6 @@ export function calculateLeadPrice(lead: NotionReserva, config: any): LeadWithCa
     }
 
     const calculatedPrice = calculatePrice(input, config);
-
-    console.log("✅ Preço calculado:", calculatedPrice);
 
     return {
       ...lead,

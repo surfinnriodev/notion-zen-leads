@@ -3,11 +3,6 @@ import { PricingConfig, CalculationInput, CalculationResult } from '@/types/pric
 import { PricingConfigData } from '@/types/database';
 
 export const calculatePrice = (input: CalculationInput, config: PricingConfig | PricingConfigData): CalculationResult => {
-  console.log("🚀 Iniciando cálculo de preço");
-  console.log("📊 Input recebido:", input);
-  console.log("🏨 Config recebida:", config);
-  console.log("📋 Itens disponíveis na config:", config.items?.map(i => ({ id: i.id, name: i.name, price: i.price })));
-  
   const checkIn = new Date(input.checkInStart);
   const checkOut = new Date(input.checkInEnd);
   const numberOfNights = differenceInDays(checkOut, checkIn);
@@ -114,20 +109,14 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     itemId: string, 
     name: string
   ) => {
-    console.log(`🔍 Verificando item: ${name} (${itemId})`);
-    console.log(`📊 Input value: ${inputValue}, Included: ${includedCount}`);
-    
     if (inputValue && inputValue > 0) {
       const extraCount = Math.max(0, inputValue - (includedCount || 0));
-      console.log(`📈 Extra count: ${extraCount}`);
       
       if (extraCount > 0) {
         const item = config.items.find(i => i.id === itemId);
-        console.log(`🎯 Item encontrado:`, item);
         
         if (item) {
           const cost = item.price * extraCount * (item.billingType === 'per_person' ? numberOfPeople : 1);
-          console.log(`💰 Custo calculado: ${cost} (preço: ${item.price}, quantidade: ${extraCount}, pessoas: ${numberOfPeople})`);
           
           result.fixedItemsCost += cost;
           result.breakdown.fixedItems.push({
@@ -138,7 +127,6 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
           });
         } else {
           console.log(`❌ Item não encontrado: ${itemId}`);
-          console.log(`📋 Itens disponíveis:`, config.items.map(i => i.id));
         }
       }
     }
