@@ -117,7 +117,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     console.log(`🔍 Verificando item: ${name} (${itemId})`);
     console.log(`📊 Input value: ${inputValue}, Included: ${includedCount}`);
     
-    if (inputValue) {
+    if (inputValue && inputValue > 0) {
       const extraCount = Math.max(0, inputValue - (includedCount || 0));
       console.log(`📈 Extra count: ${extraCount}`);
       
