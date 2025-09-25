@@ -6,8 +6,60 @@ import { toast } from 'sonner';
 export const useMessageTemplates = () => {
   const queryClient = useQueryClient();
 
+  // Templates padrão para fallback
+  const DEFAULT_TEMPLATES: MessageTemplate[] = [
+    {
+      id: 'welcome',
+      name: 'Mensagem de Boas-vindas',
+      subject: 'Bem-vindo(a) {{nome}}! Sua reserva em análise',
+      content: `Olá {{nome}},
+
+Obrigado pelo seu interesse em nossos serviços de surf!
+
+Detalhes da sua reserva:
+• Check-in: {{check_in}}
+• Check-out: {{check_out}}
+• Número de pessoas: {{numero_pessoas}}
+• Tipo de quarto: {{tipo_quarto}}
+• Pacote: {{pacote}}
+
+Valor total: {{preco_total}}
+
+Em breve entraremos em contato para finalizar sua reserva.
+
+Abraços,
+Equipe Surf Inn Rio`,
+      variables: ['nome', 'check_in', 'check_out', 'numero_pessoas', 'tipo_quarto', 'pacote', 'preco_total'],
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'confirmation',
+      name: 'Confirmação de Reserva',
+      subject: 'Reserva confirmada - {{nome}}',
+      content: `Oi {{nome}}!
+
+Sua reserva foi confirmada! 🏄‍♂️
+
+📅 Período: {{check_in}} até {{check_out}} ({{numero_noites}} noites)
+👥 {{numero_pessoas}} pessoa(s)
+🏠 {{tipo_quarto}}
+📦 {{pacote}}
+
+💰 Valor total: {{preco_total}}
+
+Nos vemos em breve!
+Equipe Surf Inn Rio`,
+      variables: ['nome', 'check_in', 'check_out', 'numero_noites', 'numero_pessoas', 'tipo_quarto', 'pacote', 'preco_total'],
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ];
+
   // Buscar templates
-  const { data: templates = [], isLoading, error } = useQuery({
+  const { data: templates = DEFAULT_TEMPLATES, isLoading, error } = useQuery({
     queryKey: ['message-templates'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -16,8 +68,12 @@ export const useMessageTemplates = () => {
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as MessageTemplate[];
+      if (error) {
+        console.warn('Erro ao buscar templates, usando padrão:', error);
+        return DEFAULT_TEMPLATES;
+      }
+      
+      return data && data.length > 0 ? data as MessageTemplate[] : DEFAULT_TEMPLATES;
     },
   });
 

@@ -61,12 +61,55 @@ export const usePricingConfig = () => {
     },
   });
 
+  // Configuração padrão para fallback
+  const DEFAULT_CONFIG_DATA: PricingConfigData = {
+    roomCategories: [
+      { id: 'private-double', name: 'Private: Double', pricePerNight: 150, billingType: 'per_room' },
+      { id: 'private-single', name: 'Private: Single', pricePerNight: 120, billingType: 'per_room' },
+      { id: 'shared-mixed', name: 'Shared: Mixed Standard', pricePerNight: 80, billingType: 'per_person' },
+      { id: 'shared-female', name: 'Shared: Female Only', pricePerNight: 85, billingType: 'per_person' },
+    ],
+    packages: [
+      {
+        id: 'basic-package',
+        name: 'Pacote Básico',
+        fixedPrice: 300,
+        overridesIndividualPricing: true,
+        includedItems: {
+          breakfast: true,
+          unlimitedBoardRental: true,
+          surfLessons: 2,
+        }
+      },
+      {
+        id: 'complete-package',
+        name: 'Pacote Completo',
+        fixedPrice: 500,
+        overridesIndividualPricing: true,
+        includedItems: {
+          breakfast: true,
+          unlimitedBoardRental: true,
+          surfLessons: 5,
+          yogaLessons: 3,
+          surfSkate: 2,
+          videoAnalysis: 1,
+        }
+      }
+    ],
+    items: [
+      { id: 'breakfast', name: 'Café da manhã', price: 25, billingType: 'per_person', category: 'boolean', dbColumn: 'breakfast' },
+      { id: 'aulas_de_surf', name: 'Aulas de surf', price: 80, billingType: 'per_person', category: 'fixed', dbColumn: 'aulas_de_surf' },
+      { id: 'aulas_de_yoga', name: 'Aulas de yoga', price: 40, billingType: 'per_person', category: 'fixed', dbColumn: 'aulas_de_yoga' },
+      { id: 'transfer', name: 'Transfer', price: 100, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer' },
+    ]
+  };
+
   // Converter dados do banco para o formato esperado
-  const parsedConfig: PricingConfigData | null = config ? {
+  const parsedConfig: PricingConfigData = config ? {
     roomCategories: config.room_categories as any,
     packages: config.packages as any,
     items: config.items as any,
-  } : null;
+  } : DEFAULT_CONFIG_DATA;
 
   // Atualizar configuração
   const updateConfigMutation = useMutation({
@@ -137,8 +180,6 @@ export const usePricingConfig = () => {
 
   // Funções wrapper para compatibilidade
   const updateConfig = (newConfig: Partial<PricingConfigData>) => {
-    if (!parsedConfig) return;
-    
     const updatedConfig = {
       ...parsedConfig,
       ...newConfig,
