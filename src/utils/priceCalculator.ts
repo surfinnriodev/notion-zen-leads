@@ -126,7 +126,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
             cost,
           });
         } else {
-          console.log(`❌ Item não encontrado: ${itemId}`);
+          console.log(`❌ Item não encontrado: ${itemId} - Itens disponíveis:`, config.items?.map(i => i.id));
         }
       }
     }
