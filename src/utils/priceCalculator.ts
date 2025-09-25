@@ -1,7 +1,8 @@
 import { differenceInDays } from 'date-fns';
 import { PricingConfig, CalculationInput, CalculationResult } from '@/types/pricing';
+import { PricingConfigData } from '@/types/database';
 
-export const calculatePrice = (input: CalculationInput, config: PricingConfig): CalculationResult => {
+export const calculatePrice = (input: CalculationInput, config: PricingConfig | PricingConfigData): CalculationResult => {
   const checkIn = new Date(input.checkInStart);
   const checkOut = new Date(input.checkInEnd);
   const numberOfNights = differenceInDays(checkOut, checkIn);
@@ -34,13 +35,13 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig): 
     // 2. Calcular hospedagem se não houver pacote
     const roomCategory = config.roomCategories.find(r => r.id === input.roomCategory);
     if (roomCategory) {
-      const accommodationCost = roomCategory.perPerson 
+      const accommodationCost = roomCategory.billingType === 'per_person' 
         ? roomCategory.pricePerNight * numberOfNights * numberOfPeople
         : roomCategory.pricePerNight * numberOfNights;
       
       result.accommodationCost = accommodationCost;
       result.breakdown.accommodation = {
-        description: `${roomCategory.name} - ${numberOfNights} noites${roomCategory.perPerson ? ` x ${numberOfPeople} pessoas` : ''}`,
+        description: `${roomCategory.name} - ${numberOfNights} noites${roomCategory.billingType === 'per_person' ? ` x ${numberOfPeople} pessoas` : ''}`,
         cost: accommodationCost,
       };
     }
@@ -51,55 +52,53 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig): 
 
   // Café da manhã
   if (input.breakfast && !packageIncludes.breakfast) {
-    const breakfastConfig = config.dailyItems.breakfast;
-    const cost = breakfastConfig.price * numberOfNights * (breakfastConfig.perPerson ? numberOfPeople : 1);
-    result.dailyItemsCost += cost;
-    result.breakdown.dailyItems.push({
-      name: 'Café da manhã',
-      quantity: numberOfNights * (breakfastConfig.perPerson ? numberOfPeople : 1),
-      unitPrice: breakfastConfig.price,
-      cost,
-    });
+    const breakfastItem = config.items.find(item => item.id === 'breakfast');
+    if (breakfastItem) {
+      const cost = breakfastItem.price * numberOfNights * (breakfastItem.billingType === 'per_person' ? numberOfPeople : 1);
+      result.dailyItemsCost += cost;
+      result.breakdown.dailyItems.push({
+        name: 'Café da manhã',
+        quantity: numberOfNights * (breakfastItem.billingType === 'per_person' ? numberOfPeople : 1),
+        unitPrice: breakfastItem.price,
+        cost,
+      });
+    }
   }
 
   // Aluguel de prancha ilimitado
   if (input.unlimitedBoardRental && !packageIncludes.unlimitedBoardRental) {
-    const boardConfig = config.dailyItems.unlimitedBoardRental;
-    const cost = boardConfig.price * numberOfNights * (boardConfig.perPerson ? numberOfPeople : 1);
-    result.dailyItemsCost += cost;
-    result.breakdown.dailyItems.push({
-      name: 'Aluguel prancha ilimitado',
-      quantity: numberOfNights * (boardConfig.perPerson ? numberOfPeople : 1),
-      unitPrice: boardConfig.price,
-      cost,
-    });
+    const boardItem = config.items.find(item => item.id === 'aluguel_prancha');
+    if (boardItem) {
+      const cost = boardItem.price * numberOfNights * (boardItem.billingType === 'per_person' ? numberOfPeople : 1);
+      result.dailyItemsCost += cost;
+      result.breakdown.dailyItems.push({
+        name: 'Aluguel prancha ilimitado',
+        quantity: numberOfNights * (boardItem.billingType === 'per_person' ? numberOfPeople : 1),
+        unitPrice: boardItem.price,
+        cost,
+      });
+    }
   }
 
   // 4. Calcular itens fixos
   
-  // Aulas de surf (com faixas)
+  // Aulas de surf
   if (input.surfLessons) {
     const includedLessons = packageIncludes.surfLessons || 0;
     const extraLessons = Math.max(0, input.surfLessons - includedLessons);
     
     if (extraLessons > 0) {
-      let tierConfig;
-      if (extraLessons <= 3) {
-        tierConfig = config.fixedItems.surfLessons.tier1_3;
-      } else if (extraLessons <= 7) {
-        tierConfig = config.fixedItems.surfLessons.tier4_7;
-      } else {
-        tierConfig = config.fixedItems.surfLessons.tier8plus;
+      const surfItem = config.items.find(item => item.id === 'aulas_de_surf');
+      if (surfItem) {
+        const cost = surfItem.price * extraLessons * (surfItem.billingType === 'per_person' ? numberOfPeople : 1);
+        result.fixedItemsCost += cost;
+        result.breakdown.fixedItems.push({
+          name: `Aulas de surf (${extraLessons} aulas extras)`,
+          quantity: extraLessons * (surfItem.billingType === 'per_person' ? numberOfPeople : 1),
+          unitPrice: surfItem.price,
+          cost,
+        });
       }
-      
-      const cost = tierConfig.price * extraLessons * (tierConfig.perPerson ? numberOfPeople : 1);
-      result.fixedItemsCost += cost;
-      result.breakdown.fixedItems.push({
-        name: `Aulas de surf (${extraLessons} aulas extras)`,
-        quantity: extraLessons * (tierConfig.perPerson ? numberOfPeople : 1),
-        unitPrice: tierConfig.price,
-        cost,
-      });
     }
   }
 
@@ -107,63 +106,72 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig): 
   const addFixedItem = (
     inputValue: number | undefined, 
     includedCount: number | undefined, 
-    config: { price: number; perPerson: boolean }, 
+    itemId: string, 
     name: string
   ) => {
     if (inputValue) {
       const extraCount = Math.max(0, inputValue - (includedCount || 0));
       if (extraCount > 0) {
-        const cost = config.price * extraCount * (config.perPerson ? numberOfPeople : 1);
-        result.fixedItemsCost += cost;
-        result.breakdown.fixedItems.push({
-          name: `${name} (${extraCount} ${extraCount === 1 ? 'sessão extra' : 'sessões extras'})`,
-          quantity: extraCount * (config.perPerson ? numberOfPeople : 1),
-          unitPrice: config.price,
-          cost,
-        });
+        const item = config.items.find(i => i.id === itemId);
+        if (item) {
+          const cost = item.price * extraCount * (item.billingType === 'per_person' ? numberOfPeople : 1);
+          result.fixedItemsCost += cost;
+          result.breakdown.fixedItems.push({
+            name: `${name} (${extraCount} ${extraCount === 1 ? 'sessão extra' : 'sessões extras'})`,
+            quantity: extraCount * (item.billingType === 'per_person' ? numberOfPeople : 1),
+            unitPrice: item.price,
+            cost,
+          });
+        }
       }
     }
   };
 
   // Aplicar para outros itens fixos
-  addFixedItem(input.yogaLessons, packageIncludes.yogaLessons, config.fixedItems.yogaLessons, 'Aulas de yoga');
-  addFixedItem(input.surfSkate, packageIncludes.surfSkate, config.fixedItems.surfSkate, 'Surf-skate');
-  addFixedItem(input.videoAnalysis, packageIncludes.videoAnalysis, config.fixedItems.videoAnalysis, 'Análise de vídeo');
-  addFixedItem(input.massage, packageIncludes.massage, config.fixedItems.massage, 'Massagem');
-  addFixedItem(input.surfGuide, packageIncludes.surfGuide, config.fixedItems.surfGuide, 'Surf guide');
+  addFixedItem(input.yogaLessons, packageIncludes.yogaLessons, 'aulas_de_yoga', 'Aulas de yoga');
+  addFixedItem(input.surfSkate, packageIncludes.surfSkate, 'skate', 'Surf-skate');
+  addFixedItem(input.videoAnalysis, packageIncludes.videoAnalysis, 'analise_de_video', 'Análise de vídeo');
+  addFixedItem(input.massage, packageIncludes.massage, 'massagem_extra', 'Massagem');
+  addFixedItem(input.surfGuide, packageIncludes.surfGuide, 'surf_guide', 'Surf guide');
 
   // Transfer (por reserva)
   if (input.transfer) {
     const extraTransfer = Math.max(0, input.transfer - (packageIncludes.transfer || 0));
     if (extraTransfer > 0) {
-      const cost = config.fixedItems.transfer.price * extraTransfer;
-      result.fixedItemsCost += cost;
-      result.breakdown.fixedItems.push({
-        name: `Transfer (${extraTransfer} ${extraTransfer === 1 ? 'trecho extra' : 'trechos extras'})`,
-        quantity: extraTransfer,
-        unitPrice: config.fixedItems.transfer.price,
-        cost,
-      });
+      const transferItem = config.items.find(item => item.id === 'transfer');
+      if (transferItem) {
+        const cost = transferItem.price * extraTransfer;
+        result.fixedItemsCost += cost;
+        result.breakdown.fixedItems.push({
+          name: `Transfer (${extraTransfer} ${extraTransfer === 1 ? 'trecho extra' : 'trechos extras'})`,
+          quantity: extraTransfer,
+          unitPrice: transferItem.price,
+          cost,
+        });
+      }
     }
   }
 
   // Atividades
   const activities = [
-    { key: 'hike', name: 'Trilha', value: input.hike, config: config.fixedItems.activities.hike },
-    { key: 'rioCityTour', name: 'Rio City Tour', value: input.rioCityTour, config: config.fixedItems.activities.rioCityTour },
-    { key: 'cariocaExperience', name: 'Carioca Experience', value: input.cariocaExperience, config: config.fixedItems.activities.cariocaExperience },
+    { key: 'hike', name: 'Trilha', value: input.hike, itemId: 'hike_extra' },
+    { key: 'rioCityTour', name: 'Rio City Tour', value: input.rioCityTour, itemId: 'rio_city_tour' },
+    { key: 'cariocaExperience', name: 'Carioca Experience', value: input.cariocaExperience, itemId: 'carioca_experience' },
   ];
 
   activities.forEach(activity => {
     if (activity.value && activity.value > 0) {
-      const cost = activity.config.price * activity.value * (activity.config.perPerson ? numberOfPeople : 1);
-      result.fixedItemsCost += cost;
-      result.breakdown.fixedItems.push({
-        name: activity.name,
-        quantity: activity.value * (activity.config.perPerson ? numberOfPeople : 1),
-        unitPrice: activity.config.price,
-        cost,
-      });
+      const item = config.items.find(i => i.id === activity.itemId);
+      if (item) {
+        const cost = item.price * activity.value * (item.billingType === 'per_person' ? numberOfPeople : 1);
+        result.fixedItemsCost += cost;
+        result.breakdown.fixedItems.push({
+          name: activity.name,
+          quantity: activity.value * (item.billingType === 'per_person' ? numberOfPeople : 1),
+          unitPrice: item.price,
+          cost,
+        });
+      }
     }
   });
 
