@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { PricingConfig, RoomCategory, PackageConfig, PricingItem } from "@/types/pricing";
 import { AVAILABLE_PRICING_ITEMS } from "@/hooks/usePricingConfig";
-import { useSurfPricingTiers } from "@/hooks/useSurfPricingTiers";
 import { X, Plus, RotateCcw, Info } from "lucide-react";
 
 interface PricingConfigFormProps {
@@ -20,9 +19,6 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
   const [editingRoom, setEditingRoom] = useState<RoomCategory | null>(null);
   const [editingPackage, setEditingPackage] = useState<PackageConfig | null>(null);
   const [availableItems, setAvailableItems] = useState<PricingItem[]>([]);
-  
-  // Usar o contexto das faixas de preço de surf
-  const { tiers: surfPricingTiers, updateTiers } = useSurfPricingTiers();
 
   // Atualizar itens disponíveis quando config muda
   React.useEffect(() => {
@@ -36,22 +32,6 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
       style: 'currency',
       currency: 'BRL'
     }).format(value);
-  };
-
-  // Função para atualizar as faixas de preço de surf
-  const updateSurfPricingTier = (tier: keyof typeof surfPricingTiers, value: number) => {
-    const newTiers = {
-      ...surfPricingTiers,
-      [tier]: value
-    };
-    updateTiers(newTiers);
-  };
-
-  // Função para salvar as faixas de preço
-  const saveSurfPricingTiers = () => {
-    // As faixas já são salvas automaticamente no contexto
-    console.log('Faixas de preço atualizadas:', surfPricingTiers);
-    alert('Faixas de preço atualizadas com sucesso!');
   };
 
   const addRoom = () => {
@@ -321,13 +301,6 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                 <Info className="w-4 h-4 text-blue-600" />
                 <h3 className="text-sm font-medium">Faixas de Preço - Aulas de Surf</h3>
               </div>
-              <Button 
-                size="sm" 
-                onClick={saveSurfPricingTiers}
-                className="h-8 px-3"
-              >
-                Salvar
-              </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-3 bg-white dark:bg-gray-800 rounded border">
@@ -336,11 +309,9 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                   <span className="text-sm">R$</span>
                   <Input
                     type="number"
-                    value={surfPricingTiers.tier1to3}
-                    onChange={(e) => updateSurfPricingTier('tier1to3', parseInt(e.target.value) || 0)}
+                    value="180"
                     className="h-8 text-sm"
-                    min="0"
-                    step="1"
+                    readOnly
                   />
                 </div>
               </div>
@@ -350,11 +321,9 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                   <span className="text-sm">R$</span>
                   <Input
                     type="number"
-                    value={surfPricingTiers.tier4to7}
-                    onChange={(e) => updateSurfPricingTier('tier4to7', parseInt(e.target.value) || 0)}
+                    value="160"
                     className="h-8 text-sm"
-                    min="0"
-                    step="1"
+                    readOnly
                   />
                 </div>
               </div>
@@ -364,17 +333,15 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                   <span className="text-sm">R$</span>
                   <Input
                     type="number"
-                    value={surfPricingTiers.tier8plus}
-                    onChange={(e) => updateSurfPricingTier('tier8plus', parseInt(e.target.value) || 0)}
+                    value="140"
                     className="h-8 text-sm"
-                    min="0"
-                    step="1"
+                    readOnly
                   />
                 </div>
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              O preço é determinado automaticamente pela quantidade total de aulas por pessoa. Clique em "Salvar" para aplicar as alterações.
+              O preço é determinado automaticamente pela quantidade total de aulas por pessoa.
             </p>
           </div>
 

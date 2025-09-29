@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { PricingConfig, CalculationInput } from "@/types/pricing";
 import { calculatePrice } from "@/utils/priceCalculator";
-import { useSurfPricingTiers } from "@/hooks/useSurfPricingTiers";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calculator, Plus, X, Settings } from "lucide-react";
@@ -33,8 +32,6 @@ interface PriceCalculatorFormProps {
 }
 
 export const PriceCalculatorForm = ({ config }: PriceCalculatorFormProps) => {
-  const { tiers: surfPricingTiers } = useSurfPricingTiers();
-  
   const [input, setInput] = useState<CalculationInput>({
     checkInStart: "",
     checkInEnd: "",
@@ -98,7 +95,7 @@ export const PriceCalculatorForm = ({ config }: PriceCalculatorFormProps) => {
       return;
     }
 
-    const calculation = calculatePrice(input, config, surfPricingTiers);
+    const calculation = calculatePrice(input, config);
 
     // Adicionar cálculos personalizados
     const customCalculation = calculateCustomItems();
