@@ -3,17 +3,25 @@ import { differenceInDays, getDay, format } from 'date-fns';
 /**
  * Calcula o preço das aulas de surf baseado na quantidade (faixas de preço)
  * @param quantity Número de aulas por pessoa
+ * @param customTiers Opcional: faixas de preço personalizadas
  * @returns Preço por aula baseado na faixa
  */
-export function getSurfLessonPrice(quantity: number): number {
+export function getSurfLessonPrice(quantity: number, customTiers?: { tier1to3: number; tier4to7: number; tier8plus: number }): number {
+  // Usar faixas personalizadas se fornecidas, senão usar padrões
+  const tiers = customTiers || {
+    tier1to3: 180,
+    tier4to7: 160,
+    tier8plus: 140
+  };
+
   if (quantity >= 1 && quantity <= 3) {
-    return 180; // R$ 180 para 1-3 aulas
+    return tiers.tier1to3;
   } else if (quantity >= 4 && quantity <= 7) {
-    return 160; // R$ 160 para 4-7 aulas
+    return tiers.tier4to7;
   } else if (quantity >= 8) {
-    return 140; // R$ 140 para 8+ aulas
+    return tiers.tier8plus;
   }
-  return 180; // Default para 1-3 aulas
+  return tiers.tier1to3; // Default para 1-3 aulas
 }
 
 /**

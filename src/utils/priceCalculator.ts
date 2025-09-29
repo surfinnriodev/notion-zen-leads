@@ -7,8 +7,9 @@ import {
   calculateTransfersForGroup,
   calculateRetainedAndPendingValues 
 } from './pricingRules';
+import { SurfPricingTiers } from '@/hooks/useSurfPricingTiers';
 
-export const calculatePrice = (input: CalculationInput, config: PricingConfig | PricingConfigData): CalculationResult => {
+export const calculatePrice = (input: CalculationInput, config: PricingConfig | PricingConfigData, customSurfTiers?: SurfPricingTiers): CalculationResult => {
   const checkIn = new Date(input.checkInStart);
   const checkOut = new Date(input.checkInEnd);
   const numberOfNights = differenceInDays(checkOut, checkIn);
@@ -96,7 +97,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     
     if (totalLessons > 0) {
       // Usar preço baseado na faixa para o total de aulas por pessoa
-      const pricePerLesson = getSurfLessonPrice(totalLessons);
+      const pricePerLesson = getSurfLessonPrice(totalLessons, customSurfTiers);
       const totalCost = pricePerLesson * totalLessons * numberOfPeople;
       
       result.fixedItemsCost += totalCost;
