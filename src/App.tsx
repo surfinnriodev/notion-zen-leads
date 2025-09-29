@@ -9,29 +9,26 @@ import Leads from "./pages/Leads";
 import Calculator from "./pages/Calculator";
 import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
-import { SurfPricingProvider } from "@/hooks/useSurfPricingTiers";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <SurfPricingProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/leads" element={<Leads />} />
-              <Route path="/calculator" element={<Calculator />} />
-              <Route path="/messages" element={<Messages />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Layout>
-        </BrowserRouter>
-      </SurfPricingProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/leads" element={<Leads />} />
+            <Route path="/calculator" element={<Calculator />} />
+            <Route path="/messages" element={<Messages />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
