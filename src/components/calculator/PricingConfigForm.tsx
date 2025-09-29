@@ -309,9 +309,14 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                   <span className="text-sm">R$</span>
                   <Input
                     type="number"
-                    value="180"
+                    value={config.surfLessonPricing?.tier1 || 180}
+                    onChange={(e) => onUpdateConfig({
+                      surfLessonPricing: {
+                        ...config.surfLessonPricing,
+                        tier1: parseFloat(e.target.value) || 180
+                      }
+                    })}
                     className="h-8 text-sm"
-                    readOnly
                   />
                 </div>
               </div>
@@ -321,9 +326,14 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                   <span className="text-sm">R$</span>
                   <Input
                     type="number"
-                    value="160"
+                    value={config.surfLessonPricing?.tier2 || 160}
+                    onChange={(e) => onUpdateConfig({
+                      surfLessonPricing: {
+                        ...config.surfLessonPricing,
+                        tier2: parseFloat(e.target.value) || 160
+                      }
+                    })}
                     className="h-8 text-sm"
-                    readOnly
                   />
                 </div>
               </div>
@@ -333,9 +343,14 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                   <span className="text-sm">R$</span>
                   <Input
                     type="number"
-                    value="140"
+                    value={config.surfLessonPricing?.tier3 || 140}
+                    onChange={(e) => onUpdateConfig({
+                      surfLessonPricing: {
+                        ...config.surfLessonPricing,
+                        tier3: parseFloat(e.target.value) || 140
+                      }
+                    })}
                     className="h-8 text-sm"
-                    readOnly
                   />
                 </div>
               </div>

@@ -48,6 +48,11 @@ export interface PricingConfigData {
     category: 'daily' | 'fixed' | 'boolean';
     dbColumn?: string;
   }>;
+  surfLessonPricing?: {
+    tier1: number; // 1-3 aulas
+    tier2: number; // 4-7 aulas
+    tier3: number; // 8+ aulas
+  };
 }
 
 // Tipo para mensagem com histórico

@@ -96,7 +96,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     
     if (totalLessons > 0) {
       // Usar preço baseado na faixa para o total de aulas por pessoa
-      const pricePerLesson = getSurfLessonPrice(totalLessons);
+      const pricePerLesson = getSurfLessonPrice(totalLessons, (config as any).surfLessonPricing);
       const totalCost = pricePerLesson * totalLessons * numberOfPeople;
       
       result.fixedItemsCost += totalCost;

@@ -192,13 +192,13 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
     { value: "cancelado", label: "Cancelado" },
   ];
 
+  // Usar as categorias de quarto da configuração para consistência
   const roomTypeOptions = [
-    { value: "Without room", label: "Sem quarto" },
-    { value: "Private: Double", label: "Private: Double" },
-    { value: "Private: Single", label: "Private: Single" },
-    { value: "Private: Shared bathroom", label: "Private: Shared bathroom" },
-    { value: "Shared: Mixed Standard", label: "Shared: Mixed Standard" },
-    { value: "Shared: Female Only", label: "Shared: Female Only" },
+    { value: "", label: "Sem quarto" },
+    ...config.roomCategories.map(room => ({
+      value: room.name, // Usar o nome da configuração
+      label: room.name
+    }))
   ];
 
   const surfLevelOptions = [

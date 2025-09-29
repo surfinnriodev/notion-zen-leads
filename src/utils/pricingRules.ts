@@ -3,17 +3,20 @@ import { differenceInDays, getDay, format } from 'date-fns';
 /**
  * Calcula o preço das aulas de surf baseado na quantidade (faixas de preço)
  * @param quantity Número de aulas por pessoa
+ * @param surfLessonPricing Configuração das faixas de preço (opcional)
  * @returns Preço por aula baseado na faixa
  */
-export function getSurfLessonPrice(quantity: number): number {
+export function getSurfLessonPrice(quantity: number, surfLessonPricing?: { tier1: number; tier2: number; tier3: number }): number {
+  const pricing = surfLessonPricing || { tier1: 180, tier2: 160, tier3: 140 };
+  
   if (quantity >= 1 && quantity <= 3) {
-    return 180; // R$ 180 para 1-3 aulas
+    return pricing.tier1; // R$ 180 para 1-3 aulas (padrão)
   } else if (quantity >= 4 && quantity <= 7) {
-    return 160; // R$ 160 para 4-7 aulas
+    return pricing.tier2; // R$ 160 para 4-7 aulas (padrão)
   } else if (quantity >= 8) {
-    return 140; // R$ 140 para 8+ aulas
+    return pricing.tier3; // R$ 140 para 8+ aulas (padrão)
   }
-  return 180; // Default para 1-3 aulas
+  return pricing.tier1; // Default para 1-3 aulas
 }
 
 /**
@@ -142,7 +145,7 @@ export function generateCalculationMessage(lead: any, calculation: any): string 
   // Calcular aulas de surf
   const surfLessons = lead.aulas_de_surf || 0;
   if (surfLessons > 0) {
-    const surfPrice = getSurfLessonPrice(surfLessons);
+    const surfPrice = getSurfLessonPrice(surfLessons, calculation.surfLessonPricing);
     const surfTotal = surfLessons * surfPrice * people;
     message += `Aulas de Surf: ${surfLessons * people} × R$ ${surfPrice} = ${formatCurrency(surfTotal)}\n`;
   }

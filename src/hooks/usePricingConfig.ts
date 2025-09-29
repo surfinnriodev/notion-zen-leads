@@ -70,6 +70,11 @@ export const usePricingConfig = () => {
       { id: 'shared-mixed', name: 'Shared: Mixed Standard', pricePerNight: 80, billingType: 'per_person' },
       { id: 'shared-female', name: 'Shared: Female Only', pricePerNight: 85, billingType: 'per_person' },
     ],
+    surfLessonPricing: {
+      tier1: 180, // 1-3 aulas
+      tier2: 160, // 4-7 aulas
+      tier3: 140, // 8+ aulas
+    },
     packages: [
       {
         id: 'basic-package',
@@ -128,6 +133,7 @@ export const usePricingConfig = () => {
       roomCategories: config.room_categories as any,
       packages: config.packages as any,
       items: config.items as any,
+      surfLessonPricing: config.surf_lesson_pricing as any || DEFAULT_CONFIG_DATA.surfLessonPricing,
     } : DEFAULT_CONFIG_DATA;
   }, [config]);
 
@@ -144,6 +150,7 @@ export const usePricingConfig = () => {
             room_categories: newConfig.roomCategories,
             packages: newConfig.packages,
             items: newConfig.items,
+            surf_lesson_pricing: newConfig.surfLessonPricing,
           })
           .select()
           .single();
@@ -158,6 +165,7 @@ export const usePricingConfig = () => {
             room_categories: newConfig.roomCategories,
             packages: newConfig.packages,
             items: newConfig.items,
+            surf_lesson_pricing: newConfig.surfLessonPricing,
             updated_at: new Date().toISOString(),
           })
           .eq('id', config.id)

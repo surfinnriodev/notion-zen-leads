@@ -33,10 +33,17 @@ export interface PricingItem {
   dbColumn?: string; // coluna correspondente no banco
 }
 
+export interface SurfLessonPricing {
+  tier1: number; // 1-3 aulas
+  tier2: number; // 4-7 aulas
+  tier3: number; // 8+ aulas
+}
+
 export interface PricingConfig {
   roomCategories: RoomCategory[];
   packages: PackageConfig[];
   items: PricingItem[]; // todos os itens de cobrança
+  surfLessonPricing?: SurfLessonPricing; // faixas de preço para aulas de surf
 }
 
 export interface CalculationInput {
