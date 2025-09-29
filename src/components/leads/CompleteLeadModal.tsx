@@ -194,7 +194,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
   // Usar as categorias de quarto da configuração para consistência
   const roomTypeOptions = [
-    { value: "", label: "Sem quarto" },
+    { value: "sem-quarto", label: "Sem quarto" },
     ...config.roomCategories.map(room => ({
       value: room.name, // Usar o nome da configuração
       label: room.name
@@ -454,8 +454,8 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 <div>
                   <Label htmlFor="tipo_de_quarto">Tipo de Quarto *</Label>
                   <Select
-                    value={formData.tipo_de_quarto || ""}
-                    onValueChange={(value) => handleInputChange("tipo_de_quarto", value)}
+                    value={formData.tipo_de_quarto || "sem-quarto"}
+                    onValueChange={(value) => handleInputChange("tipo_de_quarto", value === "sem-quarto" ? "" : value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o tipo de quarto" />
