@@ -22,7 +22,14 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
   const [availableItems, setAvailableItems] = useState<PricingItem[]>([]);
   
   // Usar o contexto das faixas de preço de surf
-  const { tiers: surfPricingTiers, updateTiers } = useSurfPricingTiers();
+  const { 
+    tiers: surfPricingTiers, 
+    updateSingleTier,
+    saveTiers,
+    resetTiers,
+    hasUnsavedChanges,
+    isLoading
+  } = useSurfPricingTiers();
 
   // Atualizar itens disponíveis quando config muda
   React.useEffect(() => {
@@ -38,20 +45,14 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
     }).format(value);
   };
 
-  // Função para atualizar as faixas de preço de surf
-  const updateSurfPricingTier = (tier: keyof typeof surfPricingTiers, value: number) => {
-    const newTiers = {
-      ...surfPricingTiers,
-      [tier]: value
-    };
-    updateTiers(newTiers);
+  // Função para salvar as faixas de preço
+  const handleSaveSurfPricingTiers = () => {
+    saveTiers();
   };
 
-  // Função para salvar as faixas de preço
-  const saveSurfPricingTiers = () => {
-    // As faixas já são salvas automaticamente no contexto
-    console.log('Faixas de preço atualizadas:', surfPricingTiers);
-    alert('Faixas de preço atualizadas com sucesso!');
+  // Função para resetar as faixas de preço
+  const handleResetSurfPricingTiers = () => {
+    resetTiers();
   };
 
   const addRoom = () => {
@@ -321,13 +322,25 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                 <Info className="w-4 h-4 text-blue-600" />
                 <h3 className="text-sm font-medium">Faixas de Preço - Aulas de Surf</h3>
               </div>
-              <Button 
-                size="sm" 
-                onClick={saveSurfPricingTiers}
-                className="h-8 px-3"
-              >
-                Salvar
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  onClick={handleSaveSurfPricingTiers}
+                  className="h-8 px-3"
+                  disabled={!hasUnsavedChanges || isLoading}
+                >
+                  {isLoading ? 'Carregando...' : 'Salvar'}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={handleResetSurfPricingTiers}
+                  className="h-8 px-3"
+                  disabled={isLoading}
+                >
+                  Resetar
+                </Button>
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-3 bg-white dark:bg-gray-800 rounded border">
@@ -337,10 +350,11 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                   <Input
                     type="number"
                     value={surfPricingTiers.tier1to3}
-                    onChange={(e) => updateSurfPricingTier('tier1to3', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updateSingleTier('tier1to3', parseInt(e.target.value) || 0)}
                     className="h-8 text-sm"
                     min="0"
                     step="1"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -351,10 +365,11 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                   <Input
                     type="number"
                     value={surfPricingTiers.tier4to7}
-                    onChange={(e) => updateSurfPricingTier('tier4to7', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updateSingleTier('tier4to7', parseInt(e.target.value) || 0)}
                     className="h-8 text-sm"
                     min="0"
                     step="1"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -365,16 +380,21 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                   <Input
                     type="number"
                     value={surfPricingTiers.tier8plus}
-                    onChange={(e) => updateSurfPricingTier('tier8plus', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updateSingleTier('tier8plus', parseInt(e.target.value) || 0)}
                     className="h-8 text-sm"
                     min="0"
                     step="1"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              O preço é determinado automaticamente pela quantidade total de aulas por pessoa. Clique em "Salvar" para aplicar as alterações.
+              O preço é determinado automaticamente pela quantidade total de aulas por pessoa. 
+              {hasUnsavedChanges && (
+                <span className="text-orange-600 font-medium"> • Você tem alterações não salvas</span>
+              )}
+              As alterações são salvas automaticamente no navegador e aplicadas em tempo real nos cálculos.
             </p>
           </div>
 
