@@ -8,26 +8,26 @@ import { toast } from 'sonner';
 // Todos os itens de cobrança disponíveis baseados no banco
 export const AVAILABLE_PRICING_ITEMS: PricingItem[] = [
   // Itens diários/booleanos
-  { id: 'breakfast', name: 'Café da manhã', price: 25, billingType: 'per_person', category: 'boolean', dbColumn: 'breakfast' },
-  { id: 'aluguel_prancha', name: 'Aluguel prancha', price: 30, billingType: 'per_person', category: 'boolean', dbColumn: 'aluguel_de_prancha' },
-  { id: 'transfer', name: 'Transfer', price: 100, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer' },
-  { id: 'transfer_extra', name: 'Transfer extra', price: 100, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer_extra' },
-  { id: 'massagem_extra', name: 'Massagem extra', price: 80, billingType: 'per_person', category: 'boolean', dbColumn: 'massagem_extra' },
-  { id: 'rio_city_tour', name: 'Rio City Tour', price: 80, billingType: 'per_person', category: 'boolean', dbColumn: 'rio_city_tour' },
-  { id: 'carioca_experience', name: 'Carioca Experience', price: 100, billingType: 'per_person', category: 'boolean', dbColumn: 'carioca_experience' },
-  { id: 'hike_extra', name: 'Trilha extra', price: 60, billingType: 'per_person', category: 'boolean', dbColumn: 'hike_extra' },
+  { id: 'breakfast', name: 'Café da manhã', price: 30, billingType: 'per_person', category: 'boolean', dbColumn: 'breakfast' },
+  { id: 'aluguel_prancha', name: 'Aluguel prancha', price: 100, billingType: 'per_person', category: 'boolean', dbColumn: 'aluguel_de_prancha' },
+  { id: 'transfer', name: 'Transfer', price: 300, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer' },
+  { id: 'transfer_extra', name: 'Transfer extra', price: 300, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer_extra' },
+  { id: 'massagem_extra', name: 'Massagem extra', price: 250, billingType: 'per_person', category: 'boolean', dbColumn: 'massagem_extra' },
+  { id: 'rio_city_tour', name: 'Rio City Tour', price: 700, billingType: 'per_person', category: 'boolean', dbColumn: 'rio_city_tour' },
+  { id: 'carioca_experience', name: 'Carioca Experience', price: 840, billingType: 'per_person', category: 'boolean', dbColumn: 'carioca_experience' },
+  { id: 'hike_extra', name: 'Trilha extra', price: 300, billingType: 'per_person', category: 'boolean', dbColumn: 'hike_extra' },
 
-  // Itens numéricos (quantidade)
-  { id: 'aulas_de_surf', name: 'Aulas de surf', price: 80, billingType: 'per_person', category: 'fixed', dbColumn: 'aulas_de_surf' },
-  { id: 'aulas_de_yoga', name: 'Aulas de yoga', price: 40, billingType: 'per_person', category: 'fixed', dbColumn: 'aulas_de_yoga' },
-  { id: 'yoga', name: 'Yoga individual', price: 40, billingType: 'per_person', category: 'fixed', dbColumn: 'yoga' },
-  { id: 'skate', name: 'Surf-skate', price: 35, billingType: 'per_person', category: 'fixed', dbColumn: 'skate' },
-  { id: 'surf_guide', name: 'Surf guide', price: 120, billingType: 'per_person', category: 'fixed', dbColumn: 'surf_guide' },
-  { id: 'surf_guide_package', name: 'Surf guide (pacote)', price: 100, billingType: 'per_person', category: 'fixed', dbColumn: 'surf_guide_package' },
-  { id: 'analise_de_video', name: 'Análise de vídeo', price: 50, billingType: 'per_person', category: 'fixed', dbColumn: 'analise_de_video' },
-  { id: 'analise_de_video_package', name: 'Análise vídeo (pacote)', price: 40, billingType: 'per_person', category: 'fixed', dbColumn: 'analise_de_video_package' },
-  { id: 'massagem_package', name: 'Massagem (pacote)', price: 70, billingType: 'per_person', category: 'fixed', dbColumn: 'massagem_package' },
-  { id: 'transfer_package', name: 'Transfer (pacote)', price: 80, billingType: 'per_reservation', category: 'fixed', dbColumn: 'transfer_package' },
+  // Itens numéricos (quantidade) - Aulas de surf com faixas de preço (não editável individualmente)
+  // { id: 'aulas_de_surf', name: 'Aulas de surf', price: 180, billingType: 'per_person', category: 'fixed', dbColumn: 'aulas_de_surf' },
+  { id: 'aulas_de_yoga', name: 'Aulas de yoga', price: 120, billingType: 'per_person', category: 'fixed', dbColumn: 'aulas_de_yoga' },
+  { id: 'yoga', name: 'Yoga individual', price: 120, billingType: 'per_person', category: 'fixed', dbColumn: 'yoga' },
+  { id: 'skate', name: 'Surf-skate', price: 160, billingType: 'per_person', category: 'fixed', dbColumn: 'skate' },
+  { id: 'surf_guide', name: 'Surf guide', price: 350, billingType: 'per_person', category: 'fixed', dbColumn: 'surf_guide' },
+  { id: 'surf_guide_package', name: 'Surf guide (pacote)', price: 350, billingType: 'per_person', category: 'fixed', dbColumn: 'surf_guide_package' },
+  { id: 'analise_de_video', name: 'Análise de vídeo', price: 350, billingType: 'per_person', category: 'fixed', dbColumn: 'analise_de_video' },
+  { id: 'analise_de_video_package', name: 'Análise vídeo (pacote)', price: 350, billingType: 'per_person', category: 'fixed', dbColumn: 'analise_de_video_package' },
+  { id: 'massagem_package', name: 'Massagem (pacote)', price: 250, billingType: 'per_person', category: 'fixed', dbColumn: 'massagem_package' },
+  { id: 'transfer_package', name: 'Transfer (pacote)', price: 300, billingType: 'per_reservation', category: 'fixed', dbColumn: 'transfer_package' },
 ];
 
 export const usePricingConfig = () => {
@@ -99,26 +99,26 @@ export const usePricingConfig = () => {
     ],
     items: [
       // Itens diários/booleanos
-      { id: 'breakfast', name: 'Café da manhã', price: 25, billingType: 'per_person', category: 'boolean', dbColumn: 'breakfast' },
-      { id: 'aluguel_prancha', name: 'Aluguel prancha', price: 30, billingType: 'per_person', category: 'boolean', dbColumn: 'aluguel_de_prancha' },
-      { id: 'transfer', name: 'Transfer', price: 100, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer' },
-      { id: 'transfer_extra', name: 'Transfer extra', price: 100, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer_extra' },
-      { id: 'massagem_extra', name: 'Massagem extra', price: 80, billingType: 'per_person', category: 'boolean', dbColumn: 'massagem_extra' },
-      { id: 'rio_city_tour', name: 'Rio City Tour', price: 80, billingType: 'per_person', category: 'boolean', dbColumn: 'rio_city_tour' },
-      { id: 'carioca_experience', name: 'Carioca Experience', price: 100, billingType: 'per_person', category: 'boolean', dbColumn: 'carioca_experience' },
-      { id: 'hike_extra', name: 'Trilha extra', price: 60, billingType: 'per_person', category: 'boolean', dbColumn: 'hike_extra' },
+      { id: 'breakfast', name: 'Café da manhã', price: 30, billingType: 'per_person', category: 'boolean', dbColumn: 'breakfast' },
+      { id: 'aluguel_prancha', name: 'Aluguel prancha', price: 100, billingType: 'per_person', category: 'boolean', dbColumn: 'aluguel_de_prancha' },
+      { id: 'transfer', name: 'Transfer', price: 300, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer' },
+      { id: 'transfer_extra', name: 'Transfer extra', price: 300, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer_extra' },
+      { id: 'massagem_extra', name: 'Massagem extra', price: 250, billingType: 'per_person', category: 'boolean', dbColumn: 'massagem_extra' },
+      { id: 'rio_city_tour', name: 'Rio City Tour', price: 700, billingType: 'per_person', category: 'boolean', dbColumn: 'rio_city_tour' },
+      { id: 'carioca_experience', name: 'Carioca Experience', price: 840, billingType: 'per_person', category: 'boolean', dbColumn: 'carioca_experience' },
+      { id: 'hike_extra', name: 'Trilha extra', price: 300, billingType: 'per_person', category: 'boolean', dbColumn: 'hike_extra' },
 
-      // Itens numéricos (quantidade)
-      { id: 'aulas_de_surf', name: 'Aulas de surf', price: 80, billingType: 'per_person', category: 'fixed', dbColumn: 'aulas_de_surf' },
-      { id: 'aulas_de_yoga', name: 'Aulas de yoga', price: 40, billingType: 'per_person', category: 'fixed', dbColumn: 'aulas_de_yoga' },
-      { id: 'yoga', name: 'Yoga individual', price: 40, billingType: 'per_person', category: 'fixed', dbColumn: 'yoga' },
-      { id: 'skate', name: 'Surf-skate', price: 35, billingType: 'per_person', category: 'fixed', dbColumn: 'skate' },
-      { id: 'surf_guide', name: 'Surf guide', price: 120, billingType: 'per_person', category: 'fixed', dbColumn: 'surf_guide' },
-      { id: 'surf_guide_package', name: 'Surf guide (pacote)', price: 100, billingType: 'per_person', category: 'fixed', dbColumn: 'surf_guide_package' },
-      { id: 'analise_de_video', name: 'Análise de vídeo', price: 50, billingType: 'per_person', category: 'fixed', dbColumn: 'analise_de_video' },
-      { id: 'analise_de_video_package', name: 'Análise vídeo (pacote)', price: 40, billingType: 'per_person', category: 'fixed', dbColumn: 'analise_de_video_package' },
-      { id: 'massagem_package', name: 'Massagem (pacote)', price: 70, billingType: 'per_person', category: 'fixed', dbColumn: 'massagem_package' },
-      { id: 'transfer_package', name: 'Transfer (pacote)', price: 80, billingType: 'per_reservation', category: 'fixed', dbColumn: 'transfer_package' },
+      // Itens numéricos (quantidade) - Aulas de surf com faixas de preço (não editável individualmente)
+      // { id: 'aulas_de_surf', name: 'Aulas de surf', price: 180, billingType: 'per_person', category: 'fixed', dbColumn: 'aulas_de_surf' },
+      { id: 'aulas_de_yoga', name: 'Aulas de yoga', price: 120, billingType: 'per_person', category: 'fixed', dbColumn: 'aulas_de_yoga' },
+      { id: 'yoga', name: 'Yoga individual', price: 120, billingType: 'per_person', category: 'fixed', dbColumn: 'yoga' },
+      { id: 'skate', name: 'Surf-skate', price: 160, billingType: 'per_person', category: 'fixed', dbColumn: 'skate' },
+      { id: 'surf_guide', name: 'Surf guide', price: 350, billingType: 'per_person', category: 'fixed', dbColumn: 'surf_guide' },
+      { id: 'surf_guide_package', name: 'Surf guide (pacote)', price: 350, billingType: 'per_person', category: 'fixed', dbColumn: 'surf_guide_package' },
+      { id: 'analise_de_video', name: 'Análise de vídeo', price: 350, billingType: 'per_person', category: 'fixed', dbColumn: 'analise_de_video' },
+      { id: 'analise_de_video_package', name: 'Análise vídeo (pacote)', price: 350, billingType: 'per_person', category: 'fixed', dbColumn: 'analise_de_video_package' },
+      { id: 'massagem_package', name: 'Massagem (pacote)', price: 250, billingType: 'per_person', category: 'fixed', dbColumn: 'massagem_package' },
+      { id: 'transfer_package', name: 'Transfer (pacote)', price: 300, billingType: 'per_reservation', category: 'fixed', dbColumn: 'transfer_package' },
     ]
   };
 

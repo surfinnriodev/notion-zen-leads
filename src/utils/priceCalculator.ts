@@ -1,6 +1,12 @@
 import { differenceInDays } from 'date-fns';
 import { PricingConfig, CalculationInput, CalculationResult } from '@/types/pricing';
 import { PricingConfigData } from '@/types/database';
+import { 
+  getSurfLessonPrice, 
+  calculateFreeYogaDays, 
+  calculateTransfersForGroup,
+  calculateRetainedAndPendingValues 
+} from './pricingRules';
 
 export const calculatePrice = (input: CalculationInput, config: PricingConfig | PricingConfigData): CalculationResult => {
   const checkIn = new Date(input.checkInStart);
@@ -82,23 +88,24 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
 
   // 4. Calcular itens fixos
   
-  // Aulas de surf
+  // Aulas de surf com faixas de preço
   if (input.surfLessons) {
     const includedLessons = packageIncludes.surfLessons || 0;
-    const extraLessons = Math.max(0, input.surfLessons - includedLessons);
+    const totalLessons = input.surfLessons;
+    const extraLessons = Math.max(0, totalLessons - includedLessons);
     
-    if (extraLessons > 0) {
-      const surfItem = config.items.find(item => item.id === 'surf-lesson');
-      if (surfItem) {
-        const cost = surfItem.price * extraLessons * (surfItem.billingType === 'per_person' ? numberOfPeople : 1);
-        result.fixedItemsCost += cost;
-        result.breakdown.fixedItems.push({
-          name: `Aulas de surf (${extraLessons} aulas extras)`,
-          quantity: extraLessons * (surfItem.billingType === 'per_person' ? numberOfPeople : 1),
-          unitPrice: surfItem.price,
-          cost,
-        });
-      }
+    if (totalLessons > 0) {
+      // Usar preço baseado na faixa para o total de aulas por pessoa
+      const pricePerLesson = getSurfLessonPrice(totalLessons);
+      const totalCost = pricePerLesson * totalLessons * numberOfPeople;
+      
+      result.fixedItemsCost += totalCost;
+      result.breakdown.fixedItems.push({
+        name: `Aulas de surf (${totalLessons} aulas por pessoa - faixa ${totalLessons <= 3 ? '1-3' : totalLessons <= 7 ? '4-7' : '8+'})`,
+        quantity: totalLessons * numberOfPeople,
+        unitPrice: pricePerLesson,
+        cost: totalCost,
+      });
     }
   }
 
@@ -132,24 +139,51 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     }
   };
 
-  // Aplicar para outros itens fixos
-  addFixedItem(input.yogaLessons, packageIncludes.yogaLessons, 'yoga-lesson', 'Aulas de yoga');
+  // Aulas de yoga com dias grátis
+  if (input.yogaLessons && input.yogaLessons > 0) {
+    const includedLessons = packageIncludes.yogaLessons || 0;
+    const totalYogaLessons = input.yogaLessons;
+    
+    if (totalYogaLessons > 0) {
+      // Calcular dias grátis de yoga (quartas e sextas)
+      const freeYogaDays = calculateFreeYogaDays(input.checkInStart, input.checkInEnd);
+      const chargedYogaLessons = Math.max(0, totalYogaLessons - freeYogaDays);
+      
+      if (chargedYogaLessons > 0) {
+        const yogaItem = config.items.find(item => item.id === 'yoga-lesson');
+        if (yogaItem) {
+          const cost = yogaItem.price * chargedYogaLessons * numberOfPeople;
+          result.fixedItemsCost += cost;
+          result.breakdown.fixedItems.push({
+            name: `Aulas de yoga (${chargedYogaLessons} aulas cobradas de ${totalYogaLessons} - ${freeYogaDays} dias grátis)`,
+            quantity: chargedYogaLessons * numberOfPeople,
+            unitPrice: yogaItem.price,
+            cost,
+          });
+        }
+      }
+    }
+  }
   addFixedItem(input.surfSkate, packageIncludes.surfSkate, 'surf-skate', 'Surf-skate');
   addFixedItem(input.videoAnalysis, packageIncludes.videoAnalysis, 'video-analysis', 'Análise de vídeo');
   addFixedItem(input.massage, packageIncludes.massage, 'massage', 'Massagem');
   addFixedItem(input.surfGuide, packageIncludes.surfGuide, 'surf-guide', 'Surf guide');
 
-  // Transfer (por reserva)
+  // Transfer com regra para grupos maiores
   if (input.transfer) {
-    const extraTransfer = Math.max(0, input.transfer - (packageIncludes.transfer || 0));
-    if (extraTransfer > 0) {
+    // Calcular número de transfers baseado no número de pessoas
+    const requiredTransfers = calculateTransfersForGroup(numberOfPeople);
+    const includedTransfers = packageIncludes.transfer || 0;
+    const extraTransfers = Math.max(0, requiredTransfers - includedTransfers);
+    
+    if (extraTransfers > 0) {
       const transferItem = config.items.find(item => item.id === 'transfer');
       if (transferItem) {
-        const cost = transferItem.price * extraTransfer;
+        const cost = transferItem.price * extraTransfers;
         result.fixedItemsCost += cost;
         result.breakdown.fixedItems.push({
-          name: `Transfer (${extraTransfer} ${extraTransfer === 1 ? 'trecho extra' : 'trechos extras'})`,
-          quantity: extraTransfer,
+          name: `Transfer (${extraTransfers} ${extraTransfers === 1 ? 'trecho' : 'trechos'} - ${numberOfPeople > 3 ? 'grupo > 3 pessoas' : 'grupo ≤ 3 pessoas'})`,
+          quantity: extraTransfers,
           unitPrice: transferItem.price,
           cost,
         });
@@ -182,6 +216,25 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
 
   // Calcular total
   result.totalCost = result.packageCost + result.accommodationCost + result.dailyItemsCost + result.fixedItemsCost;
+
+  // Calcular valor retido e valor pendente
+  const servicesCost = result.fixedItemsCost; // Serviços (aulas, extras)
+  const feeCost = 0; // Taxa sempre será acrescentada manualmente
+  const accommodationCost = result.accommodationCost;
+  const breakfastCost = result.dailyItemsCost; // Café da manhã e outros itens diários
+  
+  const { retainedValue, pendingValue } = calculateRetainedAndPendingValues(
+    servicesCost,
+    feeCost,
+    accommodationCost,
+    breakfastCost
+  );
+
+  // Adicionar informações ao resultado
+  (result as any).retainedValue = retainedValue;
+  (result as any).pendingValue = pendingValue;
+  (result as any).servicesCost = servicesCost;
+  (result as any).feeCost = feeCost;
 
   return result;
 };

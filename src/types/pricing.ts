@@ -78,4 +78,9 @@ export interface CalculationResult {
   };
   
   totalCost: number;
+  // Novos campos para valor retido e pendente
+  retainedValue?: number;
+  pendingValue?: number;
+  servicesCost?: number;
+  feeCost?: number;
 }

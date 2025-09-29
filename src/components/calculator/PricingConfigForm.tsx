@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { PricingConfig, RoomCategory, PackageConfig, PricingItem } from "@/types/pricing";
 import { AVAILABLE_PRICING_ITEMS } from "@/hooks/usePricingConfig";
-import { X, Plus, RotateCcw } from "lucide-react";
+import { X, Plus, RotateCcw, Info } from "lucide-react";
 
 interface PricingConfigFormProps {
   config: PricingConfig;
@@ -259,6 +259,7 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
         </CardContent>
       </Card>
 
+
       {/* Itens de Cobrança */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -293,6 +294,57 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Faixas de Preço para Aulas de Surf - Editável */}
+          <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Info className="w-4 h-4 text-blue-600" />
+                <h3 className="text-sm font-medium">Faixas de Preço - Aulas de Surf</h3>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-3 bg-white dark:bg-gray-800 rounded border">
+                <Label className="text-xs text-gray-500">1-3 aulas por pessoa</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-sm">R$</span>
+                  <Input
+                    type="number"
+                    value="180"
+                    className="h-8 text-sm"
+                    readOnly
+                  />
+                </div>
+              </div>
+              <div className="p-3 bg-white dark:bg-gray-800 rounded border">
+                <Label className="text-xs text-gray-500">4-7 aulas por pessoa</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-sm">R$</span>
+                  <Input
+                    type="number"
+                    value="160"
+                    className="h-8 text-sm"
+                    readOnly
+                  />
+                </div>
+              </div>
+              <div className="p-3 bg-white dark:bg-gray-800 rounded border">
+                <Label className="text-xs text-gray-500">8+ aulas por pessoa</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-sm">R$</span>
+                  <Input
+                    type="number"
+                    value="140"
+                    className="h-8 text-sm"
+                    readOnly
+                  />
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              O preço é determinado automaticamente pela quantidade total de aulas por pessoa.
+            </p>
+          </div>
+
           {(config.items || []).map((item) => (
             <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
               <div className="flex-1 grid grid-cols-4 gap-4">

@@ -82,7 +82,7 @@ INSERT INTO pricing_config (name, description, room_categories, packages, items)
     {
       "id": "breakfast",
       "name": "Café da Manhã",
-      "price": 25,
+      "price": 30,
       "billingType": "per_person",
       "category": "daily",
       "dbColumn": "breakfast"
@@ -90,7 +90,7 @@ INSERT INTO pricing_config (name, description, room_categories, packages, items)
     {
       "id": "unlimited-board-rental",
       "name": "Aluguel de Prancha Ilimitado", 
-      "price": 30,
+      "price": 100,
       "billingType": "per_person",
       "category": "daily",
       "dbColumn": "aluguel_de_prancha"
@@ -98,7 +98,7 @@ INSERT INTO pricing_config (name, description, room_categories, packages, items)
     {
       "id": "surf-lesson",
       "name": "Aula de Surf",
-      "price": 80,
+      "price": 180,
       "billingType": "per_unit",
       "category": "fixed",
       "dbColumn": "aulas_de_surf"
@@ -106,7 +106,7 @@ INSERT INTO pricing_config (name, description, room_categories, packages, items)
     {
       "id": "yoga-lesson",
       "name": "Aula de Yoga",
-      "price": 50,
+      "price": 120,
       "billingType": "per_unit", 
       "category": "fixed",
       "dbColumn": "aulas_de_yoga"
@@ -114,7 +114,7 @@ INSERT INTO pricing_config (name, description, room_categories, packages, items)
     {
       "id": "surf-skate",
       "name": "Surf-Skate",
-      "price": 40,
+      "price": 160,
       "billingType": "per_unit",
       "category": "fixed",
       "dbColumn": "skate"
@@ -122,7 +122,7 @@ INSERT INTO pricing_config (name, description, room_categories, packages, items)
     {
       "id": "video-analysis",
       "name": "Análise de Vídeo",
-      "price": 60,
+      "price": 350,
       "billingType": "per_unit",
       "category": "fixed",
       "dbColumn": "analise_de_video"
@@ -130,7 +130,7 @@ INSERT INTO pricing_config (name, description, room_categories, packages, items)
     {
       "id": "massage",
       "name": "Massagem",
-      "price": 120,
+      "price": 250,
       "billingType": "per_unit",
       "category": "fixed",
       "dbColumn": "massagem_extra"
@@ -138,7 +138,7 @@ INSERT INTO pricing_config (name, description, room_categories, packages, items)
     {
       "id": "surf-guide",
       "name": "Surf Guide",
-      "price": 100,
+      "price": 350,
       "billingType": "per_unit",
       "category": "fixed",
       "dbColumn": "surf_guide"
@@ -146,7 +146,7 @@ INSERT INTO pricing_config (name, description, room_categories, packages, items)
     {
       "id": "transfer",
       "name": "Transfer",
-      "price": 80,
+      "price": 300,
       "billingType": "per_reservation",
       "category": "fixed",
       "dbColumn": "transfer"
@@ -154,7 +154,7 @@ INSERT INTO pricing_config (name, description, room_categories, packages, items)
     {
       "id": "hike",
       "name": "Trilha",
-      "price": 60,
+      "price": 300,
       "billingType": "per_reservation",
       "category": "fixed",
       "dbColumn": "hike_extra"
@@ -162,7 +162,7 @@ INSERT INTO pricing_config (name, description, room_categories, packages, items)
     {
       "id": "rio-city-tour",
       "name": "Rio City Tour",
-      "price": 150,
+      "price": 700,
       "billingType": "per_reservation",
       "category": "fixed",
       "dbColumn": "rio_city_tour"
@@ -170,7 +170,7 @@ INSERT INTO pricing_config (name, description, room_categories, packages, items)
     {
       "id": "carioca-experience",
       "name": "Carioca Experience",
-      "price": 200,
+      "price": 840,
       "billingType": "per_reservation",
       "category": "fixed",
       "dbColumn": "carioca_experience"
