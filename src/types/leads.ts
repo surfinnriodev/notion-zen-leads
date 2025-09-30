@@ -161,11 +161,29 @@ export function calculateLeadPrice(lead: NotionReserva, config: any): LeadWithCa
 }
 
 export function getLeadDisplayPrice(lead: LeadWithCalculation): string {
-  if (lead.totalPrice) {
+  let totalPrice = lead.totalPrice || 0;
+  
+  // Se houver calculatedPrice, usar o valor de lá
+  if (lead.calculatedPrice) {
+    totalPrice = lead.calculatedPrice.totalCost || 0;
+    
+    // Adicionar ajuste de hospedagem se houver
+    if (lead.accommodation_price_override && lead.calculatedPrice.accommodationCost) {
+      const adjustment = lead.accommodation_price_override - lead.calculatedPrice.accommodationCost;
+      totalPrice += adjustment;
+    }
+    
+    // Adicionar taxa extra se houver
+    if (lead.extra_fee_amount) {
+      totalPrice += lead.extra_fee_amount;
+    }
+  }
+  
+  if (totalPrice > 0) {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
-    }).format(lead.totalPrice);
+    }).format(totalPrice);
   }
 
   return "Orçamento pendente";

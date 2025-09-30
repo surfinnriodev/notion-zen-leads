@@ -35,6 +35,28 @@ export const calculateNights = (checkIn: string | null, checkOut: string | null)
 export const extractVariablesFromLead = (lead: LeadWithCalculation): Record<string, string> => {
   const nights = calculateNights(lead.check_in_start, lead.check_in_end);
 
+  // Calcular o preço total incluindo ajustes de hospedagem e taxa extra
+  let totalPrice = lead.totalPrice || 0;
+  let accommodationPrice = lead.accommodationCost || 0;
+  
+  // Se houver calculatedPrice, usar os valores de lá
+  if (lead.calculatedPrice) {
+    totalPrice = lead.calculatedPrice.totalCost || 0;
+    accommodationPrice = lead.calculatedPrice.accommodationCost || 0;
+    
+    // Adicionar ajuste de hospedagem se houver
+    if (lead.accommodation_price_override) {
+      const adjustment = lead.accommodation_price_override - accommodationPrice;
+      totalPrice += adjustment;
+      accommodationPrice = lead.accommodation_price_override;
+    }
+    
+    // Adicionar taxa extra se houver
+    if (lead.extra_fee_amount) {
+      totalPrice += lead.extra_fee_amount;
+    }
+  }
+
   return {
     // Dados básicos
     nome: lead.name || lead.nome || 'N/A',
@@ -49,11 +71,11 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation): Record<stri
     tipo_quarto: lead.tipo_de_quarto || 'N/A',
     pacote: lead.pacote || 'Sem pacote',
 
-    // Preços
-    preco_total: formatCurrency(lead.totalPrice || 0),
-    preco_hospedagem: formatCurrency(lead.accommodationCost || 0),
-    preco_extras: formatCurrency((lead.totalPrice || 0) - (lead.accommodationCost || 0)),
-    preco_pacote: formatCurrency(lead.packageCost || 0),
+    // Preços (agora incluindo ajustes e taxa extra)
+    preco_total: formatCurrency(totalPrice),
+    preco_hospedagem: formatCurrency(accommodationPrice),
+    preco_extras: formatCurrency(totalPrice - accommodationPrice),
+    preco_pacote: formatCurrency(lead.packageCost || (lead.calculatedPrice?.packageCost || 0)),
 
     // Outros
     nivel_surf: lead.nivel_de_surf || 'N/A',
