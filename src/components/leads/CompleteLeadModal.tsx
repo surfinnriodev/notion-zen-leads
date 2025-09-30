@@ -12,6 +12,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DollarSign, Save, User, Calendar, Home, Activity, MessageSquare, Send, Copy } from "lucide-react";
+import { DollarSign, Save, User, Calendar, Home, Activity, MessageSquare, Send, Copy, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface CompleteLeadModalProps {
@@ -40,6 +50,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
   const [messageContent, setMessageContent] = useState("");
   const [messageSubject, setMessageSubject] = useState("");
   const [customMessage, setCustomMessage] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Inicializar formData quando o lead muda
   useEffect(() => {
@@ -80,6 +91,26 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       setCustomMessage("");
     }
   }, [lead, config]);
+
+  const deleteMutation = useMutation({
+    mutationFn: async (leadId: number) => {
+      const { error } = await supabase
+        .from("reservations")
+        .delete()
+        .eq("id", leadId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      queryClient.invalidateQueries({ queryKey: ["leads-board"] });
+      toast.success("Lead excluído com sucesso!");
+      onClose();
+    },
+    onError: (error) => {
+      toast.error("Erro ao excluir lead: " + error.message);
+    },
+  });
 
   const updateMutation = useMutation({
     mutationFn: async (updatedData: Partial<LeadWithCalculation>) => {
@@ -233,6 +264,17 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
     setCustomMessage("");
 
     toast.success("Mensagem registrada no histórico!");
+  };
+
+  const handleDelete = () => {
+    if (!lead) return;
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (!lead) return;
+    deleteMutation.mutate(lead.id);
+    setShowDeleteDialog(false);
   };
 
   if (!lead) return null;
@@ -1291,20 +1333,55 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
         </Tabs>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 p-4 sm:p-6 border-t bg-background">
-          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={updateMutation.isPending}
+        <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-3 p-4 sm:p-6 border-t bg-background">
+          <Button 
+            variant="destructive" 
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending}
             className="flex items-center gap-2 w-full sm:w-auto"
           >
-            <Save className="w-4 h-4" />
-            {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+            <Trash2 className="w-4 h-4" />
+            {deleteMutation.isPending ? "Excluindo..." : "Excluir Lead"}
           </Button>
+          
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={updateMutation.isPending}
+              className="flex items-center gap-2 w-full sm:w-auto"
+            >
+              <Save className="w-4 h-4" />
+              {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
+
+      {/* Dialog de Confirmação de Exclusão */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o lead <strong>{lead?.name || "este lead"}</strong>?
+              <br /><br />
+              Esta ação não pode ser desfeita. Todos os dados do lead, incluindo histórico de mensagens, serão permanentemente removidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sim, Excluir Lead
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };
