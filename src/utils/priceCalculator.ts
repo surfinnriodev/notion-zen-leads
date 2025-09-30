@@ -39,7 +39,20 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     };
   } else {
     // 2. Calcular hospedagem se não houver pacote
-    const roomCategory = config.roomCategories.find(r => r.id === input.roomCategory);
+    // Buscar por ID ou por nome completo (ex: "Private: Double")
+    let roomCategory = config.roomCategories.find(r => r.id === input.roomCategory);
+    
+    if (!roomCategory) {
+      // Tentar buscar por nome se não encontrou por ID
+      roomCategory = config.roomCategories.find(r => r.name === input.roomCategory);
+    }
+    
+    console.log('🏠 Looking for room:', { 
+      searchId: input.roomCategory, 
+      found: roomCategory?.name,
+      availableRooms: config.roomCategories.map(r => ({ id: r.id, name: r.name }))
+    });
+    
     if (roomCategory) {
       const accommodationCost = roomCategory.billingType === 'per_person' 
         ? roomCategory.pricePerNight * numberOfNights * numberOfPeople
@@ -50,6 +63,10 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
         description: `${roomCategory.name} - ${numberOfNights} noites${roomCategory.billingType === 'per_person' ? ` x ${numberOfPeople} pessoas` : ''}`,
         cost: accommodationCost,
       };
+      
+      console.log('✅ Accommodation calculated:', result.accommodationCost);
+    } else {
+      console.log('❌ No room category found for:', input.roomCategory);
     }
   }
 

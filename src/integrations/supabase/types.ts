@@ -335,6 +335,11 @@ export type Database = {
           status: string | null
           telefone: string | null
           tipo_de_quarto: string | null
+          room_category: string | null
+          room_type: string | null
+          accommodation_price_override: number | null
+          extra_fee_amount: number | null
+          extra_fee_description: string | null
           aulas_de_surf: number | null
           aulas_de_yoga: number | null
           skate: number | null
@@ -371,6 +376,11 @@ export type Database = {
           status?: string | null
           telefone?: string | null
           tipo_de_quarto?: string | null
+          room_category?: string | null
+          room_type?: string | null
+          accommodation_price_override?: number | null
+          extra_fee_amount?: number | null
+          extra_fee_description?: string | null
           aulas_de_surf?: number | null
           aulas_de_yoga?: number | null
           skate?: number | null
@@ -407,6 +417,11 @@ export type Database = {
           status?: string | null
           telefone?: string | null
           tipo_de_quarto?: string | null
+          room_category?: string | null
+          room_type?: string | null
+          accommodation_price_override?: number | null
+          extra_fee_amount?: number | null
+          extra_fee_description?: string | null
           aulas_de_surf?: number | null
           aulas_de_yoga?: number | null
           skate?: number | null

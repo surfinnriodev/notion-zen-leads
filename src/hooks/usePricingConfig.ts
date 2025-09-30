@@ -65,10 +65,18 @@ export const usePricingConfig = () => {
   // Configuração padrão para fallback
   const DEFAULT_CONFIG_DATA: PricingConfigData = {
     roomCategories: [
+      // Private Rooms
+      { id: 'private-shared-bathroom', name: 'Private: Shared bathroom', pricePerNight: 140, billingType: 'per_room' },
       { id: 'private-double', name: 'Private: Double', pricePerNight: 150, billingType: 'per_room' },
-      { id: 'private-single', name: 'Private: Single', pricePerNight: 120, billingType: 'per_room' },
-      { id: 'shared-mixed', name: 'Shared: Mixed Standard', pricePerNight: 80, billingType: 'per_person' },
-      { id: 'shared-female', name: 'Shared: Female Only', pricePerNight: 85, billingType: 'per_person' },
+      { id: 'private-sea-view', name: 'Private: Sea-View', pricePerNight: 200, billingType: 'per_room' },
+      { id: 'private-triple', name: 'Private: Triple', pricePerNight: 180, billingType: 'per_room' },
+      { id: 'private-family', name: 'Private: Family', pricePerNight: 220, billingType: 'per_room' },
+      
+      // Shared Rooms
+      { id: 'shared-mixed-economic', name: 'Shared: Mixed Economic', pricePerNight: 70, billingType: 'per_person' },
+      { id: 'shared-mixed-standard', name: 'Shared: Mixed Standard', pricePerNight: 80, billingType: 'per_person' },
+      { id: 'shared-female-economic', name: 'Shared: Female Economic', pricePerNight: 75, billingType: 'per_person' },
+      { id: 'shared-female-standard', name: 'Shared: Female Standard', pricePerNight: 85, billingType: 'per_person' },
     ],
     surfLessonPricing: {
       tier1: 180, // 1-3 aulas

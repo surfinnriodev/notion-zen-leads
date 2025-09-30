@@ -10,6 +10,15 @@
 -- 3. Criar tabela de histórico de mensagens
 \i migrations/003_create_message_history.sql
 
+-- 4. Adicionar campos de categoria de quarto e ajustes de preço
+\i migrations/005_add_room_fields_and_pricing_overrides.sql
+
+-- 5. Atualizar tipos de quarto completos na configuração
+\i migrations/006_update_room_categories_complete.sql
+
+-- 6. Corrigir nomenclatura de tipos de quarto nos leads existentes
+\i migrations/007_fix_room_type_nomenclature.sql
+
 -- Verificar se as tabelas foram criadas
 SELECT table_name 
 FROM information_schema.tables 

@@ -2,11 +2,12 @@
 
 Este documento explica como executar as migrações para criar as tabelas necessárias para persistir os dados da calculadora e mensagens.
 
-## 📋 Tabelas a Criar
+## 📋 Migrações Disponíveis
 
-1. **`pricing_config`** - Configurações de preços
-2. **`message_templates`** - Templates de mensagens
-3. **`message_history`** - Histórico de mensagens enviadas
+1. **`001_create_pricing_config.sql`** - Cria tabela de configurações de preços
+2. **`002_create_message_templates.sql`** - Cria tabela de templates de mensagens
+3. **`003_create_message_history.sql`** - Cria tabela de histórico de mensagens enviadas
+4. **`005_add_room_fields_and_pricing_overrides.sql`** - Adiciona campos para categorização de quartos e ajustes de preços
 
 ## 🚀 Como Executar as Migrações
 
@@ -20,7 +21,8 @@ Este documento explica como executar as migrações para criar as tabelas necess
 ```sql
 -- 1. Primeiro execute: migrations/001_create_pricing_config.sql
 -- 2. Depois execute: migrations/002_create_message_templates.sql  
--- 3. Por último execute: migrations/003_create_message_history.sql
+-- 3. Execute: migrations/003_create_message_history.sql
+-- 4. Execute: migrations/005_add_room_fields_and_pricing_overrides.sql
 ```
 
 ### Opção 2: Via CLI do Supabase

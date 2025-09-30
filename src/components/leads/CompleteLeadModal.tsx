@@ -46,6 +46,30 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
     if (lead) {
       // Mapear para o formato legado para compatibilidade
       const legacyLead = mapReservaToLegacyFormat(lead);
+      
+      // Inicializar room_category e room_type se ainda não existirem
+      if (!lead.room_category && lead.tipo_de_quarto) {
+        // Extrair categoria e tipo do campo tipo_de_quarto
+        if (lead.tipo_de_quarto.includes('Private:')) {
+          legacyLead.room_category = 'Private';
+          legacyLead.room_type = lead.tipo_de_quarto.replace('Private: ', '').trim();
+        } else if (lead.tipo_de_quarto.includes('Shared:')) {
+          legacyLead.room_category = 'Shared';
+          legacyLead.room_type = lead.tipo_de_quarto.replace('Shared: ', '').trim();
+        } else if (lead.tipo_de_quarto === 'Without room') {
+          legacyLead.room_category = 'Without Room';
+          legacyLead.room_type = '';
+        }
+      } else {
+        legacyLead.room_category = lead.room_category || '';
+        legacyLead.room_type = lead.room_type || '';
+      }
+      
+      // Incluir os novos campos de ajuste de preço
+      legacyLead.accommodation_price_override = lead.accommodation_price_override;
+      legacyLead.extra_fee_amount = lead.extra_fee_amount;
+      legacyLead.extra_fee_description = lead.extra_fee_description;
+      
       setFormData(legacyLead);
       setCalculatedLead(calculateLeadPrice(lead, config));
 
@@ -99,6 +123,13 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       if (updatedData.check_in_start !== undefined) mappedData.check_in_start = updatedData.check_in_start;
       if (updatedData.check_in_end !== undefined) mappedData.check_in_end = updatedData.check_in_end;
 
+      // Novos campos de categoria de quarto e ajustes de preço
+      if (updatedData.room_category !== undefined) mappedData.room_category = updatedData.room_category;
+      if (updatedData.room_type !== undefined) mappedData.room_type = updatedData.room_type;
+      if (updatedData.accommodation_price_override !== undefined) mappedData.accommodation_price_override = updatedData.accommodation_price_override;
+      if (updatedData.extra_fee_amount !== undefined) mappedData.extra_fee_amount = updatedData.extra_fee_amount;
+      if (updatedData.extra_fee_description !== undefined) mappedData.extra_fee_description = updatedData.extra_fee_description;
+
       const { data, error } = await supabase
         .from("reservations")
         .update(mappedData)
@@ -121,13 +152,35 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
   });
 
   const handleInputChange = (field: string, value: any) => {
-    const updatedData = { ...formData, [field]: value };
+    let updatedData = { ...formData, [field]: value };
+
+    // Sincronizar room_category e room_type com tipo_de_quarto
+    if (field === 'room_category' || field === 'room_type') {
+      const category = field === 'room_category' ? value : formData.room_category;
+      const type = field === 'room_type' ? value : formData.room_type;
+      
+      console.log('🏠 Room change:', { field, value, category, type });
+      
+      // Atualizar tipo_de_quarto com o formato combinado
+      if (category && type && category !== 'Without Room' && category !== 'Select' && type !== 'Select') {
+        updatedData.tipo_de_quarto = `${category}: ${type}`;
+        console.log('✅ Updated tipo_de_quarto:', updatedData.tipo_de_quarto);
+      } else if (category === 'Without Room') {
+        updatedData.tipo_de_quarto = 'Without room';
+      } else {
+        updatedData.tipo_de_quarto = '';
+      }
+    }
+
     setFormData(updatedData);
 
     // Recalcular preço em tempo real
     if (lead) {
       const updatedLead = { ...lead, ...updatedData };
-      setCalculatedLead(calculateLeadPrice(updatedLead, config));
+      console.log('💰 Recalculating price with:', { tipo_de_quarto: updatedLead.tipo_de_quarto });
+      const newCalculation = calculateLeadPrice(updatedLead, config);
+      console.log('💰 New calculation:', newCalculation);
+      setCalculatedLead(newCalculation);
     }
   };
 
@@ -452,24 +505,98 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 <h3 className="font-medium text-base sm:text-lg">Tipo de Acomodação</h3>
 
                 <div>
-                  <Label htmlFor="tipo_de_quarto">Tipo de Quarto *</Label>
+                  <Label htmlFor="room_category">Room category *</Label>
                   <Select
-                    value={formData.tipo_de_quarto || "sem-quarto"}
-                    onValueChange={(value) => handleInputChange("tipo_de_quarto", value === "sem-quarto" ? "" : value)}
+                    value={formData.room_category || ""}
+                    onValueChange={(value) => {
+                      // Limpar room_type quando mudar a categoria
+                      setFormData({
+                        ...formData,
+                        room_category: value,
+                        room_type: "",
+                        tipo_de_quarto: value === "Without Room" ? "Without room" : ""
+                      });
+                      
+                      // Recalcular
+                      if (lead) {
+                        const updatedLead = {
+                          ...lead,
+                          room_category: value,
+                          room_type: "",
+                          tipo_de_quarto: value === "Without Room" ? "Without room" : ""
+                        };
+                        setCalculatedLead(calculateLeadPrice(updatedLead, config));
+                      }
+                    }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo de quarto" />
+                      <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent>
-                      {roomTypeOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="Select">Select</SelectItem>
+                      <SelectItem value="Without Room">Without Room</SelectItem>
+                      <SelectItem value="Shared">Shared</SelectItem>
+                      <SelectItem value="Private">Private</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
+                {formData.room_category && formData.room_category !== "Without Room" && formData.room_category !== "Select" && (
+                  <div>
+                    <Label htmlFor="room_type">Room type *</Label>
+                    <Select
+                      value={formData.room_type || ""}
+                      onValueChange={(value) => {
+                        handleInputChange("room_type", value);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Select">Select</SelectItem>
+                        {formData.room_category === "Private" && (
+                          <>
+                            <SelectItem value="Shared bathroom">Shared bathroom</SelectItem>
+                            <SelectItem value="Double">Double</SelectItem>
+                            <SelectItem value="Sea-View">Sea-View</SelectItem>
+                            <SelectItem value="Triple">Triple</SelectItem>
+                            <SelectItem value="Family">Family</SelectItem>
+                          </>
+                        )}
+                        {formData.room_category === "Shared" && (
+                          <>
+                            <SelectItem value="Mixed Economic">Mixed Economic</SelectItem>
+                            <SelectItem value="Mixed Standard">Mixed Standard</SelectItem>
+                            <SelectItem value="Female Economic">Female Economic</SelectItem>
+                            <SelectItem value="Female Standard">Female Standard</SelectItem>
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
+
+              {/* Informações adicionais sobre o quarto selecionado */}
+              {formData.room_type && formData.room_type !== "Select" && (
+                <div className="space-y-3 sm:space-y-4">
+                  <h3 className="font-medium text-base sm:text-lg">Detalhes da Acomodação</h3>
+                  <div className="p-4 bg-gray-50 rounded-lg space-y-2 text-sm">
+                    <div><strong>Categoria:</strong> {formData.room_category}</div>
+                    <div><strong>Tipo:</strong> {formData.room_type}</div>
+                    {calculatedLead?.calculatedPrice?.accommodationCost > 0 && (
+                      <div>
+                        <strong>Preço Calculado:</strong>{" "}
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.accommodationCost)}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    O preço final pode ser ajustado na aba "Preços" se necessário.
+                  </p>
+                </div>
+              )}
             </div>
           </TabsContent>
 
@@ -940,15 +1067,57 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 {/* Hospedagem */}
                 {calculatedLead.calculatedPrice.breakdown.accommodation && (
-                  <div className="bg-card border rounded-lg p-4">
-                    <h4 className="font-semibold text-base mb-3 flex items-center gap-2">
+                  <div className="bg-card border rounded-lg p-4 space-y-4">
+                    <h4 className="font-semibold text-base flex items-center gap-2">
                       🏨 Hospedagem
                     </h4>
-                    <div className="flex justify-between">
-                      <span>{calculatedLead.calculatedPrice.breakdown.accommodation.description}</span>
-                      <span className="font-medium">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.breakdown.accommodation.cost)}
-                      </span>
+                    
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">{calculatedLead.calculatedPrice.breakdown.accommodation.description}</span>
+                        <span className="font-medium">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.breakdown.accommodation.cost)}
+                        </span>
+                      </div>
+
+                      <Separator />
+
+                      <div className="space-y-2">
+                        <Label htmlFor="accommodation_price_override" className="text-sm">
+                          Ajustar Valor da Hospedagem
+                        </Label>
+                        <div className="flex gap-2 items-center">
+                          <span className="text-xs text-muted-foreground">R$</span>
+                          <Input
+                            id="accommodation_price_override"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder={calculatedLead.calculatedPrice.breakdown.accommodation.cost.toFixed(2)}
+                            value={formData.accommodation_price_override || ""}
+                            onChange={(e) => {
+                              const value = e.target.value === '' ? null : parseFloat(e.target.value);
+                              handleInputChange("accommodation_price_override", value);
+                            }}
+                            onFocus={(e) => e.target.select()}
+                            className="flex-1"
+                          />
+                          {formData.accommodation_price_override && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleInputChange("accommodation_price_override", null)}
+                            >
+                              Resetar
+                            </Button>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {formData.accommodation_price_override 
+                            ? `Usando valor personalizado: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(formData.accommodation_price_override)}`
+                            : "Deixe vazio para usar o valor calculado automaticamente"}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1001,6 +1170,68 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                   </div>
                 )}
 
+                {/* Taxa Extra */}
+                <div className="bg-card border rounded-lg p-4 space-y-4">
+                  <h4 className="font-semibold text-base flex items-center gap-2">
+                    💰 Taxa Extra
+                  </h4>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="extra_fee_description" className="text-sm">
+                        Descrição da Taxa
+                      </Label>
+                      <Input
+                        id="extra_fee_description"
+                        type="text"
+                        placeholder="Ex: Taxa de limpeza, Taxa de serviço..."
+                        value={formData.extra_fee_description || ""}
+                        onChange={(e) => handleInputChange("extra_fee_description", e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="extra_fee_amount" className="text-sm">
+                        Valor da Taxa
+                      </Label>
+                      <div className="flex gap-2 items-center">
+                        <span className="text-xs text-muted-foreground">R$</span>
+                        <Input
+                          id="extra_fee_amount"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={formData.extra_fee_amount || ""}
+                          onChange={(e) => {
+                            const value = e.target.value === '' ? null : parseFloat(e.target.value);
+                            handleInputChange("extra_fee_amount", value);
+                          }}
+                          onFocus={(e) => e.target.select()}
+                          className="flex-1"
+                        />
+                        {formData.extra_fee_amount && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              handleInputChange("extra_fee_amount", null);
+                              handleInputChange("extra_fee_description", "");
+                            }}
+                          >
+                            Limpar
+                          </Button>
+                        )}
+                      </div>
+                      {formData.extra_fee_amount && formData.extra_fee_amount > 0 && (
+                        <p className="text-xs text-green-600 mt-1">
+                          ✓ Taxa de {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(formData.extra_fee_amount)} será adicionada ao total
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 {/* Resumo Final */}
                 <div className="bg-primary/10 border-2 border-primary/20 rounded-lg p-4">
                   <div className="space-y-2">
@@ -1010,10 +1241,17 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                         <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.packageCost)}</span>
                       </div>
                     )}
-                    {calculatedLead.calculatedPrice.accommodationCost > 0 && (
+                    {(calculatedLead.calculatedPrice.accommodationCost > 0 || formData.accommodation_price_override) && (
                       <div className="flex justify-between text-sm">
                         <span>Subtotal Hospedagem:</span>
-                        <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.accommodationCost)}</span>
+                        <span>
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                            formData.accommodation_price_override || calculatedLead.calculatedPrice.accommodationCost
+                          )}
+                          {formData.accommodation_price_override && (
+                            <span className="text-xs text-orange-600 ml-1">(ajustado)</span>
+                          )}
+                        </span>
                       </div>
                     )}
                     {calculatedLead.calculatedPrice.dailyItemsCost > 0 && (
@@ -1028,11 +1266,21 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                         <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.fixedItemsCost)}</span>
                       </div>
                     )}
+                    {formData.extra_fee_amount && formData.extra_fee_amount > 0 && (
+                      <div className="flex justify-between text-sm text-green-700">
+                        <span>{formData.extra_fee_description || "Taxa Extra"}:</span>
+                        <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(formData.extra_fee_amount)}</span>
+                      </div>
+                    )}
                     <Separator className="my-2" />
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total Geral:</span>
                       <span className="text-primary">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.totalCost)}
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                          calculatedLead.calculatedPrice.totalCost + 
+                          (formData.accommodation_price_override ? (formData.accommodation_price_override - calculatedLead.calculatedPrice.accommodationCost) : 0) +
+                          (formData.extra_fee_amount || 0)
+                        )}
                       </span>
                     </div>
                   </div>

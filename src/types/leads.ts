@@ -11,21 +11,58 @@ export interface LeadWithCalculation extends NotionReserva {
 
 // Mapeamento entre valores do Supabase e IDs da configuração
 const ROOM_TYPE_MAPPING: Record<string, string> = {
+  // Sem quarto
   "Without room": "",
+  
+  // Formatos antigos - Private
   "Private: Double": "private-double",
   "Private: Single": "private-single",
-  "Private: Shared bathroom": "private-double", // Assumindo que é similar ao double
-  "Shared: Mixed Standard": "shared-mixed",
-  "Shared: Female Only": "shared-female",
-  "private-double": "private-double", // Já no formato correto
+  "Private: Shared bathroom": "private-shared-bathroom",
+  
+  // Novos tipos - Private
+  "Private: Sea-View": "private-sea-view",
+  "Private: Triple": "private-triple",
+  "Private: Family": "private-family",
+  
+  // Formatos antigos - Shared
+  "Shared: Mixed Standard": "shared-mixed-standard",
+  "Shared: Female Only": "shared-female-only",
+  
+  // Novos tipos - Shared
+  "Shared: Mixed Economic": "shared-mixed-economic",
+  "Shared: Female Economic": "shared-female-economic",
+  "Shared: Female Standard": "shared-female-standard",
+  
+  // IDs diretos (já no formato correto)
+  "private-double": "private-double",
   "private-single": "private-single",
+  "private-shared-bathroom": "private-shared-bathroom",
+  "private-sea-view": "private-sea-view",
+  "private-triple": "private-triple",
+  "private-family": "private-family",
   "shared-mixed": "shared-mixed",
+  "shared-mixed-standard": "shared-mixed-standard",
+  "shared-mixed-economic": "shared-mixed-economic",
   "shared-female": "shared-female",
+  "shared-female-only": "shared-female-only",
+  "shared-female-standard": "shared-female-standard",
+  "shared-female-economic": "shared-female-economic",
 };
 
 function mapRoomType(supabaseRoomType: string | null): string {
   if (!supabaseRoomType) return "";
-  return ROOM_TYPE_MAPPING[supabaseRoomType] || "";
+  
+  // Se já encontrar no mapeamento, retorna o ID
+  if (ROOM_TYPE_MAPPING[supabaseRoomType]) {
+    const mapped = ROOM_TYPE_MAPPING[supabaseRoomType];
+    console.log('🔍 Room type mapped:', { input: supabaseRoomType, output: mapped });
+    return mapped;
+  }
+  
+  // Senão, retorna o nome original para buscar na configuração
+  // O calculatePrice agora busca tanto por ID quanto por nome
+  console.log('🔍 Room type using original name:', supabaseRoomType);
+  return supabaseRoomType;
 }
 
 // Helper function to calculate actual days between dates
