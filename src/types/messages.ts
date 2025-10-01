@@ -27,7 +27,11 @@ export const AVAILABLE_VARIABLES = [
   { key: 'numero_pessoas', label: 'Número de pessoas', example: '2' },
   { key: 'numero_noites', label: 'Número de noites', example: '5' },
   { key: 'tipo_quarto', label: 'Tipo de quarto', example: 'Private: Double' },
-  { key: 'pacote', label: 'Pacote', example: 'Pacote Completo' },
+  { key: 'pacote', label: 'Pacote (benefícios base)', example: 'Package 2 - Carioca Ride\n\n5 nights & 6 days...' },
+
+  // Resumos de Serviços
+  { key: 'servicos_contratados', label: '📋 Resumo Completo (PT)', example: '📍 HOSPEDAGEM:\nPrivate: Double - 5 noites\n\n🏄 ATIVIDADES:\n• 6 Aulas de Surf...' },
+  { key: 'servicos_contratados_en', label: '📋 Complete Summary (EN)', example: '📍 ACCOMMODATION:\nPrivate: Double - 5 nights\n\n🏄 ACTIVITIES:\n• 6 Surf Lessons...' },
 
   // Preços
   { key: 'preco_total', label: 'Preço Total', example: 'R$ 2.500,00' },
