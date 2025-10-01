@@ -85,28 +85,46 @@ export const usePricingConfig = () => {
     },
     packages: [
       {
-        id: 'basic-package',
-        name: 'Pacote Básico',
+        id: 'package-1',
+        name: 'Package 1 - Surf In Rio',
         fixedPrice: 300,
-        overridesIndividualPricing: true,
+        overridesIndividualPricing: false,
         includedItems: {
-          breakfast: true,
-          unlimitedBoardRental: true,
-          surfLessons: 2,
+          surfLessons: 4,
+          yogaLessons: 1,
         }
       },
       {
-        id: 'complete-package',
-        name: 'Pacote Completo',
+        id: 'package-2',
+        name: 'Package 2 - Carioca Ride',
         fixedPrice: 500,
-        overridesIndividualPricing: true,
+        overridesIndividualPricing: false,
         includedItems: {
           breakfast: true,
           unlimitedBoardRental: true,
-          surfLessons: 5,
-          yogaLessons: 3,
-          surfSkate: 2,
+          surfLessons: 4,
+          yogaLessons: 1,
+          surfSkate: 1,
           videoAnalysis: 1,
+          massage: 1,
+          transfer: 1,
+        }
+      },
+      {
+        id: 'package-3',
+        name: 'Package 3 - Surf Intensive',
+        fixedPrice: 800,
+        overridesIndividualPricing: false,
+        includedItems: {
+          breakfast: true,
+          unlimitedBoardRental: true,
+          surfLessons: 8,
+          yogaLessons: 2,
+          surfSkate: 1,
+          surfGuide: 1,
+          videoAnalysis: 1,
+          massage: 1,
+          transfer: 1,
         }
       }
     ],

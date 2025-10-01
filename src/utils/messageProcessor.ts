@@ -1,5 +1,6 @@
 import { LeadWithCalculation } from '@/types/leads';
 import { MessageTemplate, MessagePreview } from '@/types/messages';
+import { PackageConfig } from '@/types/pricing';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -32,7 +33,54 @@ export const calculateNights = (checkIn: string | null, checkOut: string | null)
   }
 };
 
-export const extractVariablesFromLead = (lead: LeadWithCalculation): Record<string, string> => {
+/**
+ * Formata os benefícios de um pacote para exibição
+ */
+export const formatPackageBenefits = (pkg: PackageConfig, nights: number): string => {
+  const benefits: string[] = [];
+  
+  benefits.push(`${nights} nights & ${nights + 1} days`);
+  
+  if (pkg.includedItems.surfLessons) {
+    benefits.push(`${pkg.includedItems.surfLessons} Surfing lesson${pkg.includedItems.surfLessons > 1 ? 's' : ''}`);
+  }
+  
+  if (pkg.includedItems.yogaLessons) {
+    benefits.push(`${pkg.includedItems.yogaLessons} Yoga Lesson${pkg.includedItems.yogaLessons > 1 ? 's' : ''}`);
+  }
+  
+  if (pkg.includedItems.surfSkate) {
+    benefits.push(`${pkg.includedItems.surfSkate} Surf Skate lesson${pkg.includedItems.surfSkate > 1 ? 's' : ''}`);
+  }
+  
+  if (pkg.includedItems.videoAnalysis) {
+    benefits.push(`Video Analysis`);
+  }
+  
+  if (pkg.includedItems.massage) {
+    benefits.push(`Ayurvedic Massage`);
+  }
+  
+  if (pkg.includedItems.surfGuide) {
+    benefits.push(`${pkg.includedItems.surfGuide} Surf Guidance`);
+  }
+  
+  if (pkg.includedItems.unlimitedBoardRental) {
+    benefits.push(`Optional Board Rental`);
+  }
+  
+  if (pkg.includedItems.breakfast) {
+    benefits.push(`Breakfast Optional`);
+  }
+  
+  if (pkg.includedItems.transfer) {
+    benefits.push(`Airport Transfer Optional`);
+  }
+  
+  return benefits.join('\n');
+};
+
+export const extractVariablesFromLead = (lead: LeadWithCalculation, packages?: PackageConfig[]): Record<string, string> => {
   const nights = calculateNights(lead.check_in_start, lead.check_in_end);
 
   // Calcular o preço total incluindo ajustes de hospedagem e taxa extra
@@ -57,6 +105,16 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation): Record<stri
     }
   }
 
+  // Formatar pacote com benefícios se disponível
+  let packageDisplay = lead.pacote || 'Sem pacote';
+  if (lead.pacote && packages) {
+    const selectedPackage = packages.find(pkg => pkg.id === lead.pacote || pkg.name === lead.pacote);
+    if (selectedPackage) {
+      const benefits = formatPackageBenefits(selectedPackage, nights);
+      packageDisplay = `${selectedPackage.name}\n\n${benefits}`;
+    }
+  }
+
   return {
     // Dados básicos
     nome: lead.name || lead.nome || 'N/A',
@@ -69,7 +127,7 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation): Record<stri
     numero_pessoas: String(lead.number_of_people || lead.numero_de_pessoas || 0),
     numero_noites: String(nights),
     tipo_quarto: lead.tipo_de_quarto || 'N/A',
-    pacote: lead.pacote || 'Sem pacote',
+    pacote: packageDisplay,
 
     // Preços (agora incluindo ajustes e taxa extra)
     preco_total: formatCurrency(totalPrice),
@@ -85,8 +143,8 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation): Record<stri
   };
 };
 
-export const processTemplate = (template: MessageTemplate, lead: LeadWithCalculation): MessagePreview => {
-  const variables = extractVariablesFromLead(lead);
+export const processTemplate = (template: MessageTemplate, lead: LeadWithCalculation, packages?: PackageConfig[]): MessagePreview => {
+  const variables = extractVariablesFromLead(lead, packages);
 
   // Substituir variáveis no assunto e conteúdo
   let processedSubject = template.subject;

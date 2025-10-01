@@ -46,7 +46,7 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
     const newRoom: RoomCategory = {
       id: `room-${Date.now()}`,
       name: "Private: Double",
-      pricePerNight: 100,
+      pricePerNight: 0, // Preço será definido manualmente no lead
       billingType: 'per_room',
     };
     setLocalConfig({
@@ -176,7 +176,7 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
           <div>
             <CardTitle className="text-base font-medium">Tipos de Acomodação</CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
-              Configure os preços para cada tipo de quarto disponível
+              Configure os tipos de quarto disponíveis. Os preços serão definidos manualmente em cada lead.
             </p>
           </div>
           <Button size="sm" variant="ghost" onClick={addRoom} className="gap-2 text-muted-foreground hover:text-foreground">
@@ -199,7 +199,7 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                 .filter(room => room.name.startsWith('Private:'))
                 .map((room) => (
                   <div key={room.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg border">
-                    <div className="flex-1 grid grid-cols-4 gap-3">
+                    <div className="flex-1 grid grid-cols-2 gap-3">
                       <div>
                         <Label className="text-xs">Tipo de Quarto</Label>
                         <Select
@@ -219,16 +219,6 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                         </Select>
                       </div>
                       <div>
-                        <Label className="text-xs">Preço/Noite</Label>
-                        <Input
-                          type="number"
-                          value={room.pricePerNight}
-                          onChange={(e) => updateRoom(room.id, { pricePerNight: parseFloat(e.target.value) || 0 })}
-                          className="h-9"
-                          placeholder="150"
-                        />
-                      </div>
-                      <div>
                         <Label className="text-xs">Cobrança</Label>
                         <Select
                           value={room.billingType}
@@ -242,11 +232,6 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                             <SelectItem value="per_person">Por pessoa</SelectItem>
                           </SelectContent>
                         </Select>
-                      </div>
-                      <div className="flex items-end">
-                        <div className="text-xs text-muted-foreground">
-                          {formatCurrency(room.pricePerNight)} / {room.billingType === 'per_room' ? 'quarto' : 'pessoa'}
-                        </div>
                       </div>
                     </div>
                     <Button
@@ -278,7 +263,7 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                 .filter(room => room.name.startsWith('Shared:'))
                 .map((room) => (
                   <div key={room.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg border">
-                    <div className="flex-1 grid grid-cols-4 gap-3">
+                    <div className="flex-1 grid grid-cols-2 gap-3">
                       <div>
                         <Label className="text-xs">Tipo de Quarto</Label>
                         <Select
@@ -297,16 +282,6 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                         </Select>
                       </div>
                       <div>
-                        <Label className="text-xs">Preço/Noite</Label>
-                        <Input
-                          type="number"
-                          value={room.pricePerNight}
-                          onChange={(e) => updateRoom(room.id, { pricePerNight: parseFloat(e.target.value) || 0 })}
-                          className="h-9"
-                          placeholder="80"
-                        />
-                      </div>
-                      <div>
                         <Label className="text-xs">Cobrança</Label>
                         <Select
                           value={room.billingType}
@@ -320,11 +295,6 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                             <SelectItem value="per_person">Por pessoa</SelectItem>
                           </SelectContent>
                         </Select>
-                      </div>
-                      <div className="flex items-end">
-                        <div className="text-xs text-muted-foreground">
-                          {formatCurrency(room.pricePerNight)} / {room.billingType === 'per_room' ? 'quarto' : 'pessoa'}
-                        </div>
                       </div>
                     </div>
                     <Button
@@ -357,55 +327,41 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                   .filter(room => !room.name.startsWith('Private:') && !room.name.startsWith('Shared:'))
                   .map((room) => (
                     <div key={room.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg border">
-                      <div className="flex-1 grid grid-cols-4 gap-3">
-                <div>
+                      <div className="flex-1 grid grid-cols-2 gap-3">
+                        <div>
                           <Label className="text-xs">Nome Personalizado</Label>
-                  <Input
-                    value={room.name}
-                    onChange={(e) => updateRoom(room.id, { name: e.target.value })}
+                          <Input
+                            value={room.name}
+                            onChange={(e) => updateRoom(room.id, { name: e.target.value })}
                             className="h-9"
-                  />
-                </div>
-                <div>
-                          <Label className="text-xs">Preço/Noite</Label>
-                  <Input
-                    type="number"
-                    value={room.pricePerNight}
-                    onChange={(e) => updateRoom(room.id, { pricePerNight: parseFloat(e.target.value) || 0 })}
-                            className="h-9"
-                  />
-                </div>
-                <div>
+                          />
+                        </div>
+                        <div>
                           <Label className="text-xs">Cobrança</Label>
-                  <Select
-                    value={room.billingType}
-                    onValueChange={(value: any) => updateRoom(room.id, { billingType: value })}
-                  >
+                          <Select
+                            value={room.billingType}
+                            onValueChange={(value: any) => updateRoom(room.id, { billingType: value })}
+                          >
                             <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="per_room">Por quarto</SelectItem>
-                      <SelectItem value="per_person">Por pessoa</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                        <div className="flex items-end">
-                          <div className="text-xs text-muted-foreground">
-                            {formatCurrency(room.pricePerNight)} / {room.billingType === 'per_room' ? 'quarto' : 'pessoa'}
-                          </div>
-                </div>
-              </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => removeRoom(room.id)}
-                className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="per_room">Por quarto</SelectItem>
+                              <SelectItem value="per_person">Por pessoa</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeRoom(room.id)}
+                        className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
               </div>
             )}
           </div>
@@ -421,7 +377,7 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                   const newRoom: RoomCategory = {
                     id: `room-${Date.now()}`,
                     name: "Private: Double",
-                    pricePerNight: 150,
+                    pricePerNight: 0, // Preço será definido manualmente no lead
                     billingType: 'per_room',
                   };
                   setLocalConfig({ ...localConfig, roomCategories: [...localConfig.roomCategories, newRoom] });
@@ -438,7 +394,7 @@ export const PricingConfigForm = ({ config, onUpdateConfig, onReset }: PricingCo
                   const newRoom: RoomCategory = {
                     id: `room-${Date.now()}`,
                     name: "Shared: Mixed Standard",
-                    pricePerNight: 80,
+                    pricePerNight: 0, // Preço será definido manualmente no lead
                     billingType: 'per_person',
                   };
                   setLocalConfig({ ...localConfig, roomCategories: [...localConfig.roomCategories, newRoom] });

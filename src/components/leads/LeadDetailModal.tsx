@@ -106,7 +106,7 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
     console.log("📝 Found template:", template);
     if (template && calculatedLead) {
       console.log("🔄 Processing template with lead:", calculatedLead);
-      const processed = processTemplate(template, calculatedLead);
+      const processed = processTemplate(template, calculatedLead, config.packages);
       console.log("✅ Processed message:", processed);
       setMessageSubject(processed.subject);
       setMessageContent(processed.content);

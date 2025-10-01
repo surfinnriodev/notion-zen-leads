@@ -203,6 +203,15 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       }
     }
 
+    // Atualizar transfer_package automaticamente quando o pacote muda
+    if (field === 'pacote') {
+      const selectedPackage = config.packages?.find(pkg => 
+        pkg.id === value || pkg.name === value
+      );
+      updatedData.transfer_package = selectedPackage?.includedItems?.transfer || 0;
+      console.log('✈️ Updated transfer_package from package:', updatedData.transfer_package);
+    }
+
     setFormData(updatedData);
 
     // Recalcular preço em tempo real
@@ -229,7 +238,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
     console.log("📝 Found template:", template);
     if (template && calculatedLead) {
       console.log("🔄 Processing template with lead:", calculatedLead);
-      const processed = processTemplate(template, calculatedLead);
+      const processed = processTemplate(template, calculatedLead, config.packages);
       console.log("✅ Processed message:", processed);
       setMessageSubject(processed.subject);
       setMessageContent(processed.content);
@@ -491,12 +500,25 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="pacote">Pacote Selecionado</Label>
-                  <Input
-                    id="pacote"
-                    value={formData.pacote || ""}
-                    onChange={(e) => handleInputChange("pacote", e.target.value)}
-                    placeholder="Ex: Package 2 - Carioca Ride"
-                  />
+                  <Select
+                    value={formData.pacote || "none"}
+                    onValueChange={(value) => handleInputChange("pacote", value === "none" ? null : value)}
+                  >
+                    <SelectTrigger id="pacote">
+                      <SelectValue placeholder="Selecione um pacote" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sem pacote</SelectItem>
+                      {config.packages?.map((pkg) => (
+                        <SelectItem key={pkg.id} value={pkg.id}>
+                          {pkg.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Pacotes incluem serviços pré-configurados
+                  </p>
                 </div>
 
                 <div>
@@ -795,10 +817,10 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 </div>
 
                 <div>
-                  <Label htmlFor="transfer_extra">Transfer Extra</Label>
+                  <Label htmlFor="aluguel_de_prancha">Aluguel de Prancha Ilimitado</Label>
                   <Select
-                    value={formData.transfer_extra ? "sim" : "nao"}
-                    onValueChange={(value) => handleInputChange("transfer_extra", value === "sim")}
+                    value={formData.aluguel_de_prancha ? "sim" : "nao"}
+                    onValueChange={(value) => handleInputChange("aluguel_de_prancha", value === "sim")}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione" />
@@ -808,6 +830,9 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                       <SelectItem value="sim">Sim</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Prancha disponível durante toda a estadia
+                  </p>
                 </div>
 
                 <div>
@@ -817,14 +842,43 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                       type="number"
                       min="0"
                       step="1"
+                      className="w-full bg-muted"
+                      value={(() => {
+                        // Buscar transfer incluído no pacote selecionado
+                        if (formData.pacote) {
+                          const selectedPackage = config.packages?.find(pkg => 
+                            pkg.id === formData.pacote || pkg.name === formData.pacote
+                          );
+                          return selectedPackage?.includedItems?.transfer || 0;
+                        }
+                        return 0;
+                      })()}
+                      disabled
+                      readOnly
+                    />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Transfer incluído no pacote (read-only)
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="transfer_extra">Transfer Extra (quantidade)</Label>
+                    <Input
+                      id="transfer_extra"
+                      type="number"
+                      min="0"
+                      step="1"
                       className="w-full"
-                      value={formData.transfer_package || 0}
+                      value={formData.transfer_extra || 0}
                       onChange={(e) => {
                         const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
-                        handleInputChange("transfer_package", value);
+                        handleInputChange("transfer_extra", value);
                       }}
                       onFocus={(e) => e.target.select()}
                     />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Transfers adicionais além do pacote
+                  </p>
                 </div>
               </div>
             </div>
@@ -1063,32 +1117,6 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
           {/* Tab 6: Preços */}
           <TabsContent value="pricing" className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4 min-h-0">
-            {/* Resumo Total */}
-            <div className="bg-primary/5 p-4 sm:p-6 rounded-lg">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                  <span className="text-lg sm:text-xl font-semibold">Preço Total:</span>
-                </div>
-                <span className="text-xl sm:text-2xl font-bold text-primary">
-                  {calculatedLead ? getLeadDisplayPrice(calculatedLead) : "Calculando..."}
-                </span>
-              </div>
-
-              {calculatedLead?.calculatedPrice && (
-                <div className="grid grid-cols-2 gap-2 text-sm sm:text-base">
-                  <div className="flex justify-between py-1">
-                    <span>Noites:</span>
-                    <span className="font-medium">{calculatedLead.calculatedPrice.numberOfNights}</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span>Pessoas:</span>
-                    <span className="font-medium">{calculatedLead.calculatedPrice.numberOfPeople}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* Detalhamento Item por Item */}
             {calculatedLead?.calculatedPrice?.breakdown && (
               <div className="space-y-4">
@@ -1096,19 +1124,75 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 {calculatedLead.calculatedPrice.breakdown.package && (
                   <div className="bg-card border rounded-lg p-4">
                     <h4 className="font-semibold text-base mb-3 flex items-center gap-2">
-                      🎯 Pacote
+                      📦 Pacote
                     </h4>
-                    <div className="flex justify-between">
-                      <span>{calculatedLead.calculatedPrice.breakdown.package.name}</span>
-                      <span className="font-medium">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.breakdown.package.cost)}
-                      </span>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <span className="font-medium">{calculatedLead.calculatedPrice.breakdown.package.name}</span>
+                        <span className="font-medium">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.breakdown.package.cost)}
+                        </span>
+                      </div>
+                      
+                      {/* Benefícios do Pacote */}
+                      {(() => {
+                        const selectedPackage = config.packages?.find(pkg => pkg.id === lead?.pacote || pkg.name === lead?.pacote);
+                        if (selectedPackage) {
+                          const benefits = [];
+                          const nights = calculatedLead.calculatedPrice.numberOfNights;
+                          
+                          benefits.push(`${nights} noites & ${nights + 1} dias`);
+                          
+                          if (selectedPackage.includedItems.surfLessons) {
+                            benefits.push(`${selectedPackage.includedItems.surfLessons} Aula${selectedPackage.includedItems.surfLessons > 1 ? 's' : ''} de Surf`);
+                          }
+                          if (selectedPackage.includedItems.yogaLessons) {
+                            benefits.push(`${selectedPackage.includedItems.yogaLessons} Aula${selectedPackage.includedItems.yogaLessons > 1 ? 's' : ''} de Yoga`);
+                          }
+                          if (selectedPackage.includedItems.surfSkate) {
+                            benefits.push(`${selectedPackage.includedItems.surfSkate} Aula${selectedPackage.includedItems.surfSkate > 1 ? 's' : ''} de Surf Skate`);
+                          }
+                          if (selectedPackage.includedItems.videoAnalysis) {
+                            benefits.push(`Análise de Vídeo`);
+                          }
+                          if (selectedPackage.includedItems.massage) {
+                            benefits.push(`Massagem Ayurvédica`);
+                          }
+                          if (selectedPackage.includedItems.surfGuide) {
+                            benefits.push(`${selectedPackage.includedItems.surfGuide} Surf Guide`);
+                          }
+                          if (selectedPackage.includedItems.unlimitedBoardRental) {
+                            benefits.push(`Aluguel de Prancha (Opcional)`);
+                          }
+                          if (selectedPackage.includedItems.breakfast) {
+                            benefits.push(`Café da Manhã (Opcional)`);
+                          }
+                          if (selectedPackage.includedItems.transfer) {
+                            benefits.push(`Transfer Aeroporto (Opcional)`);
+                          }
+                          
+                          return (
+                            <div className="bg-primary/5 p-3 rounded-lg">
+                              <p className="text-xs font-medium text-muted-foreground mb-2">Benefícios incluídos:</p>
+                              <ul className="space-y-1 text-xs text-muted-foreground">
+                                {benefits.map((benefit, idx) => (
+                                  <li key={idx} className="flex items-start gap-2">
+                                    <span className="text-primary mt-0.5">•</span>
+                                    <span>{benefit}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
                 )}
 
                 {/* Hospedagem */}
-                {calculatedLead.calculatedPrice.breakdown.accommodation && (
+                {lead?.tipo_de_quarto && lead.tipo_de_quarto !== "Without room" && (
                   <div className="bg-card border rounded-lg p-4 space-y-4">
                     <h4 className="font-semibold text-base flex items-center gap-2">
                       🏨 Hospedagem
@@ -1116,18 +1200,54 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                     
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-sm">{calculatedLead.calculatedPrice.breakdown.accommodation.description}</span>
-                        <span className="font-medium">
-                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.breakdown.accommodation.cost)}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-sm font-medium">
+                            {(() => {
+                              // Se já tem o formato completo "Category: Type"
+                              if (lead.tipo_de_quarto.includes(':')) {
+                                return lead.tipo_de_quarto;
+                              }
+                              
+                              // Se tem room_category e room_type separados
+                              if (formData.room_category && formData.room_type) {
+                                return `${formData.room_category}: ${formData.room_type}`;
+                              }
+                              
+                              // Buscar na configuração de quartos
+                              const room = config.roomCategories?.find(r => 
+                                r.id === lead.tipo_de_quarto || r.name === lead.tipo_de_quarto
+                              );
+                              
+                              if (room) {
+                                return room.name;
+                              }
+                              
+                              // Fallback: mostrar o que está salvo
+                              return lead.tipo_de_quarto;
+                            })()}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {calculatedLead?.calculatedPrice?.numberOfNights || 0} noites • {calculatedLead?.calculatedPrice?.numberOfPeople || 0} pessoas
+                          </span>
+                        </div>
+                        {formData.accommodation_price_override && (
+                          <span className="font-medium text-primary">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(formData.accommodation_price_override)}
+                          </span>
+                        )}
                       </div>
 
                       <Separator />
 
                       <div className="space-y-2">
-                        <Label htmlFor="accommodation_price_override" className="text-sm">
-                          Ajustar Valor da Hospedagem
-                        </Label>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="accommodation_price_override" className="text-sm font-semibold">
+                            💵 Valor da Hospedagem
+                          </Label>
+                          <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                            Inserção Manual
+                          </span>
+                        </div>
                         <div className="flex gap-2 items-center">
                           <span className="text-xs text-muted-foreground">R$</span>
                           <Input
@@ -1135,7 +1255,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                             type="number"
                             min="0"
                             step="0.01"
-                            placeholder={calculatedLead.calculatedPrice.breakdown.accommodation.cost.toFixed(2)}
+                            placeholder="0.00"
                             value={formData.accommodation_price_override || ""}
                             onChange={(e) => {
                               const value = e.target.value === '' ? null : parseFloat(e.target.value);
@@ -1150,14 +1270,14 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                               size="sm"
                               onClick={() => handleInputChange("accommodation_price_override", null)}
                             >
-                              Resetar
+                              Limpar
                             </Button>
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {formData.accommodation_price_override 
-                            ? `Usando valor personalizado: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(formData.accommodation_price_override)}`
-                            : "Deixe vazio para usar o valor calculado automaticamente"}
+                            ? `✓ Valor definido: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(formData.accommodation_price_override)}`
+                            : "Digite o valor total da hospedagem para este lead"}
                         </p>
                       </div>
                     </div>
@@ -1273,60 +1393,125 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
 
-                {/* Resumo Final */}
-                <div className="bg-primary/10 border-2 border-primary/20 rounded-lg p-4">
-                  <div className="space-y-2">
-                    {calculatedLead.calculatedPrice.packageCost > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span>Subtotal Pacote:</span>
-                        <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.packageCost)}</span>
-                      </div>
-                    )}
-                    {(calculatedLead.calculatedPrice.accommodationCost > 0 || formData.accommodation_price_override) && (
-                      <div className="flex justify-between text-sm">
-                        <span>Subtotal Hospedagem:</span>
-                        <span>
-                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                            formData.accommodation_price_override || calculatedLead.calculatedPrice.accommodationCost
-                          )}
-                          {formData.accommodation_price_override && (
-                            <span className="text-xs text-orange-600 ml-1">(ajustado)</span>
-                          )}
-                        </span>
-                      </div>
-                    )}
-                    {calculatedLead.calculatedPrice.dailyItemsCost > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span>Subtotal Itens Diários:</span>
-                        <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.dailyItemsCost)}</span>
-                      </div>
-                    )}
-                    {calculatedLead.calculatedPrice.fixedItemsCost > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span>Subtotal Atividades:</span>
-                        <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.fixedItemsCost)}</span>
-                      </div>
-                    )}
-                    {formData.extra_fee_amount && formData.extra_fee_amount > 0 && (
-                      <div className="flex justify-between text-sm text-green-700">
-                        <span>{formData.extra_fee_description || "Taxa Extra"}:</span>
-                        <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(formData.extra_fee_amount)}</span>
-                      </div>
-                    )}
-                    <Separator className="my-2" />
-                    <div className="flex justify-between font-bold text-lg">
-                      <span>Total Geral:</span>
-                      <span className="text-primary">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                          calculatedLead.calculatedPrice.totalCost + 
-                          (formData.accommodation_price_override ? (formData.accommodation_price_override - calculatedLead.calculatedPrice.accommodationCost) : 0) +
-                          (formData.extra_fee_amount || 0)
-                        )}
-                      </span>
+            {/* Resumo do Orçamento - Movido para o final */}
+            {calculatedLead?.calculatedPrice && (
+              <div className="bg-white border-2 border-primary/20 rounded-lg shadow-sm">
+                {/* Cabeçalho */}
+                <div className="bg-primary/10 p-4 border-b border-primary/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-5 h-5 text-primary" />
+                      <span className="text-base font-semibold">Resumo do Orçamento</span>
                     </div>
+                    <Badge variant="outline" className="bg-white">
+                      {calculatedLead.calculatedPrice.numberOfNights || 0} noites • {calculatedLead.calculatedPrice.numberOfPeople || 0} pessoas
+                    </Badge>
                   </div>
                 </div>
+
+                {/* Cálculos */}
+                {(() => {
+                  // Calcular valores
+                  const servicosCost = (calculatedLead.calculatedPrice.packageCost || 0) + 
+                                      (calculatedLead.calculatedPrice.fixedItemsCost || 0);
+                  
+                  const taxaCost = formData.extra_fee_amount || 0;
+                  
+                  const hospedagemCost = formData.accommodation_price_override || 
+                                        calculatedLead.calculatedPrice.accommodationCost || 0;
+                  
+                  const cafeCost = calculatedLead.calculatedPrice.dailyItemsCost || 0;
+                  
+                  const valorDeposito = servicosCost + taxaCost;
+                  const valorPendente = hospedagemCost + cafeCost;
+                  const total = valorDeposito + valorPendente;
+
+                  return (
+                    <div className="p-4 space-y-4">
+                      {/* Taxa */}
+                      {taxaCost > 0 && (
+                        <div className="flex justify-between items-center py-2 border-b border-dashed">
+                          <span className="text-sm font-medium">Taxa (BRL):</span>
+                          <span className="font-medium text-orange-600">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(taxaCost)}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Valor Depósito */}
+                      <div className="bg-blue-50 p-3 rounded-lg space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-semibold text-blue-900">💵 Valor Depósito:</span>
+                          <span className="font-bold text-blue-900">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorDeposito)}
+                          </span>
+                        </div>
+                        {/* Desmembramento do Depósito */}
+                        <div className="text-xs text-blue-800 pl-4 space-y-1 border-l-2 border-blue-200">
+                          {calculatedLead.calculatedPrice.packageCost > 0 && (
+                            <div className="flex justify-between">
+                              <span>• Pacote:</span>
+                              <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.packageCost)}</span>
+                            </div>
+                          )}
+                          {calculatedLead.calculatedPrice.fixedItemsCost > 0 && (
+                            <div className="flex justify-between">
+                              <span>• Atividades:</span>
+                              <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedLead.calculatedPrice.fixedItemsCost)}</span>
+                            </div>
+                          )}
+                          {taxaCost > 0 && (
+                            <div className="flex justify-between">
+                              <span>• Taxa:</span>
+                              <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(taxaCost)}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Valor Pendente */}
+                      <div className="bg-amber-50 p-3 rounded-lg space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-semibold text-amber-900">⏳ Valor Pendente:</span>
+                          <span className="font-bold text-amber-900">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorPendente)}
+                          </span>
+                        </div>
+                        {/* Desmembramento do Pendente */}
+                        <div className="text-xs text-amber-800 pl-4 space-y-1 border-l-2 border-amber-200">
+                          {hospedagemCost > 0 && (
+                            <div className="flex justify-between">
+                              <span>• Hospedagem:</span>
+                              <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(hospedagemCost)}</span>
+                            </div>
+                          )}
+                          {cafeCost > 0 && (
+                            <div className="flex justify-between">
+                              <span>• Café da Manhã:</span>
+                              <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cafeCost)}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Total */}
+                      <div className="bg-primary/5 p-4 rounded-lg border-t-2 border-primary/30">
+                        <div className="flex justify-between items-center">
+                          <span className="text-lg font-semibold">Total:</span>
+                          <span className="text-2xl font-bold text-primary">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total)}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1 text-right">
+                          Depósito + Pendente
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </TabsContent>

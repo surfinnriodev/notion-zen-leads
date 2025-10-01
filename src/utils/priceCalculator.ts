@@ -54,17 +54,19 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     });
     
     if (roomCategory) {
-      const accommodationCost = roomCategory.billingType === 'per_person' 
-        ? roomCategory.pricePerNight * numberOfNights * numberOfPeople
-        : roomCategory.pricePerNight * numberOfNights;
+      // Se pricePerNight for 0, o custo será definido manualmente no lead via accommodation_price_override
+      const accommodationCost = roomCategory.pricePerNight * numberOfNights * 
+        (roomCategory.billingType === 'per_person' ? numberOfPeople : 1);
       
       result.accommodationCost = accommodationCost;
       result.breakdown.accommodation = {
-        description: `${roomCategory.name} - ${numberOfNights} noites${roomCategory.billingType === 'per_person' ? ` x ${numberOfPeople} pessoas` : ''}`,
+        description: accommodationCost === 0 
+          ? `${roomCategory.name} - Valor a ser definido manualmente`
+          : `${roomCategory.name} - ${numberOfNights} noites${roomCategory.billingType === 'per_person' ? ` x ${numberOfPeople} pessoas` : ''}`,
         cost: accommodationCost,
       };
       
-      console.log('✅ Accommodation calculated:', result.accommodationCost);
+      console.log('✅ Accommodation calculated:', result.accommodationCost, '(0 = manual pricing)');
     } else {
       console.log('❌ No room category found for:', input.roomCategory);
     }
