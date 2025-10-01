@@ -80,6 +80,178 @@ export const formatPackageBenefits = (pkg: PackageConfig, nights: number): strin
   return benefits.join('\n');
 };
 
+/**
+ * Formata um resumo completo de todos os serviços contratados pelo lead
+ * Inclui hospedagem, atividades, itens diários e extras
+ */
+export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: PackageConfig[], language: 'pt' | 'en' = 'pt'): string => {
+  const sections: string[] = [];
+  const nights = calculateNights(lead.check_in_start, lead.check_in_end);
+  
+  const labels = language === 'en' ? {
+    accommodation: '📍 ACCOMMODATION:',
+    night: 'night',
+    nights: 'nights',
+    activities: '🏄 ACTIVITIES:',
+    surfLesson: 'Surf Lesson',
+    surfLessons: 'Surf Lessons',
+    yogaLesson: 'Yoga Lesson',
+    yogaLessons: 'Yoga Lessons',
+    surfSkateSession: 'Surf Skate Session',
+    surfSkateSessions: 'Surf Skate Sessions',
+    surfGuideDay: 'Surf Guide Day',
+    surfGuideDays: 'Surf Guide Days',
+    videoAnalysis: 'Video Analysis',
+    videoAnalyses: 'Video Analyses',
+    ayurvedicMassage: 'Ayurvedic Massage',
+    ayurvedicMassages: 'Ayurvedic Massages',
+    dailyItems: '☕ DAILY ITEMS:',
+    breakfast: 'Breakfast',
+    day: 'day',
+    days: 'days',
+    unlimitedBoardRental: 'Unlimited Board Rental',
+    transfer: '✈️ TRANSFER:',
+    airportTransfer: 'Airport Transfer',
+    airportTransfers: 'Airport Transfers',
+    experiences: '🌟 EXPERIENCES:',
+    hike: 'Hike',
+    rioCityTour: 'Rio City Tour',
+    cariocaExperience: 'Carioca Experience',
+    basePackage: '📦 BASE PACKAGE:',
+    noServices: 'No services contracted'
+  } : {
+    accommodation: '📍 HOSPEDAGEM:',
+    night: 'noite',
+    nights: 'noites',
+    activities: '🏄 ATIVIDADES:',
+    surfLesson: 'Aula de Surf',
+    surfLessons: 'Aulas de Surf',
+    yogaLesson: 'Aula de Yoga',
+    yogaLessons: 'Aulas de Yoga',
+    surfSkateSession: 'Sessão de Surf Skate',
+    surfSkateSessions: 'Sessões de Surf Skate',
+    surfGuideDay: 'Dia de Surf Guide',
+    surfGuideDays: 'Dias de Surf Guide',
+    videoAnalysis: 'Análise de Vídeo',
+    videoAnalyses: 'Análises de Vídeo',
+    ayurvedicMassage: 'Massagem Ayurvédica',
+    ayurvedicMassages: 'Massagens Ayurvédicas',
+    dailyItems: '☕ ITENS DIÁRIOS:',
+    breakfast: 'Café da Manhã',
+    day: 'dia',
+    days: 'dias',
+    unlimitedBoardRental: 'Aluguel de Prancha Ilimitado',
+    transfer: '✈️ TRANSFER:',
+    airportTransfer: 'Transfer (Aeroporto)',
+    airportTransfers: 'Transfers (Aeroporto)',
+    experiences: '🌟 EXPERIÊNCIAS:',
+    hike: 'Trilha',
+    rioCityTour: 'Rio City Tour',
+    cariocaExperience: 'Carioca Experience',
+    basePackage: '📦 PACOTE BASE:',
+    noServices: 'Nenhum serviço contratado'
+  };
+  
+  // Hospedagem
+  if (lead.tipo_de_quarto && lead.tipo_de_quarto !== 'Without room') {
+    sections.push(labels.accommodation);
+    sections.push(`${lead.tipo_de_quarto} - ${nights} ${nights !== 1 ? labels.nights : labels.night}`);
+    sections.push('');
+  }
+  
+  // Atividades
+  const activities: string[] = [];
+  
+  if (lead.aulas_de_surf && lead.aulas_de_surf > 0) {
+    activities.push(`• ${lead.aulas_de_surf} ${lead.aulas_de_surf > 1 ? labels.surfLessons : labels.surfLesson}`);
+  }
+  
+  if (lead.aulas_de_yoga && lead.aulas_de_yoga > 0) {
+    activities.push(`• ${lead.aulas_de_yoga} ${lead.aulas_de_yoga > 1 ? labels.yogaLessons : labels.yogaLesson}`);
+  }
+  
+  if (lead.skate && lead.skate > 0) {
+    activities.push(`• ${lead.skate} ${lead.skate > 1 ? labels.surfSkateSessions : labels.surfSkateSession}`);
+  }
+  
+  if (lead.surf_guide || lead.surf_guide_package) {
+    const total = (lead.surf_guide || 0) + (lead.surf_guide_package || 0);
+    activities.push(`• ${total} ${total > 1 ? labels.surfGuideDays : labels.surfGuideDay}`);
+  }
+  
+  if (lead.analise_de_video || lead.analise_de_video_package) {
+    const total = (lead.analise_de_video || 0) + (lead.analise_de_video_package || 0);
+    activities.push(`• ${total} ${total > 1 ? labels.videoAnalyses : labels.videoAnalysis}`);
+  }
+  
+  if (lead.massagem_extra || lead.massagem_package) {
+    const totalMassage = (lead.massagem_extra ? 1 : 0) + (lead.massagem_package || 0);
+    activities.push(`• ${totalMassage} ${totalMassage > 1 ? labels.ayurvedicMassages : labels.ayurvedicMassage}`);
+  }
+  
+  if (activities.length > 0) {
+    sections.push(labels.activities);
+    sections.push(...activities);
+    sections.push('');
+  }
+  
+  // Itens Diários
+  const dailyItems: string[] = [];
+  
+  if (lead.breakfast) {
+    dailyItems.push(`• ${labels.breakfast} (${nights} ${nights !== 1 ? labels.days : labels.day})`);
+  }
+  
+  if (lead.aluguel_de_prancha) {
+    dailyItems.push(`• ${labels.unlimitedBoardRental}`);
+  }
+  
+  if (dailyItems.length > 0) {
+    sections.push(labels.dailyItems);
+    sections.push(...dailyItems);
+    sections.push('');
+  }
+  
+  // Transfers
+  const totalTransfers = (lead.transfer_extra || 0) + (lead.transfer_package || 0) + (lead.transfer ? 1 : 0);
+  if (totalTransfers > 0) {
+    sections.push(labels.transfer);
+    sections.push(`• ${totalTransfers} ${totalTransfers > 1 ? labels.airportTransfers : labels.airportTransfer}`);
+    sections.push('');
+  }
+  
+  // Experiências
+  const experiences: string[] = [];
+  
+  if (lead.hike_extra) {
+    experiences.push(`• ${labels.hike}`);
+  }
+  
+  if (lead.rio_city_tour) {
+    experiences.push(`• ${labels.rioCityTour}`);
+  }
+  
+  if (lead.carioca_experience) {
+    experiences.push(`• ${labels.cariocaExperience}`);
+  }
+  
+  if (experiences.length > 0) {
+    sections.push(labels.experiences);
+    sections.push(...experiences);
+    sections.push('');
+  }
+  
+  // Pacote (se houver)
+  if (lead.pacote && packages) {
+    const selectedPackage = packages.find(pkg => pkg.id === lead.pacote || pkg.name === lead.pacote);
+    if (selectedPackage) {
+      sections.push(`${labels.basePackage} ${selectedPackage.name}`);
+    }
+  }
+  
+  return sections.join('\n').trim() || labels.noServices;
+};
+
 export const extractVariablesFromLead = (lead: LeadWithCalculation, packages?: PackageConfig[]): Record<string, string> => {
   const nights = calculateNights(lead.check_in_start, lead.check_in_end);
 
@@ -115,6 +287,10 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation, packages?: P
     }
   }
 
+  // Gerar resumo completo de serviços contratados (PT e EN)
+  const completeSummaryPT = formatCompleteSummary(lead, packages, 'pt');
+  const completeSummaryEN = formatCompleteSummary(lead, packages, 'en');
+
   return {
     // Dados básicos
     nome: lead.name || lead.nome || 'N/A',
@@ -128,6 +304,8 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation, packages?: P
     numero_noites: String(nights),
     tipo_quarto: lead.tipo_de_quarto || 'N/A',
     pacote: packageDisplay,
+    servicos_contratados: completeSummaryPT,
+    servicos_contratados_en: completeSummaryEN,
 
     // Preços (agora incluindo ajustes e taxa extra)
     preco_total: formatCurrency(totalPrice),
