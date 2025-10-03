@@ -106,17 +106,29 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
     console.log("📝 Found template:", template);
     if (template && calculatedLead) {
       console.log("🔄 Processing template with lead:", calculatedLead);
-      const processed = processTemplate(template, calculatedLead, config.packages);
+      const processed = processTemplate(template, calculatedLead, config);
       console.log("✅ Processed message:", processed);
       setMessageSubject(processed.subject);
       setMessageContent(processed.content);
     }
   };
 
-  const handleCopyMessage = () => {
-    const fullMessage = `Assunto: ${messageSubject}\n\n${messageContent}`;
-    navigator.clipboard.writeText(fullMessage);
-    toast.success("Mensagem copiada para a área de transferência!");
+  const handleCopyMessage = async () => {
+    try {
+      // Limpar e formatar a mensagem corretamente
+      const cleanSubject = messageSubject.trim();
+      const cleanContent = messageContent.trim();
+      
+      // Construir mensagem com formatação preservada
+      const fullMessage = `Assunto: ${cleanSubject}\n\n${cleanContent}`;
+      
+      // Copiar usando a API moderna de clipboard
+      await navigator.clipboard.writeText(fullMessage);
+      toast.success("Mensagem copiada para a área de transferência!");
+    } catch (error) {
+      console.error("Erro ao copiar mensagem:", error);
+      toast.error("Erro ao copiar mensagem. Tente novamente.");
+    }
   };
 
   const handleSendMessage = () => {

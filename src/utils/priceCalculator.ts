@@ -28,6 +28,9 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     totalCost: 0,
   };
 
+  // Separar custo do café da manhã de outros itens diários
+  let breakfastOnlyCost = 0;
+
   // 1. Verificar se há pacote selecionado
   const selectedPackage = input.packageId ? config.packages.find(p => p.id === input.packageId) : null;
   
@@ -75,12 +78,13 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   // 3. Calcular itens diários (café da manhã, prancha)
   const packageIncludes = selectedPackage?.includedItems || {};
 
-  // Café da manhã
+  // Café da manhã (vai para valor pendente)
   if (input.breakfast && !packageIncludes.breakfast) {
     const breakfastItem = config.items.find(item => item.id === 'breakfast');
     if (breakfastItem) {
       const cost = breakfastItem.price * numberOfNights * (breakfastItem.billingType === 'per_person' ? numberOfPeople : 1);
       result.dailyItemsCost += cost;
+      breakfastOnlyCost = cost; // Salvar custo apenas do café da manhã
       result.breakdown.dailyItems.push({
         name: 'Café da manhã',
         quantity: numberOfNights * (breakfastItem.billingType === 'per_person' ? numberOfPeople : 1),
@@ -90,13 +94,14 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     }
   }
 
-  // Aluguel de prancha ilimitado
+  // Aluguel de prancha ilimitado (vai para valor depósito, como serviço)
   if (input.unlimitedBoardRental && !packageIncludes.unlimitedBoardRental) {
     const boardItem = config.items.find(item => item.id === 'unlimited-board-rental');
     if (boardItem) {
       const cost = boardItem.price * numberOfNights * (boardItem.billingType === 'per_person' ? numberOfPeople : 1);
-      result.dailyItemsCost += cost;
-      result.breakdown.dailyItems.push({
+      // Mover para fixedItemsCost ao invés de dailyItemsCost
+      result.fixedItemsCost += cost;
+      result.breakdown.fixedItems.push({
         name: 'Aluguel prancha ilimitado',
         quantity: numberOfNights * (boardItem.billingType === 'per_person' ? numberOfPeople : 1),
         unitPrice: boardItem.price,
@@ -237,10 +242,10 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   result.totalCost = result.packageCost + result.accommodationCost + result.dailyItemsCost + result.fixedItemsCost;
 
   // Calcular valor retido e valor pendente
-  const servicesCost = result.fixedItemsCost; // Serviços (aulas, extras)
+  const servicesCost = result.packageCost + result.fixedItemsCost; // Pacote + Serviços (aulas, extras, prancha)
   const feeCost = 0; // Taxa sempre será acrescentada manualmente
   const accommodationCost = result.accommodationCost;
-  const breakfastCost = result.dailyItemsCost; // Café da manhã e outros itens diários
+  const breakfastCost = breakfastOnlyCost; // APENAS café da manhã (não inclui prancha)
   
   const { retainedValue, pendingValue } = calculateRetainedAndPendingValues(
     servicesCost,
@@ -254,6 +259,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   (result as any).pendingValue = pendingValue;
   (result as any).servicesCost = servicesCost;
   (result as any).feeCost = feeCost;
+  (result as any).breakfastOnlyCost = breakfastOnlyCost; // Exportar para uso no modal
 
   return result;
 };

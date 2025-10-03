@@ -3,6 +3,7 @@ import { MessageTemplate, MessagePreview } from '@/types/messages';
 import { PackageConfig } from '@/types/pricing';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { getSurfLessonPrice } from './pricingRules';
 
 export const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -87,11 +88,16 @@ export const formatPackageBenefits = (pkg: PackageConfig, nights: number): strin
 export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: PackageConfig[], language: 'pt' | 'en' = 'pt'): string => {
   const sections: string[] = [];
   const nights = calculateNights(lead.check_in_start, lead.check_in_end);
+  const people = lead.number_of_people || 1;
   
   const labels = language === 'en' ? {
     accommodation: '📍 ACCOMMODATION:',
     night: 'night',
     nights: 'nights',
+    people: 'people',
+    person: 'person',
+    checkIn: 'Check-in',
+    checkOut: 'Check-out',
     activities: '🏄 ACTIVITIES:',
     surfLesson: 'Surf Lesson',
     surfLessons: 'Surf Lessons',
@@ -118,11 +124,17 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
     rioCityTour: 'Rio City Tour',
     cariocaExperience: 'Carioca Experience',
     basePackage: '📦 BASE PACKAGE:',
+    customPackage: 'Custom Package',
+    totalPrice: '💵 TOTAL PRICE:',
     noServices: 'No services contracted'
   } : {
     accommodation: '📍 HOSPEDAGEM:',
     night: 'noite',
     nights: 'noites',
+    people: 'pessoas',
+    person: 'pessoa',
+    checkIn: 'Check-in',
+    checkOut: 'Check-out',
     activities: '🏄 ATIVIDADES:',
     surfLesson: 'Aula de Surf',
     surfLessons: 'Aulas de Surf',
@@ -149,13 +161,26 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
     rioCityTour: 'Rio City Tour',
     cariocaExperience: 'Carioca Experience',
     basePackage: '📦 PACOTE BASE:',
+    customPackage: 'Pacote Personalizado',
+    totalPrice: '💵 PREÇO TOTAL:',
     noServices: 'Nenhum serviço contratado'
   };
   
-  // Hospedagem
+  // Hospedagem - usar room_category + room_type se disponível para mais detalhes
   if (lead.tipo_de_quarto && lead.tipo_de_quarto !== 'Without room') {
     sections.push(labels.accommodation);
-    sections.push(`${lead.tipo_de_quarto} - ${nights} ${nights !== 1 ? labels.nights : labels.night}`);
+    
+    // Construir descrição completa do quarto
+    let roomDescription = lead.tipo_de_quarto;
+    
+    // Se temos room_category e room_type separados, usar eles para mais detalhes
+    if (lead.room_category && lead.room_type && lead.room_category !== 'Select' && lead.room_type !== 'Select') {
+      roomDescription = `${lead.room_category}: ${lead.room_type}`;
+    }
+    
+    sections.push(`${roomDescription}`);
+    sections.push(`${labels.checkIn}: ${formatDate(lead.check_in_start)} | ${labels.checkOut}: ${formatDate(lead.check_in_end)}`);
+    sections.push(`${nights} ${nights !== 1 ? labels.nights : labels.night} • ${people} ${people > 1 ? labels.people : labels.person}`);
     sections.push('');
   }
   
@@ -241,19 +266,292 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
     sections.push('');
   }
   
-  // Pacote (se houver)
+  // Pacote
   if (lead.pacote && packages) {
     const selectedPackage = packages.find(pkg => pkg.id === lead.pacote || pkg.name === lead.pacote);
     if (selectedPackage) {
       sections.push(`${labels.basePackage} ${selectedPackage.name}`);
+    } else {
+      sections.push(`${labels.basePackage} ${labels.customPackage}`);
     }
+  } else {
+    sections.push(`${labels.basePackage} ${labels.customPackage}`);
+  }
+  
+  sections.push('');
+  
+  // Preço Total
+  if (lead.calculatedPrice) {
+    let totalPrice = lead.calculatedPrice.totalCost || 0;
+    
+    // Adicionar ajustes
+    if (lead.accommodation_price_override) {
+      const originalAccommodationCost = lead.calculatedPrice.accommodationCost || 0;
+      const adjustment = lead.accommodation_price_override - originalAccommodationCost;
+      totalPrice += adjustment;
+    }
+    
+    if (lead.extra_fee_amount) {
+      totalPrice += lead.extra_fee_amount;
+    }
+    
+    sections.push(`${labels.totalPrice} ${formatCurrency(totalPrice)}`);
   }
   
   return sections.join('\n').trim() || labels.noServices;
 };
 
-export const extractVariablesFromLead = (lead: LeadWithCalculation, packages?: PackageConfig[]): Record<string, string> => {
+/**
+ * Formata um resumo interno detalhado com valores de todos os serviços
+ * Inclui breakdown de preços, cálculos e totais
+ */
+export const formatInternalResume = (lead: LeadWithCalculation, config: any, language: 'pt' | 'en' = 'pt'): string => {
+  const sections: string[] = [];
   const nights = calculateNights(lead.check_in_start, lead.check_in_end);
+  const people = lead.number_of_people || 1;
+  
+  const labels = language === 'en' ? {
+    title: 'DETAILED SERVICE SUMMARY',
+    accommodation: 'Accommodation',
+    breakfast: 'Breakfast',
+    days: 'days',
+    services: 'Services',
+    surfLesson: 'Surf Lesson',
+    surfLessons: 'Surf Lessons',
+    yogaLesson: 'Yoga Lesson',
+    yogaLessons: 'Yoga Lessons',
+    freeYoga: 'free',
+    paidYoga: 'paid',
+    surfSkate: 'Surf Skate',
+    session: 'session',
+    sessions: 'sessions',
+    surfGuide: 'Surf Guide',
+    day: 'day',
+    videoAnalysis: 'Video Analysis',
+    massage: 'Massage',
+    unlimitedBoard: 'Unlimited Board Rental',
+    transfer: 'Transfer',
+    leg: 'leg',
+    legs: 'legs',
+    upTo3pax: 'up to 3 pax',
+    hike: 'Hike',
+    rioCityTour: 'Rio City Tour',
+    cariocaExp: 'Carioca Experience',
+    fee: 'Fee (BRL)',
+    total: 'Total',
+    deposit: 'Deposit Amount',
+    pending: 'Pending Amount',
+    depositCalc: '(Services + Fee)',
+    pendingCalc: '(Accommodation + Breakfast)',
+    people: 'people',
+    person: 'person'
+  } : {
+    title: 'RESUMO DETALHADO DOS SERVIÇOS',
+    accommodation: 'Hospedagem',
+    breakfast: 'Café da Manhã',
+    days: 'dias',
+    services: 'Serviços',
+    surfLesson: 'Aula de Surf',
+    surfLessons: 'Aulas de Surf',
+    yogaLesson: 'Aula de Yoga',
+    yogaLessons: 'Aulas de Yoga',
+    freeYoga: 'grátis',
+    paidYoga: 'paga',
+    surfSkate: 'Surf Skate',
+    session: 'sessão',
+    sessions: 'sessões',
+    surfGuide: 'Surf Guide',
+    day: 'dia',
+    videoAnalysis: 'Análise de Vídeo',
+    massage: 'Massagem',
+    unlimitedBoard: 'Aluguel Prancha Ilimitado',
+    transfer: 'Transfer',
+    leg: 'trecho',
+    legs: 'trechos',
+    upTo3pax: 'até 3 pax',
+    hike: 'Trilha',
+    rioCityTour: 'Rio City Tour',
+    cariocaExp: 'Carioca Experience',
+    fee: 'Taxa (BRL)',
+    total: 'Total',
+    deposit: 'Valor Depósito',
+    pending: 'Valor Pendente',
+    depositCalc: '(Serviços + Taxa)',
+    pendingCalc: '(Hospedagem + Café)',
+    people: 'pessoas',
+    person: 'pessoa'
+  };
+  
+  sections.push(`${labels.title}\n`);
+  
+  // Calcular valores
+  const calculatedPrice = lead.calculatedPrice;
+  if (!calculatedPrice) {
+    return language === 'en' ? 'No calculation available' : 'Cálculo não disponível';
+  }
+  
+  // Hospedagem
+  const accommodationCost = lead.accommodation_price_override || calculatedPrice.accommodationCost || 0;
+  if (accommodationCost > 0) {
+    sections.push(`${labels.accommodation}: ${formatCurrency(accommodationCost)}`);
+  }
+  
+  // Café da Manhã
+  const breakfastCost = (calculatedPrice as any).breakfastOnlyCost || 0;
+  if (breakfastCost > 0) {
+    sections.push(`${labels.breakfast}: ${formatCurrency(breakfastCost)} (${nights} ${labels.days} × ${people} ${people > 1 ? labels.people : labels.person})`);
+  }
+  
+  sections.push('');
+  sections.push(`${labels.services}:`);
+  
+  // Itens do pacote ou serviços individuais
+  const packageCost = calculatedPrice.packageCost || 0;
+  if (packageCost > 0 && lead.pacote) {
+    sections.push(`- Pacote "${lead.pacote}": ${formatCurrency(packageCost)}`);
+  }
+  
+  // Aulas de Surf (com faixas de preço)
+  if (lead.aulas_de_surf && lead.aulas_de_surf > 0) {
+    // Usar preço baseado na faixa (1-3, 4-7, 8+)
+    const pricePerLesson = getSurfLessonPrice(lead.aulas_de_surf, config.surfLessonPricing);
+    const totalSurfLessons = lead.aulas_de_surf * people;
+    const surfCost = pricePerLesson * totalSurfLessons;
+    const tierLabel = lead.aulas_de_surf <= 3 ? '1-3' : lead.aulas_de_surf <= 7 ? '4-7' : '8+';
+    sections.push(`- ${lead.aulas_de_surf} ${lead.aulas_de_surf > 1 ? labels.surfLessons : labels.surfLesson} × ${people} ${people > 1 ? labels.people : labels.person} (${formatCurrency(pricePerLesson)}/aula - faixa ${tierLabel}) = ${formatCurrency(surfCost)}`);
+  }
+  
+  // Yoga (com dias grátis)
+  if (lead.aulas_de_yoga && lead.aulas_de_yoga > 0) {
+    const freeYogaDays = lead.check_in_start && lead.check_in_end ? 
+      (() => {
+        const start = new Date(lead.check_in_start);
+        const end = new Date(lead.check_in_end);
+        let freeDays = 0;
+        const current = new Date(start);
+        while (current < end) {
+          const dayOfWeek = current.getDay();
+          if (dayOfWeek === 3 || dayOfWeek === 5) freeDays++;
+          current.setDate(current.getDate() + 1);
+        }
+        return freeDays;
+      })() : 0;
+    
+    const paidYoga = Math.max(0, lead.aulas_de_yoga - freeYogaDays);
+    const yogaItem = config.items?.find((i: any) => i.id === 'yoga-lesson');
+    const yogaPrice = yogaItem?.price || 120;
+    const yogaCost = paidYoga * people * yogaPrice;
+    
+    if (freeYogaDays > 0) {
+      sections.push(`- ${freeYogaDays} ${labels.yogaLesson} ${labels.freeYoga} + ${paidYoga} ${labels.paidYoga} = ${formatCurrency(yogaCost)}`);
+    } else {
+      sections.push(`- ${lead.aulas_de_yoga} ${lead.aulas_de_yoga > 1 ? labels.yogaLessons : labels.yogaLesson} × ${people} ${people > 1 ? labels.people : labels.person} = ${formatCurrency(yogaCost)}`);
+    }
+  }
+  
+  // Surf Skate
+  if (lead.skate && lead.skate > 0) {
+    const skateItem = config.items?.find((i: any) => i.id === 'surf-skate');
+    const skatePrice = skateItem?.price || 0;
+    const skateCost = lead.skate * people * skatePrice;
+    sections.push(`- ${lead.skate} ${lead.skate > 1 ? labels.sessions : labels.session} ${labels.surfSkate} × ${people} ${people > 1 ? labels.people : labels.person} = ${formatCurrency(skateCost)}`);
+  }
+  
+  // Surf Guide
+  const totalSurfGuide = (lead.surf_guide || 0) + (lead.surf_guide_package || 0);
+  if (totalSurfGuide > 0) {
+    const guideItem = config.items?.find((i: any) => i.id === 'surf-guide');
+    const guidePrice = guideItem?.price || 0;
+    const guideCost = totalSurfGuide * guidePrice;
+    sections.push(`- ${totalSurfGuide} ${totalSurfGuide > 1 ? labels.days : labels.day} ${labels.surfGuide} = ${formatCurrency(guideCost)}`);
+  }
+  
+  // Análise de Vídeo
+  const totalVideo = (lead.analise_de_video || 0) + (lead.analise_de_video_package || 0);
+  if (totalVideo > 0) {
+    const videoItem = config.items?.find((i: any) => i.id === 'video-analysis');
+    const videoPrice = videoItem?.price || 0;
+    const videoCost = totalVideo * videoPrice;
+    sections.push(`- ${totalVideo} ${labels.videoAnalysis} = ${formatCurrency(videoCost)}`);
+  }
+  
+  // Massagem
+  const totalMassage = (lead.massagem_extra ? 1 : 0) + (lead.massagem_package || 0);
+  if (totalMassage > 0) {
+    const massageItem = config.items?.find((i: any) => i.id === 'massage');
+    const massagePrice = massageItem?.price || 0;
+    const massageCost = totalMassage * massagePrice;
+    sections.push(`- ${totalMassage} ${labels.massage} = ${formatCurrency(massageCost)}`);
+  }
+  
+  // Aluguel de Prancha
+  if (lead.aluguel_de_prancha) {
+    const boardItem = config.items?.find((i: any) => i.id === 'unlimited-board-rental');
+    const boardPrice = boardItem?.price || 0;
+    const boardCost = nights * boardPrice;
+    sections.push(`- ${labels.unlimitedBoard} (${nights} ${labels.days}) = ${formatCurrency(boardCost)}`);
+  }
+  
+  // Transfer
+  const totalTransfers = (lead.transfer_extra || 0) + (lead.transfer_package || 0) + (lead.transfer ? 1 : 0);
+  if (totalTransfers > 0) {
+    const transferItem = config.items?.find((i: any) => i.id === 'transfer');
+    const transferPrice = transferItem?.price || 0;
+    const transferCost = totalTransfers * transferPrice;
+    const transferLabel = people > 3 ? ` (${labels.upTo3pax})` : '';
+    sections.push(`- ${totalTransfers} ${totalTransfers > 1 ? labels.legs : labels.leg} ${labels.transfer}${transferLabel} = ${formatCurrency(transferCost)}`);
+  }
+  
+  // Experiências
+  if (lead.hike_extra) {
+    const hikeItem = config.items?.find((i: any) => i.id === 'hike');
+    const hikePrice = hikeItem?.price || 0;
+    const hikeCost = hikePrice * people;
+    sections.push(`- ${labels.hike} × ${people} ${people > 1 ? labels.people : labels.person} = ${formatCurrency(hikeCost)}`);
+  }
+  
+  if (lead.rio_city_tour) {
+    const tourItem = config.items?.find((i: any) => i.id === 'rio-city-tour');
+    const tourPrice = tourItem?.price || 0;
+    const tourCost = tourPrice * people;
+    sections.push(`- ${labels.rioCityTour} × ${people} ${people > 1 ? labels.people : labels.person} = ${formatCurrency(tourCost)}`);
+  }
+  
+  if (lead.carioca_experience) {
+    const expItem = config.items?.find((i: any) => i.id === 'carioca-experience');
+    const expPrice = expItem?.price || 0;
+    const expCost = expPrice * people;
+    sections.push(`- ${labels.cariocaExp} × ${people} ${people > 1 ? labels.people : labels.person} = ${formatCurrency(expCost)}`);
+  }
+  
+  sections.push('');
+  
+  // Taxa
+  const feeCost = lead.extra_fee_amount || 0;
+  sections.push(`${labels.fee}: ${formatCurrency(feeCost)}`);
+  
+  sections.push('');
+  
+  // Calcular totais
+  const servicesCost = (calculatedPrice.packageCost || 0) + (calculatedPrice.fixedItemsCost || 0);
+  const valorDeposito = servicesCost + feeCost;
+  const valorPendente = accommodationCost + breakfastCost;
+  const totalGeral = valorDeposito + valorPendente;
+  
+  sections.push(`${labels.total}: ${formatCurrency(totalGeral)}`);
+  sections.push('');
+  sections.push(`${labels.deposit} = ${formatCurrency(valorDeposito)} ${labels.depositCalc}`);
+  sections.push(`${labels.pending}: ${formatCurrency(valorPendente)} ${labels.pendingCalc}`);
+  
+  return sections.join('\n');
+};
+
+export const extractVariablesFromLead = (lead: LeadWithCalculation, packagesOrConfig?: PackageConfig[] | any): Record<string, string> => {
+  const nights = calculateNights(lead.check_in_start, lead.check_in_end);
+
+  // Detectar se recebeu packages array ou config object
+  const packages = Array.isArray(packagesOrConfig) ? packagesOrConfig : packagesOrConfig?.packages;
+  const config = Array.isArray(packagesOrConfig) ? { packages: packagesOrConfig } : packagesOrConfig;
 
   // Calcular o preço total incluindo ajustes de hospedagem e taxa extra
   let totalPrice = lead.totalPrice || 0;
@@ -280,7 +578,7 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation, packages?: P
   // Formatar pacote com benefícios se disponível
   let packageDisplay = lead.pacote || 'Sem pacote';
   if (lead.pacote && packages) {
-    const selectedPackage = packages.find(pkg => pkg.id === lead.pacote || pkg.name === lead.pacote);
+    const selectedPackage = packages.find((pkg: any) => pkg.id === lead.pacote || pkg.name === lead.pacote);
     if (selectedPackage) {
       const benefits = formatPackageBenefits(selectedPackage, nights);
       packageDisplay = `${selectedPackage.name}\n\n${benefits}`;
@@ -290,6 +588,16 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation, packages?: P
   // Gerar resumo completo de serviços contratados (PT e EN)
   const completeSummaryPT = formatCompleteSummary(lead, packages, 'pt');
   const completeSummaryEN = formatCompleteSummary(lead, packages, 'en');
+
+  // Gerar resumo interno detalhado com valores (PT e EN)
+  const internalResumePT = formatInternalResume(lead, config, 'pt');
+  const internalResumeEN = formatInternalResume(lead, config, 'en');
+
+  // Construir descrição completa do quarto
+  let roomDescription = lead.tipo_de_quarto || 'N/A';
+  if (lead.room_category && lead.room_type && lead.room_category !== 'Select' && lead.room_type !== 'Select') {
+    roomDescription = `${lead.room_category}: ${lead.room_type}`;
+  }
 
   return {
     // Dados básicos
@@ -302,10 +610,12 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation, packages?: P
     check_out: formatDate(lead.check_in_end),
     numero_pessoas: String(lead.number_of_people || lead.numero_de_pessoas || 0),
     numero_noites: String(nights),
-    tipo_quarto: lead.tipo_de_quarto || 'N/A',
+    tipo_quarto: roomDescription,
     pacote: packageDisplay,
     servicos_contratados: completeSummaryPT,
     servicos_contratados_en: completeSummaryEN,
+    internal_resume_pt: internalResumePT,
+    internal_resume_en: internalResumeEN,
 
     // Preços (agora incluindo ajustes e taxa extra)
     preco_total: formatCurrency(totalPrice),
@@ -321,8 +631,8 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation, packages?: P
   };
 };
 
-export const processTemplate = (template: MessageTemplate, lead: LeadWithCalculation, packages?: PackageConfig[]): MessagePreview => {
-  const variables = extractVariablesFromLead(lead, packages);
+export const processTemplate = (template: MessageTemplate, lead: LeadWithCalculation, packagesOrConfig?: PackageConfig[] | any): MessagePreview => {
+  const variables = extractVariablesFromLead(lead, packagesOrConfig);
 
   // Substituir variáveis no assunto e conteúdo
   let processedSubject = template.subject;

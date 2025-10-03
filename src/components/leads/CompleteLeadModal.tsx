@@ -238,17 +238,29 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
     console.log("📝 Found template:", template);
     if (template && calculatedLead) {
       console.log("🔄 Processing template with lead:", calculatedLead);
-      const processed = processTemplate(template, calculatedLead, config.packages);
+      const processed = processTemplate(template, calculatedLead, config);
       console.log("✅ Processed message:", processed);
       setMessageSubject(processed.subject);
       setMessageContent(processed.content);
     }
   };
 
-  const handleCopyMessage = () => {
-    const fullMessage = `Assunto: ${messageSubject}\n\n${messageContent}`;
-    navigator.clipboard.writeText(fullMessage);
-    toast.success("Mensagem copiada para a área de transferência!");
+  const handleCopyMessage = async () => {
+    try {
+      // Limpar e formatar a mensagem corretamente
+      const cleanSubject = messageSubject.trim();
+      const cleanContent = messageContent.trim();
+      
+      // Construir mensagem com formatação preservada
+      const fullMessage = `Assunto: ${cleanSubject}\n\n${cleanContent}`;
+      
+      // Copiar usando a API moderna de clipboard
+      await navigator.clipboard.writeText(fullMessage);
+      toast.success("Mensagem copiada para a área de transferência!");
+    } catch (error) {
+      console.error("Erro ao copiar mensagem:", error);
+      toast.error("Erro ao copiar mensagem. Tente novamente.");
+    }
   };
 
   const handleSendMessage = () => {
@@ -1423,7 +1435,8 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                   const hospedagemCost = formData.accommodation_price_override || 
                                         calculatedLead.calculatedPrice.accommodationCost || 0;
                   
-                  const cafeCost = calculatedLead.calculatedPrice.dailyItemsCost || 0;
+                  // Usar APENAS o custo do café da manhã (não incluir prancha)
+                  const cafeCost = (calculatedLead.calculatedPrice as any).breakfastOnlyCost || 0;
                   
                   const valorDeposito = servicosCost + taxaCost;
                   const valorPendente = hospedagemCost + cafeCost;

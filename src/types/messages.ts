@@ -32,6 +32,8 @@ export const AVAILABLE_VARIABLES = [
   // Resumos de Serviços
   { key: 'servicos_contratados', label: '📋 Resumo Completo (PT)', example: '📍 HOSPEDAGEM:\nPrivate: Double - 5 noites\n\n🏄 ATIVIDADES:\n• 6 Aulas de Surf...' },
   { key: 'servicos_contratados_en', label: '📋 Complete Summary (EN)', example: '📍 ACCOMMODATION:\nPrivate: Double - 5 nights\n\n🏄 ACTIVITIES:\n• 6 Surf Lessons...' },
+  { key: 'internal_resume_pt', label: '💰 Resumo Interno Detalhado (PT)', example: 'RESUMO DETALHADO DOS SERVIÇOS\n\nHospedagem: R$ 3.000,00\nCafé da Manhã: R$ 90,00\n\nServiços:\n- 10 Aulas de Surf × 2 pessoas = R$ 3.200,00...' },
+  { key: 'internal_resume_en', label: '💰 Detailed Internal Summary (EN)', example: 'DETAILED SERVICE SUMMARY\n\nAccommodation: R$ 3,000.00\nBreakfast: R$ 90.00\n\nServices:\n- 10 Surf Lessons × 2 people = R$ 3,200.00...' },
 
   // Preços
   { key: 'preco_total', label: 'Preço Total', example: 'R$ 2.500,00' },

@@ -167,9 +167,11 @@ export function getLeadDisplayPrice(lead: LeadWithCalculation): string {
   if (lead.calculatedPrice) {
     totalPrice = lead.calculatedPrice.totalCost || 0;
     
-    // Adicionar ajuste de hospedagem se houver
-    if (lead.accommodation_price_override && lead.calculatedPrice.accommodationCost) {
-      const adjustment = lead.accommodation_price_override - lead.calculatedPrice.accommodationCost;
+    // Adicionar ajuste de hospedagem se houver override definido
+    // Note: accommodationCost pode ser 0 (para definição manual), então verificamos !== undefined
+    if (lead.accommodation_price_override !== null && lead.accommodation_price_override !== undefined) {
+      const originalAccommodationCost = lead.calculatedPrice.accommodationCost || 0;
+      const adjustment = lead.accommodation_price_override - originalAccommodationCost;
       totalPrice += adjustment;
     }
     
