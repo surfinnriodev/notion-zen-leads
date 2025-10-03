@@ -3,6 +3,7 @@ import { LeadWithCalculation } from "@/types/leads";
 import { DraggableLeadCard } from "./DraggableLeadCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Edit2, Check, X } from "lucide-react";
 import { useState } from "react";
 
@@ -48,8 +49,8 @@ export const DroppableColumn = ({
   };
 
   return (
-    <div className="space-y-3 sm:space-y-4 group">
-      <div className="flex items-center gap-2">
+    <div className="space-y-3 sm:space-y-4 group h-full flex flex-col">
+      <div className="flex items-center gap-2 flex-shrink-0">
         {color && (
           <div
             className="w-3 h-3 rounded-full flex-shrink-0"
@@ -92,7 +93,7 @@ export const DroppableColumn = ({
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-6 w-6 p-0 opacity-0 sm:group-hover:opacity-100 transition-opacity"
                 onClick={onStartEdit}
               >
                 <Edit2 className="h-3 w-3" />
@@ -100,15 +101,15 @@ export const DroppableColumn = ({
             )}
           </>
         )}
-        <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded flex-shrink-0">
+        <Badge variant="secondary" className="text-xs px-2 py-0.5 flex-shrink-0">
           {leads.length}
-        </span>
+        </Badge>
       </div>
 
       <div
         ref={setNodeRef}
         style={style}
-        className={`space-y-2 sm:space-y-3 min-h-[160px] sm:min-h-[200px] p-2 rounded-lg border-2 border-dashed transition-colors ${
+        className={`flex-1 space-y-2 sm:space-y-3 min-h-[300px] sm:min-h-[400px] max-h-[calc(100vh-250px)] overflow-y-auto p-2 rounded-lg border-2 border-dashed transition-colors ${
           isOver ? 'border-blue-300 bg-blue-50/50 dark:border-blue-600 dark:bg-blue-950/20' : 'border-transparent'
         }`}
       >
@@ -117,8 +118,10 @@ export const DroppableColumn = ({
         ))}
 
         {leads.length === 0 && (
-          <div className="text-center py-6 sm:py-8 text-muted-foreground text-xs sm:text-sm">
-            Nenhum lead
+          <div className="text-center py-8 sm:py-12 text-muted-foreground text-xs sm:text-sm">
+            <div className="text-4xl sm:text-5xl mb-2">📭</div>
+            <div>Nenhum lead aqui</div>
+            <div className="text-[10px] sm:text-xs opacity-60 mt-1">Arraste cards para cá</div>
           </div>
         )}
       </div>

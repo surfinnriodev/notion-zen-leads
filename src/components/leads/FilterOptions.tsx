@@ -65,15 +65,15 @@ export const FilterOptions = ({
   ).length;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 w-full sm:w-auto">
       {/* Busca */}
-      <div className="relative">
+      <div className="relative flex-1 sm:flex-initial">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar leads..."
+          placeholder="Buscar..."
           value={filterConfig.search}
           onChange={(e) => updateFilter('search', e.target.value)}
-          className="pl-9 h-8 w-64 text-sm"
+          className="pl-9 h-8 sm:w-64 w-full text-sm"
         />
         {filterConfig.search && (
           <Button
@@ -93,15 +93,17 @@ export const FilterOptions = ({
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 hover:bg-muted"
+            className="h-8 w-8 p-0 hover:bg-muted flex-shrink-0"
           >
             <Filter className="w-3 h-3" />
             {activeFiltersCount > 0 && (
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full" />
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
+                {activeFiltersCount}
+              </div>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 p-4" align="end">
+        <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80 p-4 max-h-[80vh] overflow-y-auto" align="end">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-medium text-sm">Filtros</h3>

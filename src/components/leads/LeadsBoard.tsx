@@ -194,7 +194,9 @@ export const LeadsBoard = () => {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 10, // Aumentado para evitar drag acidental no mobile
+        delay: 100, // Pequeno delay para diferenciar de scroll
+        tolerance: 5,
       },
     })
   );
@@ -556,8 +558,8 @@ export const LeadsBoard = () => {
       >
         <div className="p-3 sm:p-4 lg:p-6">
         {/* Header minimalista */}
-        <div className="mb-6">
-          <div className="flex items-center justify-start gap-1">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-2 sm:gap-1">
             <FilterOptions
               filterConfig={filterConfig}
               onFilterChange={(config) => {
@@ -591,9 +593,12 @@ export const LeadsBoard = () => {
         </div>
         {/* Mobile: Horizontal scroll */}
         <div className="block sm:hidden">
-          <div className="flex gap-3 overflow-x-auto pb-4">
+          <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory" style={{
+            scrollbarWidth: 'thin',
+            WebkitOverflowScrolling: 'touch'
+          }}>
             {columns.map((column) => (
-              <div key={column.id} className="flex-shrink-0 w-[280px]">
+              <div key={column.id} className="flex-shrink-0 w-[85vw] snap-center">
                 <DroppableColumn
                   id={column.id}
                   title={column.title}
@@ -605,6 +610,17 @@ export const LeadsBoard = () => {
                   color={column.color}
                 />
               </div>
+            ))}
+          </div>
+          {/* Indicador de scroll */}
+          <div className="flex justify-center gap-1 mt-2">
+            {columns.map((col, idx) => (
+              <div 
+                key={col.id} 
+                className={`h-1 rounded-full transition-all ${
+                  idx === 0 ? 'w-3 bg-primary' : 'w-1 bg-muted'
+                }`}
+              />
             ))}
           </div>
         </div>

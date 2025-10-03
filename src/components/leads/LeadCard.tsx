@@ -41,55 +41,28 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
 
   return (
     <>
-      <Card className="cursor-pointer hover:shadow-md hover:shadow-black/5 transition-all duration-200 w-full border border-border hover:border-border-hover bg-card" onClick={() => setIsModalOpen(true)}>
-        <CardContent className="p-3 space-y-3 overflow-hidden">
+      <Card className="cursor-pointer hover:shadow-md hover:shadow-black/5 transition-all duration-200 w-full border border-border hover:border-border-hover bg-card active:scale-[0.98]" onClick={() => setIsModalOpen(true)}>
+        <CardContent className="p-3 sm:p-3 space-y-2 sm:space-y-3 overflow-hidden">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            <h4 className="font-medium text-sm text-foreground truncate">
+            <h4 className="font-medium text-sm sm:text-sm text-foreground truncate">
               {lead.name || "Nome não informado"}
             </h4>
           </div>
           {lead.status && (
-            <Badge className={`${getStatusColor(lead.status)} text-xs flex-shrink-0`}>
+            <Badge className={`${getStatusColor(lead.status)} text-[10px] sm:text-xs flex-shrink-0 px-1.5 sm:px-2`}>
               {lead.status}
             </Badge>
           )}
         </div>
 
-        <div className="space-y-2 text-xs text-muted-foreground overflow-hidden">
-          {lead.email && (
-            <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-              <Mail className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate max-w-full">{lead.email}</span>
-            </div>
-          )}
-
-          {lead.telefone && (
-            <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-              <Phone className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate max-w-full">{lead.telefone}</span>
-            </div>
-          )}
-
-          {lead.number_of_people && (
-            <div className="flex items-center gap-2">
-              <Users className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate">{lead.number_of_people} pessoas</span>
-            </div>
-          )}
-
-          {lead.tipo_de_quarto && (
-            <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-              <Home className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate max-w-full">{lead.tipo_de_quarto}</span>
-            </div>
-          )}
-
+        <div className="space-y-1.5 sm:space-y-2 text-xs text-muted-foreground overflow-hidden">
+          {/* Mobile: Priorizar informações mais importantes */}
           {(lead.check_in_start || lead.check_in_end) && (
             <div className="flex items-center gap-2 min-w-0 overflow-hidden">
               <Calendar className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate max-w-full">
+              <span className="truncate max-w-full text-[11px] sm:text-xs font-medium">
                 {(() => {
                   try {
                     if (lead.check_in_start) {
@@ -105,32 +78,65 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
               </span>
             </div>
           )}
+
+          <div className="flex items-center gap-3 flex-wrap">
+            {lead.number_of_people && (
+              <div className="flex items-center gap-1">
+                <Users className="w-3 h-3 flex-shrink-0" />
+                <span className="text-[11px] sm:text-xs">{lead.number_of_people}p</span>
+              </div>
+            )}
+
+            {lead.tipo_de_quarto && (
+              <div className="flex items-center gap-1 min-w-0 overflow-hidden flex-1">
+                <Home className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate max-w-full text-[11px] sm:text-xs">{lead.tipo_de_quarto}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Contato - Compacto no mobile */}
+          <div className="hidden sm:block space-y-1.5">
+            {lead.email && (
+              <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                <Mail className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate max-w-full">{lead.email}</span>
+              </div>
+            )}
+
+            {lead.telefone && (
+              <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                <Phone className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate max-w-full">{lead.telefone}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {lead.pacote && (
-          <div className="pt-2 border-t border-border overflow-hidden">
-            <span className="text-xs font-medium text-foreground block truncate max-w-full">
-              {lead.pacote}
+          <div className="pt-1.5 sm:pt-2 border-t border-border overflow-hidden">
+            <span className="text-[10px] sm:text-xs font-medium text-primary block truncate max-w-full">
+              📦 {lead.pacote}
             </span>
           </div>
         )}
 
-        <div className="pt-2 border-t border-border overflow-hidden">
+        <div className="pt-1.5 sm:pt-2 border-t border-border overflow-hidden">
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <div className="flex items-center gap-2 min-w-0 overflow-hidden flex-1">
-              <DollarSign className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-              <span className="text-xs font-medium text-foreground truncate max-w-full">
+            <div className="flex items-center gap-1.5 min-w-0 overflow-hidden flex-1">
+              <DollarSign className="w-4 h-4 text-primary flex-shrink-0" />
+              <span className="text-sm sm:text-xs font-bold text-primary truncate max-w-full">
                 {displayPrice}
               </span>
             </div>
             <div className="flex items-center gap-1">
               {lead.obs_do_cliente && (
-                <Badge variant="outline" className="text-xs flex-shrink-0 p-1" title="Tem comentários">
+                <Badge variant="outline" className="text-[10px] sm:text-xs flex-shrink-0 p-1" title="Tem comentários">
                   <MessageSquare className="w-3 h-3" />
                 </Badge>
               )}
               {calculationStatus.status !== "complete" && (
-                <Badge variant="outline" className="text-xs flex-shrink-0">
+                <Badge variant="outline" className="text-[10px] sm:text-xs flex-shrink-0 px-1">
                   ⚠️
                 </Badge>
               )}

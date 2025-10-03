@@ -313,20 +313,20 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-6xl h-[95vh] max-h-[95vh] overflow-hidden flex flex-col p-0 sm:w-[90vw] sm:max-w-5xl">
-        <DialogHeader className="p-6 pb-0">
+      <DialogContent className="w-[100vw] h-[100vh] sm:w-[90vw] sm:h-[95vh] max-w-full sm:max-w-6xl max-h-full sm:max-h-[95vh] overflow-hidden flex flex-col p-0 gap-0 m-0 sm:m-4 rounded-none sm:rounded-lg">
+        <DialogHeader className="p-4 sm:p-6 pb-3 flex-shrink-0 bg-background border-b">
           <DialogTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="flex items-center gap-2">
               <User className="w-5 h-5" />
-              <span className="truncate">Edição: {lead.name || "Lead sem nome"}</span>
+              <span className="truncate text-base sm:text-lg">Edição: {lead.name || "Lead sem nome"}</span>
             </div>
             <Badge variant="outline" className="self-start sm:self-auto">{lead.status || "novo"}</Badge>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden flex flex-col px-6 min-h-0">
+        <div className="flex-1 overflow-hidden flex flex-col px-3 sm:px-6 min-h-0">
           <Tabs defaultValue="basic" className="w-full flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 gap-1 h-auto p-1 overflow-x-auto">
+            <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 gap-0.5 sm:gap-1 h-auto p-1 overflow-x-auto flex-shrink-0 bg-muted mb-2">
               <TabsTrigger value="basic" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 px-2 text-xs sm:text-sm">
                 <User className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Básico</span>
@@ -1518,7 +1518,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
         </Tabs>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-3 p-4 sm:p-6 border-t bg-background">
+        <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-3 p-3 sm:p-6 border-t bg-background flex-shrink-0">
           <Button 
             variant="destructive" 
             onClick={handleDelete}
