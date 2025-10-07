@@ -21,7 +21,9 @@ export function getSurfLessonPrice(quantity: number, surfLessonPricing?: { tier1
 
 /**
  * Calcula quantos dias de yoga grátis existem entre as datas de check-in e check-out
- * Yoga é grátis nas quartas e sextas-feiras
+ * Yoga é grátis nas quartas e sextas-feiras às 7h da manhã
+ * IMPORTANTE: Se o check-in é no mesmo dia da aula de yoga, não conta como grátis
+ * pois o check-in é às 11h e a aula às 7h (não dá tempo de participar)
  * @param checkInStart Data de check-in
  * @param checkInEnd Data de check-out
  * @returns Número de dias de yoga grátis
@@ -33,11 +35,14 @@ export function calculateFreeYogaDays(checkInStart: string, checkInEnd: string):
   let freeDays = 0;
   const current = new Date(start);
   
-  // Iterar através de cada dia entre check-in e check-out
+  // Pular o primeiro dia (dia do check-in) pois o check-in é às 11h e yoga às 7h
+  current.setDate(current.getDate() + 1);
+  
+  // Iterar através de cada dia entre check-in+1 e check-out
   while (current < end) {
-    const dayOfWeek = getDay(current); // 0 = domingo, 1 = segunda, ..., 4 = quinta, 5 = sexta, 6 = sábado
+    const dayOfWeek = getDay(current); // 0 = domingo, 1 = segunda, ..., 3 = quarta, 5 = sexta, 6 = sábado
     
-    // Quarta-feira = 4, Sexta-feira = 5
+    // Quarta-feira = 3, Sexta-feira = 5
     if (dayOfWeek === 3 || dayOfWeek === 5) {
       freeDays++;
     }

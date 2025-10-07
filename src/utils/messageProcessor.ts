@@ -429,6 +429,8 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
         const end = new Date(lead.check_in_end);
         let freeDays = 0;
         const current = new Date(start);
+        // Pular o primeiro dia (dia do check-in) pois o check-in é às 11h e yoga às 7h
+        current.setDate(current.getDate() + 1);
         while (current < end) {
           const dayOfWeek = current.getDay();
           if (dayOfWeek === 3 || dayOfWeek === 5) freeDays++;

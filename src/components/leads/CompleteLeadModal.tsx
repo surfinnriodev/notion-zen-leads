@@ -1533,13 +1533,14 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
         <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-3 p-3 sm:p-6 border-t bg-background flex-shrink-0">
           <Button 
-            variant="destructive" 
+            variant="outline" 
+            size="sm"
             onClick={handleDelete}
             disabled={deleteMutation.isPending}
-            className="flex items-center gap-2 w-full sm:w-auto"
+            className="flex items-center gap-2 w-full sm:w-auto text-muted-foreground hover:text-destructive hover:border-destructive/50"
           >
-            <Trash2 className="w-4 h-4" />
-            {deleteMutation.isPending ? "Excluindo..." : "Excluir Lead"}
+            <Trash2 className="w-3 h-3" />
+            {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
           </Button>
           
           <div className="flex flex-col sm:flex-row gap-2">
