@@ -206,23 +206,40 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   addFixedItem(input.massage, packageIncludes.massage, 'massage', 'Massagem');
   addFixedItem(input.surfGuide, packageIncludes.surfGuide, 'surf-guide', 'Surf guide');
 
-  // Transfer com regra para grupos maiores
-  if (input.transfer) {
-    // Calcular número de transfers baseado no número de pessoas
-    const requiredTransfers = calculateTransfersForGroup(numberOfPeople);
+  // Transfer - usar a quantidade definida pelo usuário
+  if (input.transfer && input.transfer > 0) {
     const includedTransfers = packageIncludes.transfer || 0;
-    const extraTransfers = Math.max(0, requiredTransfers - includedTransfers);
+    const totalTransfers = input.transfer; // Já inclui transfer_extra + transfer_package + transfer
+    const transfersToCobrar = Math.max(0, totalTransfers - includedTransfers);
     
-    if (extraTransfers > 0) {
+    if (transfersToCobrar > 0) {
       const transferItem = config.items.find(item => item.id === 'transfer');
       if (transferItem) {
-        const cost = transferItem.price * extraTransfers;
+        const cost = transferItem.price * transfersToCobrar;
         result.fixedItemsCost += cost;
+        
+        let transferDescription = `Transfer (${transfersToCobrar} ${transfersToCobrar === 1 ? 'trecho' : 'trechos'}`;
+        if (includedTransfers > 0) {
+          transferDescription += ` - ${includedTransfers} incluído${includedTransfers > 1 ? 's' : ''} no pacote`;
+        }
+        transferDescription += ')';
+        
         result.breakdown.fixedItems.push({
-          name: `Transfer (${extraTransfers} ${extraTransfers === 1 ? 'trecho' : 'trechos'} - ${numberOfPeople > 3 ? 'grupo > 3 pessoas' : 'grupo ≤ 3 pessoas'})`,
-          quantity: extraTransfers,
+          name: transferDescription,
+          quantity: transfersToCobrar,
           unitPrice: transferItem.price,
           cost,
+        });
+      }
+    } else if (totalTransfers > 0 && includedTransfers >= totalTransfers) {
+      // Mostrar na aba de preços mesmo que seja grátis (incluído no pacote)
+      const transferItem = config.items.find(item => item.id === 'transfer');
+      if (transferItem) {
+        result.breakdown.fixedItems.push({
+          name: `Transfer (${totalTransfers} ${totalTransfers === 1 ? 'trecho' : 'trechos'} - incluído${totalTransfers > 1 ? 's' : ''} no pacote)`,
+          quantity: 0,
+          unitPrice: transferItem.price,
+          cost: 0,
         });
       }
     }

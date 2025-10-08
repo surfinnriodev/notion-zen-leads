@@ -495,14 +495,30 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
     sections.push(`- ${labels.unlimitedBoard} (${nights} ${labels.days}) = ${formatCurrency(boardCost)}`);
   }
   
-  // Transfer
+  // Transfer - considerar os incluídos no pacote
   const totalTransfers = (lead.transfer_extra || 0) + (lead.transfer_package || 0) + (lead.transfer ? 1 : 0);
   if (totalTransfers > 0) {
     const transferItem = config.items?.find((i: any) => i.id === 'transfer');
     const transferPrice = transferItem?.price || 0;
-    const transferCost = totalTransfers * transferPrice;
-    const transferLabel = people > 3 ? ` (${labels.upTo3pax})` : '';
-    sections.push(`- ${totalTransfers} ${totalTransfers > 1 ? labels.legs : labels.leg} ${labels.transfer}${transferLabel} = ${formatCurrency(transferCost)}`);
+    
+    // Verificar se há pacote e quantos transfers estão incluídos
+    const selectedPackage = lead.pacote && config.packages?.find((pkg: any) => 
+      pkg.id === lead.pacote || pkg.name === lead.pacote
+    );
+    const includedTransfers = selectedPackage?.includedItems?.transfer || 0;
+    const transfersToCobrar = Math.max(0, totalTransfers - includedTransfers);
+    
+    if (transfersToCobrar > 0) {
+      const transferCost = transfersToCobrar * transferPrice;
+      let transferLabel = `${transfersToCobrar} ${transfersToCobrar > 1 ? labels.legs : labels.leg}`;
+      if (includedTransfers > 0) {
+        transferLabel += ` (${includedTransfers} incluído${includedTransfers > 1 ? 's' : ''} no pacote)`;
+      }
+      sections.push(`- ${transferLabel} ${labels.transfer} = ${formatCurrency(transferCost)}`);
+    } else if (includedTransfers > 0) {
+      // Todos estão incluídos no pacote
+      sections.push(`- ${totalTransfers} ${totalTransfers > 1 ? labels.legs : labels.leg} ${labels.transfer} (incluído${totalTransfers > 1 ? 's' : ''} no pacote) = ${formatCurrency(0)}`);
+    }
   }
   
   // Experiências
