@@ -60,9 +60,13 @@ export interface CalculationInput {
   yogaLessons?: number;
   surfSkate?: number;
   videoAnalysis?: number;
-  massage?: number;
+  massage?: number; // Total (para compatibilidade)
+  massageExtra?: number; // Massagens extras (COBRADAS)
+  massagePackage?: number; // Massagens do pacote (NÃO COBRADAS)
   surfGuide?: number;
-  transfer?: number;
+  transfer?: number; // Total (para compatibilidade)
+  transferExtra?: number; // Transfers extras (COBRADOS)
+  transferPackage?: number; // Transfers do pacote (podem ser cobrados ou não)
   hike?: number;
   rioCityTour?: number;
   cariocaExperience?: number;

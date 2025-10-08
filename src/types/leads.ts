@@ -99,8 +99,12 @@ export function convertLeadToCalculationInput(lead: NotionReserva): CalculationI
     surfSkate: lead.skate || 0,
     videoAnalysis: (lead.analise_de_video || 0) + (lead.analise_de_video_package || 0),
     massage: (lead.massagem_extra || 0) + (lead.massagem_package || 0),
+    massageExtra: lead.massagem_extra || 0, // Separado para cálculo correto
+    massagePackage: lead.massagem_package || 0, // Separado para cálculo correto
     surfGuide: (lead.surf_guide || 0) + (lead.surf_guide_package || 0),
     transfer: (lead.transfer_extra || 0) + (lead.transfer_package || 0) + (lead.transfer ? 1 : 0),
+    transferExtra: lead.transfer_extra || 0, // Separado para cálculo correto
+    transferPackage: lead.transfer_package || 0, // Separado para cálculo correto
 
     // Experiências (convertendo boolean para numeric)
     hike: lead.hike_extra ? 1 : 0,
