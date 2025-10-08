@@ -139,7 +139,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       if (updatedData.skate !== undefined) mappedData.skate = updatedData.skate;
       if (updatedData.analise_de_video_extra !== undefined) mappedData.analise_de_video = updatedData.analise_de_video_extra;
       if (updatedData.analise_de_video_package !== undefined) mappedData.analise_de_video_package = updatedData.analise_de_video_package;
-      if (updatedData.massagem_extra !== undefined) mappedData.massagem_extra = Boolean(updatedData.massagem_extra);
+      if (updatedData.massagem_extra !== undefined) mappedData.massagem_extra = updatedData.massagem_extra;
       if (updatedData.massagem_package !== undefined) mappedData.massagem_package = updatedData.massagem_package;
       if (updatedData.surf_guide_package !== undefined) mappedData.surf_guide_package = updatedData.surf_guide_package;
       if (updatedData.transfer_extra !== undefined) mappedData.transfer_extra = updatedData.transfer_extra;
@@ -846,18 +846,22 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="massagem_extra">Massagem Extra</Label>
-                  <Select
-                    value={formData.massagem_extra ? "sim" : "nao"}
-                    onValueChange={(value) => handleInputChange("massagem_extra", value === "sim")}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="nao">Não</SelectItem>
-                      <SelectItem value="sim">Sim</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <Input
+                      id="massagem_extra"
+                      type="number"
+                      min="0"
+                      step="1"
+                      className="w-full"
+                      value={formData.massagem_extra || 0}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                        handleInputChange("massagem_extra", value);
+                      }}
+                      onFocus={(e) => e.target.select()}
+                    />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Massagens adicionais além do pacote
+                  </p>
                 </div>
 
                 <div>
@@ -867,14 +871,23 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                       type="number"
                       min="0"
                       step="1"
-                      className="w-full"
-                      value={formData.massagem_package || 0}
-                      onChange={(e) => {
-                        const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
-                        handleInputChange("massagem_package", value);
-                      }}
-                      onFocus={(e) => e.target.select()}
+                      className="w-full bg-muted"
+                      value={(() => {
+                        // Buscar massagens incluídas no pacote selecionado
+                        if (formData.pacote) {
+                          const selectedPackage = config.packages?.find(pkg => 
+                            pkg.id === formData.pacote || pkg.name === formData.pacote
+                          );
+                          return selectedPackage?.includedItems?.massage || 0;
+                        }
+                        return 0;
+                      })()}
+                      disabled
+                      readOnly
                     />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Massagens incluídas no pacote (read-only)
+                  </p>
                 </div>
               </div>
 

@@ -220,7 +220,7 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
   }
   
   if (lead.massagem_extra || lead.massagem_package) {
-    const totalMassage = (lead.massagem_extra ? 1 : 0) + (lead.massagem_package || 0);
+    const totalMassage = (lead.massagem_extra || 0) + (lead.massagem_package || 0);
     activities.push(`• ${totalMassage} ${totalMassage > 1 ? labels.ayurvedicMassages : labels.ayurvedicMassage}`);
   }
   
@@ -479,7 +479,7 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
   }
   
   // Massagem
-  const totalMassage = (lead.massagem_extra ? 1 : 0) + (lead.massagem_package || 0);
+  const totalMassage = (lead.massagem_extra || 0) + (lead.massagem_package || 0);
   if (totalMassage > 0) {
     const massageItem = config.items?.find((i: any) => i.id === 'massage');
     const massagePrice = massageItem?.price || 0;

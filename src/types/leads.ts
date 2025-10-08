@@ -98,7 +98,7 @@ export function convertLeadToCalculationInput(lead: NotionReserva): CalculationI
     yogaLessons: lead.aulas_de_yoga || 0,
     surfSkate: lead.skate || 0,
     videoAnalysis: (lead.analise_de_video || 0) + (lead.analise_de_video_package || 0),
-    massage: (lead.massagem_extra ? 1 : 0) + (lead.massagem_package || 0),
+    massage: (lead.massagem_extra || 0) + (lead.massagem_package || 0),
     surfGuide: (lead.surf_guide || 0) + (lead.surf_guide_package || 0),
     transfer: (lead.transfer_extra || 0) + (lead.transfer_package || 0) + (lead.transfer ? 1 : 0),
 
