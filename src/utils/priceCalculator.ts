@@ -203,7 +203,43 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   }
   addFixedItem(input.surfSkate, packageIncludes.surfSkate, 'surf-skate', 'Surf-skate');
   addFixedItem(input.videoAnalysis, packageIncludes.videoAnalysis, 'video-analysis', 'Análise de vídeo');
-  addFixedItem(input.massage, packageIncludes.massage, 'massage', 'Massagem');
+  
+  // Massagem - IMPORTANTE: massagem_package NÃO é cobrada (já está incluída)
+  // Cobrar apenas massagem_extra
+  if (input.massage && input.massage > 0) {
+    const massageItem = config.items.find(item => item.id === 'massage');
+    if (massageItem) {
+      // Separar massagem_extra e massagem_package do input
+      // input.massage já vem como soma, mas precisamos mostrar separado
+      const totalMassages = input.massage;
+      
+      // Buscar do lead original quantas são extras e quantas do pacote
+      // Como não temos acesso direto aqui, vamos assumir que packageIncludes.massage indica as do pacote
+      const packageMassages = packageIncludes.massage || 0;
+      const extraMassages = Math.max(0, totalMassages - packageMassages);
+      
+      // Cobrar APENAS as extras
+      if (extraMassages > 0) {
+        const cost = massageItem.price * extraMassages;
+        result.fixedItemsCost += cost;
+        result.breakdown.fixedItems.push({
+          name: `Massagem (${extraMassages} ${extraMassages === 1 ? 'extra' : 'extras'}${packageMassages > 0 ? `, ${packageMassages} incluída${packageMassages > 1 ? 's' : ''} no pacote` : ''})`,
+          quantity: extraMassages,
+          unitPrice: massageItem.price,
+          cost,
+        });
+      } else if (packageMassages > 0) {
+        // Mostrar que tem massagens mas são incluídas (grátis)
+        result.breakdown.fixedItems.push({
+          name: `Massagem (${packageMassages} incluída${packageMassages > 1 ? 's' : ''} no pacote)`,
+          quantity: 0,
+          unitPrice: massageItem.price,
+          cost: 0,
+        });
+      }
+    }
+  }
+  
   addFixedItem(input.surfGuide, packageIncludes.surfGuide, 'surf-guide', 'Surf guide');
 
   // Transfer - usar a quantidade definida pelo usuário

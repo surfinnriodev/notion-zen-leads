@@ -871,13 +871,16 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                       type="number"
                       min="0"
                       step="1"
-                      className="w-full bg-muted"
+                      className="w-full"
                       value={formData.massagem_package || 0}
-                      disabled
-                      readOnly
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                        handleInputChange("massagem_package", value);
+                      }}
+                      onFocus={(e) => e.target.select()}
                     />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Massagens incluídas no pacote do banco (read-only)
+                    Massagens incluídas no pacote
                   </p>
                 </div>
               </div>
@@ -946,13 +949,16 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                       type="number"
                       min="0"
                       step="1"
-                      className="w-full bg-muted"
+                      className="w-full"
                       value={formData.transfer_package || 0}
-                      disabled
-                      readOnly
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                        handleInputChange("transfer_package", value);
+                      }}
+                      onFocus={(e) => e.target.select()}
                     />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Transfer incluído no pacote do banco (read-only)
+                    Transfers incluídos no pacote
                   </p>
                 </div>
 

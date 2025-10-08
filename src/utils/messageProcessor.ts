@@ -478,13 +478,28 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
     sections.push(`- ${totalVideo} ${labels.videoAnalysis} = ${formatCurrency(videoCost)}`);
   }
   
-  // Massagem
-  const totalMassage = (lead.massagem_extra || 0) + (lead.massagem_package || 0);
+  // Massagem - cobrar APENAS as extras (massagem_package já está incluída no pacote)
+  const massagemExtra = lead.massagem_extra || 0;
+  const massagemPackage = lead.massagem_package || 0;
+  const totalMassage = massagemExtra + massagemPackage;
+  
   if (totalMassage > 0) {
     const massageItem = config.items?.find((i: any) => i.id === 'massage');
     const massagePrice = massageItem?.price || 0;
-    const massageCost = totalMassage * massagePrice;
-    sections.push(`- ${totalMassage} ${labels.massage} = ${formatCurrency(massageCost)}`);
+    
+    // Cobrar APENAS as extras
+    const massageCost = massagemExtra * massagePrice;
+    
+    if (massagemExtra > 0) {
+      let massageLabel = `${massagemExtra} ${labels.massage}`;
+      if (massagemPackage > 0) {
+        massageLabel += ` (${massagemPackage} incluída${massagemPackage > 1 ? 's' : ''} no pacote)`;
+      }
+      sections.push(`- ${massageLabel} = ${formatCurrency(massageCost)}`);
+    } else if (massagemPackage > 0) {
+      // Apenas as do pacote (grátis)
+      sections.push(`- ${massagemPackage} ${labels.massage} (incluída${massagemPackage > 1 ? 's' : ''} no pacote) = ${formatCurrency(0)}`);
+    }
   }
   
   // Aluguel de Prancha
