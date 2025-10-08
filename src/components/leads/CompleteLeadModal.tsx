@@ -176,15 +176,15 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
         return data;
       } else {
         // Atualização de lead existente
-        const { data, error } = await supabase
-          .from("reservations")
-          .update(mappedData)
-          .eq("id", lead.id)
-          .select()
-          .single();
+      const { data, error } = await supabase
+        .from("reservations")
+        .update(mappedData)
+        .eq("id", lead.id)
+        .select()
+        .single();
 
-        if (error) throw error;
-        return data;
+      if (error) throw error;
+      return data;
       }
     },
     onSuccess: () => {
@@ -872,21 +872,12 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                       min="0"
                       step="1"
                       className="w-full bg-muted"
-                      value={(() => {
-                        // Buscar massagens incluídas no pacote selecionado
-                        if (formData.pacote) {
-                          const selectedPackage = config.packages?.find(pkg => 
-                            pkg.id === formData.pacote || pkg.name === formData.pacote
-                          );
-                          return selectedPackage?.includedItems?.massage || 0;
-                        }
-                        return 0;
-                      })()}
+                      value={formData.massagem_package || 0}
                       disabled
                       readOnly
                     />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Massagens incluídas no pacote (read-only)
+                    Massagens incluídas no pacote do banco (read-only)
                   </p>
                 </div>
               </div>
@@ -956,21 +947,12 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                       min="0"
                       step="1"
                       className="w-full bg-muted"
-                      value={(() => {
-                        // Buscar transfer incluído no pacote selecionado
-                        if (formData.pacote) {
-                          const selectedPackage = config.packages?.find(pkg => 
-                            pkg.id === formData.pacote || pkg.name === formData.pacote
-                          );
-                          return selectedPackage?.includedItems?.transfer || 0;
-                        }
-                        return 0;
-                      })()}
+                      value={formData.transfer_package || 0}
                       disabled
                       readOnly
                     />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Transfer incluído no pacote (read-only)
+                    Transfer incluído no pacote do banco (read-only)
                   </p>
                 </div>
 
@@ -1634,16 +1616,16 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
         <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-3 p-3 sm:p-6 border-t bg-background flex-shrink-0">
           {!isCreating && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleDelete}
-              disabled={deleteMutation.isPending}
-              className="flex items-center gap-2 w-full sm:w-auto text-muted-foreground hover:text-destructive hover:border-destructive/50"
-            >
-              <Trash2 className="w-3 h-3" />
-              {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
-            </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending}
+            className="flex items-center gap-2 w-full sm:w-auto text-muted-foreground hover:text-destructive hover:border-destructive/50"
+          >
+            <Trash2 className="w-3 h-3" />
+            {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
+          </Button>
           )}
           
           <div className={`flex flex-col sm:flex-row gap-2 ${isCreating ? 'w-full' : ''}`}>
