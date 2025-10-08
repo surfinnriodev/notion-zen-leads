@@ -218,10 +218,16 @@ export function mapReservaToLegacyFormat(lead: NotionReserva): any {
     skate: lead.skate,
     analise_de_video_extra: lead.analise_de_video,
     analise_de_video_package: lead.analise_de_video_package,
-    massagem_extra: lead.massagem_extra,
+    // Converter massagem_extra para número (pode vir como boolean do banco antigo)
+    massagem_extra: typeof lead.massagem_extra === 'boolean' 
+      ? (lead.massagem_extra ? 1 : 0) 
+      : (lead.massagem_extra || 0),
     massagem_package: lead.massagem_package,
     surf_guide_package: lead.surf_guide_package,
-    transfer_extra: lead.transfer_extra,
+    // Converter transfer_extra para número (pode vir como boolean do banco antigo)
+    transfer_extra: typeof lead.transfer_extra === 'boolean' 
+      ? (lead.transfer_extra ? 1 : 0) 
+      : (lead.transfer_extra || 0),
     transfer_package: lead.transfer_package,
 
     // Boolean items - mapping database fields to legacy modal field names

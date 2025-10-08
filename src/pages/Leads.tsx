@@ -83,30 +83,57 @@ const Leads = () => {
     <div className="p-4 sm:p-6">
       {/* Header com título e controles */}
       <div className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
+        {/* Linha 1: Título */}
+        <div className="flex items-center justify-between mb-3">
           <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Leads</h1>
           
-          {/* Controles do lado direito */}
+          {/* View Toggle - Desktop */}
+          <div className="hidden sm:flex gap-1">
+            <Button
+              variant={viewMode === "list" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="h-8 w-8 p-0"
+              title="Vista de Lista"
+            >
+              <List className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === "board" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("board")}
+              className="h-8 w-8 p-0"
+              title="Vista Kanban"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        
+        {/* Linha 2: Contagem e Botão Novo Lead */}
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            {leadCount} {leadCount === 1 ? 'lead encontrado' : 'leads encontrados'}
+          </p>
+          
           <div className="flex items-center gap-2">
             {/* Botão Criar Novo Lead */}
             <Button
               onClick={handleCreateLead}
               size="sm"
-              className="flex items-center gap-1.5"
-              title="Criar Novo Lead"
+              className="gap-1.5"
             >
               <Plus className="w-4 h-4" />
               <span>Novo</span>
             </Button>
             
-            {/* View Toggle */}
-            <div className="flex gap-1">
+            {/* View Toggle - Mobile */}
+            <div className="flex sm:hidden gap-1">
               <Button
                 variant={viewMode === "list" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("list")}
                 className="h-8 w-8 p-0"
-                title="Vista de Lista"
               >
                 <List className="w-4 h-4" />
               </Button>
@@ -115,16 +142,12 @@ const Leads = () => {
                 size="sm"
                 onClick={() => setViewMode("board")}
                 className="h-8 w-8 p-0"
-                title="Vista Kanban"
               >
                 <LayoutGrid className="w-4 h-4" />
               </Button>
             </div>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">
-          {leadCount} {leadCount === 1 ? 'lead encontrado' : 'leads encontrados'}
-        </p>
       </div>
 
       {/* Content */}
