@@ -84,28 +84,28 @@ const Leads = () => {
       {/* Header com título e controles */}
       <div className="mb-4 sm:mb-6">
         <div className="flex items-center justify-between gap-3 mb-1">
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Leads</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground flex-shrink-0">Leads</h1>
           
           {/* Controles do lado direito */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {/* Botão Criar Novo Lead */}
             <Button
               onClick={handleCreateLead}
               size="sm"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 whitespace-nowrap"
               title="Criar Novo Lead"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 flex-shrink-0" />
               <span className="hidden sm:inline">Novo Lead</span>
             </Button>
             
             {/* View Toggle */}
-            <div className="flex gap-1">
+            <div className="flex gap-1 flex-shrink-0">
               <Button
                 variant={viewMode === "list" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("list")}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 flex-shrink-0"
                 title="Vista de Lista"
               >
                 <List className="w-4 h-4" />
@@ -114,7 +114,7 @@ const Leads = () => {
                 variant={viewMode === "board" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("board")}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 flex-shrink-0"
                 title="Vista Kanban"
               >
                 <LayoutGrid className="w-4 h-4" />
