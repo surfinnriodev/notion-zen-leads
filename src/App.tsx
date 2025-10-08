@@ -9,26 +9,36 @@ import Leads from "./pages/Leads";
 import Calculator from "./pages/Calculator";
 import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
+import { useVersionCheck } from "./hooks/useVersionCheck";
 
 const queryClient = new QueryClient();
+
+const AppContent = () => {
+  // Hook para verificar versão e forçar reload se necessário (importante para iOS)
+  useVersionCheck();
+  
+  return (
+    <BrowserRouter>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/leads" element={<Leads />} />
+          <Route path="/calculator" element={<Calculator />} />
+          <Route path="/messages" element={<Messages />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Layout>
+    </BrowserRouter>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/leads" element={<Leads />} />
-            <Route path="/calculator" element={<Calculator />} />
-            <Route path="/messages" element={<Messages />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
-      </BrowserRouter>
+      <AppContent />
     </TooltipProvider>
   </QueryClientProvider>
 );
