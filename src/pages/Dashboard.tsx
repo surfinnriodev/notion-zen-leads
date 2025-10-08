@@ -78,19 +78,19 @@ const Dashboard = () => {
         />
 
         <MetricCard
-          title="Receita Total"
+          title="Receita Confirmada"
           value={`R$ ${metrics.totalRevenue.toLocaleString('pt-BR')}`}
           icon={DollarSign}
           valueColor="text-green-600"
-          subtitle="receita estimada"
+          subtitle="pagos + hospedagem concluída"
         />
 
         <MetricCard
-          title="Receita por Lead"
-          value={`R$ ${metrics.averageRevenuePerLead.toLocaleString('pt-BR')}`}
+          title="Receita Prevista"
+          value={`R$ ${metrics.projectedRevenue.toLocaleString('pt-BR')}`}
           icon={TrendingUp}
           valueColor="text-blue-600"
-          subtitle="ticket médio"
+          subtitle="total em pipeline"
         />
 
         <MetricCard

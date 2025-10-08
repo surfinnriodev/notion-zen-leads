@@ -6,6 +6,7 @@ import { usePricingConfig } from "./usePricingConfig";
 interface DashboardMetrics {
   totalLeads: number;
   totalRevenue: number;
+  projectedRevenue: number;
   averageRevenuePerLead: number;
   leadsByStatus: Record<string, {
     count: number;
@@ -73,10 +74,40 @@ export const useDashboardData = () => {
         ...calculateLeadPrice(lead, config)
       }));
 
+      // Status que indicam receita confirmada (pago)
+      const paidStatuses = [
+        'pago | a se hospedar',
+        'pago',
+        'hospedagem concluída',
+        'hospedagem concluida',
+        'concluído',
+        'concluido'
+      ];
+
+      // Status a serem excluídos (perdidos, cancelados)
+      const excludedStatuses = [
+        'perdido',
+        'cancelado',
+        'descartado'
+      ];
+
+      // Filtrar leads pagos (receita real)
+      const paidLeads = leadsWithPricing.filter(lead => {
+        const status = (lead.status || '').toLowerCase().trim();
+        return paidStatuses.some(paidStatus => status.includes(paidStatus));
+      });
+
+      // Filtrar leads válidos para projeção (excluir perdidos/cancelados)
+      const validLeads = leadsWithPricing.filter(lead => {
+        const status = (lead.status || '').toLowerCase().trim();
+        return !excludedStatuses.some(excludedStatus => status.includes(excludedStatus));
+      });
+
       // Métricas básicas
       const totalLeads = leads.length;
-      const totalRevenue = leadsWithPricing.reduce((sum, lead) => sum + (lead.totalPrice || 0), 0);
-      const averageRevenuePerLead = totalRevenue / totalLeads || 0;
+      const totalRevenue = paidLeads.reduce((sum, lead) => sum + (lead.totalPrice || 0), 0);
+      const projectedRevenue = validLeads.reduce((sum, lead) => sum + (lead.totalPrice || 0), 0);
+      const averageRevenuePerLead = totalRevenue / (paidLeads.length || 1);
 
       // Leads por status
       const leadsByStatus: Record<string, { count: number; revenue: number; percentage: number }> = {};
@@ -145,13 +176,16 @@ export const useDashboardData = () => {
 
       console.log("✅ Métricas calculadas:", {
         totalLeads,
+        paidLeads: paidLeads.length,
         totalRevenue: totalRevenue.toFixed(2),
+        projectedRevenue: projectedRevenue.toFixed(2),
         statusCount: Object.keys(leadsByStatus).length
       });
 
       return {
         totalLeads,
         totalRevenue,
+        projectedRevenue,
         averageRevenuePerLead,
         leadsByStatus,
         revenueByMonth,
@@ -170,6 +204,7 @@ function getEmptyMetrics(): DashboardMetrics {
   return {
     totalLeads: 0,
     totalRevenue: 0,
+    projectedRevenue: 0,
     averageRevenuePerLead: 0,
     leadsByStatus: {},
     revenueByMonth: [],
