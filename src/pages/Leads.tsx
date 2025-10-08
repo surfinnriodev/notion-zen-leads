@@ -80,11 +80,24 @@ const Leads = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 relative">
+    <div className="p-4 sm:p-6">
       {/* Header com título e controles */}
       <div className="mb-4 sm:mb-6">
         <div className="flex items-center justify-between gap-3 mb-1">
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Leads</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Leads</h1>
+            {/* Botão Criar Novo Lead */}
+            <Button
+              onClick={handleCreateLead}
+              size="sm"
+              className="flex items-center gap-2"
+              title="Criar Novo Lead"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Novo Lead</span>
+            </Button>
+          </div>
+          
           {/* View Toggle */}
           <div className="flex gap-1">
             <Button
@@ -116,16 +129,6 @@ const Leads = () => {
       <div className="bg-card rounded-lg border border-border">
         {viewMode === "list" ? <LeadsList /> : <LeadsBoard />}
       </div>
-
-      {/* Botão flutuante para criar novo lead */}
-      <Button
-        onClick={handleCreateLead}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow z-50"
-        size="icon"
-        title="Criar Novo Lead"
-      >
-        <Plus className="w-6 h-6" />
-      </Button>
 
       {/* Modal de criação de lead */}
       {newLead && (
