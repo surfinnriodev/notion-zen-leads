@@ -194,8 +194,8 @@ export const LeadsBoard = () => {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 10, // Aumentado para evitar drag acidental no mobile
-        delay: 100, // Pequeno delay para diferenciar de scroll
+        distance: 8, // Distância mínima para ativar o drag
+        delay: 0, // Sem delay para feedback instantâneo
         tolerance: 5,
       },
     })

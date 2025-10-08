@@ -112,6 +112,8 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
     },
   });
 
+  const isCreating = lead && lead.id === 0;
+
   const updateMutation = useMutation({
     mutationFn: async (updatedData: Partial<LeadWithCalculation>) => {
       if (!lead) throw new Error("No lead to update");
@@ -140,7 +142,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       if (updatedData.massagem_extra !== undefined) mappedData.massagem_extra = Boolean(updatedData.massagem_extra);
       if (updatedData.massagem_package !== undefined) mappedData.massagem_package = updatedData.massagem_package;
       if (updatedData.surf_guide_package !== undefined) mappedData.surf_guide_package = updatedData.surf_guide_package;
-      if (updatedData.transfer_extra !== undefined) mappedData.transfer_extra = Boolean(updatedData.transfer_extra);
+      if (updatedData.transfer_extra !== undefined) mappedData.transfer_extra = updatedData.transfer_extra;
       if (updatedData.transfer_package !== undefined) mappedData.transfer_package = updatedData.transfer_package;
 
       // Booleans fields - mapping to correct database field names
@@ -161,24 +163,38 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       if (updatedData.extra_fee_amount !== undefined) mappedData.extra_fee_amount = updatedData.extra_fee_amount;
       if (updatedData.extra_fee_description !== undefined) mappedData.extra_fee_description = updatedData.extra_fee_description;
 
-      const { data, error } = await supabase
-        .from("reservations")
-        .update(mappedData)
-        .eq("id", lead.id)
-        .select()
-        .single();
+      // Verificar se é criação ou edição
+      if (lead.id === 0) {
+        // Criação de novo lead
+        const { data, error } = await supabase
+          .from("reservations")
+          .insert(mappedData)
+          .select()
+          .single();
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return data;
+      } else {
+        // Atualização de lead existente
+        const { data, error } = await supabase
+          .from("reservations")
+          .update(mappedData)
+          .eq("id", lead.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       queryClient.invalidateQueries({ queryKey: ["leads-board"] });
-      toast.success("Lead atualizado com sucesso!");
+      toast.success(isCreating ? "Lead criado com sucesso!" : "Lead atualizado com sucesso!");
       onClose();
     },
     onError: (error) => {
-      toast.error("Erro ao atualizar lead: " + error.message);
+      toast.error(`Erro ao ${isCreating ? 'criar' : 'atualizar'} lead: ` + error.message);
     },
   });
 
@@ -330,9 +346,11 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
           <DialogTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="flex items-center gap-2">
               <User className="w-5 h-5" />
-              <span className="truncate text-base sm:text-lg">Edição: {lead.name || "Lead sem nome"}</span>
+              <span className="truncate text-base sm:text-lg">
+                {isCreating ? "Criar Novo Lead" : `Edição: ${lead.name || "Lead sem nome"}`}
+              </span>
             </div>
-            <Badge variant="outline" className="self-start sm:self-auto">{lead.status || "novo"}</Badge>
+            {!isCreating && <Badge variant="outline" className="self-start sm:self-auto">{lead.status || "novo"}</Badge>}
           </DialogTitle>
         </DialogHeader>
 
@@ -473,20 +491,90 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                   <Label htmlFor="check_in_start">Check-in *</Label>
                   <Input
                     id="check_in_start"
-                    type="date"
-                    value={formData.check_in_start ? formData.check_in_start.split('T')[0] : ""}
-                    onChange={(e) => handleInputChange("check_in_start", e.target.value)}
+                    type="text"
+                    placeholder="dd/mm/aaaa"
+                    value={formData.check_in_start ? (() => {
+                      try {
+                        const date = new Date(formData.check_in_start);
+                        return date.toLocaleDateString('pt-BR');
+                      } catch {
+                        return '';
+                      }
+                    })() : ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Aceitar formato dd/mm/aaaa
+                      const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+                      if (match) {
+                        const [, day, month, year] = match;
+                        const isoDate = `${year}-${month}-${day}`;
+                        handleInputChange("check_in_start", isoDate);
+                      } else {
+                        // Permitir digitação parcial
+                        handleInputChange("check_in_start", value);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      // Tentar converter ao perder o foco
+                      const value = e.target.value;
+                      const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                      if (match) {
+                        const [, day, month, year] = match;
+                        const paddedDay = day.padStart(2, '0');
+                        const paddedMonth = month.padStart(2, '0');
+                        const isoDate = `${year}-${paddedMonth}-${paddedDay}`;
+                        handleInputChange("check_in_start", isoDate);
+                      }
+                    }}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Formato: dd/mm/aaaa (ex: 25/12/2024)
+                  </p>
                 </div>
 
                 <div>
                   <Label htmlFor="check_in_end">Check-out *</Label>
                   <Input
                     id="check_in_end"
-                    type="date"
-                    value={formData.check_in_end ? formData.check_in_end.split('T')[0] : ""}
-                    onChange={(e) => handleInputChange("check_in_end", e.target.value)}
+                    type="text"
+                    placeholder="dd/mm/aaaa"
+                    value={formData.check_in_end ? (() => {
+                      try {
+                        const date = new Date(formData.check_in_end);
+                        return date.toLocaleDateString('pt-BR');
+                      } catch {
+                        return '';
+                      }
+                    })() : ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Aceitar formato dd/mm/aaaa
+                      const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+                      if (match) {
+                        const [, day, month, year] = match;
+                        const isoDate = `${year}-${month}-${day}`;
+                        handleInputChange("check_in_end", isoDate);
+                      } else {
+                        // Permitir digitação parcial
+                        handleInputChange("check_in_end", value);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      // Tentar converter ao perder o foco
+                      const value = e.target.value;
+                      const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                      if (match) {
+                        const [, day, month, year] = match;
+                        const paddedDay = day.padStart(2, '0');
+                        const paddedMonth = month.padStart(2, '0');
+                        const isoDate = `${year}-${paddedMonth}-${paddedDay}`;
+                        handleInputChange("check_in_end", isoDate);
+                      }
+                    }}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Formato: dd/mm/aaaa (ex: 30/12/2024)
+                  </p>
                 </div>
 
                 <div>
@@ -1532,18 +1620,20 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-3 p-3 sm:p-6 border-t bg-background flex-shrink-0">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleDelete}
-            disabled={deleteMutation.isPending}
-            className="flex items-center gap-2 w-full sm:w-auto text-muted-foreground hover:text-destructive hover:border-destructive/50"
-          >
-            <Trash2 className="w-3 h-3" />
-            {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
-          </Button>
+          {!isCreating && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+              className="flex items-center gap-2 w-full sm:w-auto text-muted-foreground hover:text-destructive hover:border-destructive/50"
+            >
+              <Trash2 className="w-3 h-3" />
+              {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
+            </Button>
+          )}
           
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className={`flex flex-col sm:flex-row gap-2 ${isCreating ? 'w-full' : ''}`}>
             <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
               Cancelar
             </Button>
@@ -1553,7 +1643,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
               className="flex items-center gap-2 w-full sm:w-auto"
             >
               <Save className="w-4 h-4" />
-              {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+              {updateMutation.isPending ? "Salvando..." : (isCreating ? "Criar Lead" : "Salvar Alterações")}
             </Button>
           </div>
         </div>

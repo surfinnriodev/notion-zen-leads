@@ -15,6 +15,16 @@ export const formatCurrency = (value: number) => {
 export const formatDate = (dateString: string | null) => {
   if (!dateString) return 'N/A';
   try {
+    // Garantir que a data seja interpretada como local (Brasil) e não UTC
+    // Se a string está no formato YYYY-MM-DD, extrair os componentes
+    const dateMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (dateMatch) {
+      const [, year, month, day] = dateMatch;
+      // Criar data explicitamente com os valores locais
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      return format(date, 'dd/MM/yyyy', { locale: ptBR });
+    }
+    // Fallback para o método original
     return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
   } catch {
     return 'N/A';
@@ -91,14 +101,14 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
   const people = lead.number_of_people || 1;
   
   const labels = language === 'en' ? {
-    accommodation: '📍 ACCOMMODATION:',
+    accommodation: 'ACCOMMODATION:',
     night: 'night',
     nights: 'nights',
     people: 'people',
     person: 'person',
     checkIn: 'Check-in',
     checkOut: 'Check-out',
-    activities: '🏄 ACTIVITIES:',
+    activities: 'ACTIVITIES:',
     surfLesson: 'Surf Lesson',
     surfLessons: 'Surf Lessons',
     yogaLesson: 'Yoga Lesson',
@@ -111,31 +121,31 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
     videoAnalyses: 'Video Analyses',
     ayurvedicMassage: 'Ayurvedic Massage',
     ayurvedicMassages: 'Ayurvedic Massages',
-    dailyItems: '☕ DAILY ITEMS:',
+    dailyItems: 'DAILY ITEMS:',
     breakfast: 'Breakfast',
     day: 'day',
     days: 'days',
     unlimitedBoardRental: 'Unlimited Board Rental',
-    transfer: '✈️ TRANSFER:',
+    transfer: 'TRANSFER:',
     airportTransfer: 'Airport Transfer',
     airportTransfers: 'Airport Transfers',
-    experiences: '🌟 EXPERIENCES:',
+    experiences: 'EXPERIENCES:',
     hike: 'Hike',
     rioCityTour: 'Rio City Tour',
     cariocaExperience: 'Carioca Experience',
-    basePackage: '📦 BASE PACKAGE:',
+    basePackage: 'BASE PACKAGE:',
     customPackage: 'Custom Package',
-    totalPrice: '💵 TOTAL PRICE:',
+    totalPrice: 'TOTAL PRICE:',
     noServices: 'No services contracted'
   } : {
-    accommodation: '📍 HOSPEDAGEM:',
+    accommodation: 'HOSPEDAGEM:',
     night: 'noite',
     nights: 'noites',
     people: 'pessoas',
     person: 'pessoa',
     checkIn: 'Check-in',
     checkOut: 'Check-out',
-    activities: '🏄 ATIVIDADES:',
+    activities: 'ATIVIDADES:',
     surfLesson: 'Aula de Surf',
     surfLessons: 'Aulas de Surf',
     yogaLesson: 'Aula de Yoga',
@@ -148,21 +158,21 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
     videoAnalyses: 'Análises de Vídeo',
     ayurvedicMassage: 'Massagem Ayurvédica',
     ayurvedicMassages: 'Massagens Ayurvédicas',
-    dailyItems: '☕ ITENS DIÁRIOS:',
+    dailyItems: 'ITENS DIÁRIOS:',
     breakfast: 'Café da Manhã',
     day: 'dia',
     days: 'dias',
     unlimitedBoardRental: 'Aluguel de Prancha Ilimitado',
-    transfer: '✈️ TRANSFER:',
+    transfer: 'TRANSFER:',
     airportTransfer: 'Transfer (Aeroporto)',
     airportTransfers: 'Transfers (Aeroporto)',
-    experiences: '🌟 EXPERIÊNCIAS:',
+    experiences: 'EXPERIÊNCIAS:',
     hike: 'Trilha',
     rioCityTour: 'Rio City Tour',
     cariocaExperience: 'Carioca Experience',
-    basePackage: '📦 PACOTE BASE:',
+    basePackage: 'BASE PACKAGE:',
     customPackage: 'Pacote Personalizado',
-    totalPrice: '💵 PREÇO TOTAL:',
+    totalPrice: 'PREÇO TOTAL:',
     noServices: 'Nenhum serviço contratado'
   };
   
@@ -266,17 +276,7 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
     sections.push('');
   }
   
-  // Pacote
-  if (lead.pacote && packages) {
-    const selectedPackage = packages.find(pkg => pkg.id === lead.pacote || pkg.name === lead.pacote);
-    if (selectedPackage) {
-      sections.push(`${labels.basePackage} ${selectedPackage.name}`);
-    } else {
-      sections.push(`${labels.basePackage} ${labels.customPackage}`);
-    }
-  } else {
-    sections.push(`${labels.basePackage} ${labels.customPackage}`);
-  }
+  // Remover seção de pacote conforme solicitado pelo cliente
   
   sections.push('');
   
@@ -337,7 +337,7 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
     hike: 'Hike',
     rioCityTour: 'Rio City Tour',
     cariocaExp: 'Carioca Experience',
-    fee: 'Fee (BRL)',
+    fee: 'Fee',
     total: 'Total',
     deposit: 'Deposit Amount',
     pending: 'Pending Amount',
@@ -372,7 +372,7 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
     hike: 'Trilha',
     rioCityTour: 'Rio City Tour',
     cariocaExp: 'Carioca Experience',
-    fee: 'Taxa (BRL)',
+    fee: 'Taxa',
     total: 'Total',
     deposit: 'Valor Depósito',
     pending: 'Valor Pendente',
@@ -413,11 +413,12 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
   
   // Aulas de Surf (com faixas de preço)
   if (lead.aulas_de_surf && lead.aulas_de_surf > 0) {
-    // Usar preço baseado na faixa (1-3, 4-7, 8+)
-    const pricePerLesson = getSurfLessonPrice(lead.aulas_de_surf, config.surfLessonPricing);
+    // Calcular TOTAL de aulas para determinar a faixa de preço
     const totalSurfLessons = lead.aulas_de_surf * people;
+    // Usar preço baseado na faixa do TOTAL de aulas (não apenas por pessoa)
+    const pricePerLesson = getSurfLessonPrice(totalSurfLessons, config.surfLessonPricing);
     const surfCost = pricePerLesson * totalSurfLessons;
-    const tierLabel = lead.aulas_de_surf <= 3 ? '1-3' : lead.aulas_de_surf <= 7 ? '4-7' : '8+';
+    const tierLabel = totalSurfLessons <= 3 ? '1-3' : totalSurfLessons <= 7 ? '4-7' : '8+';
     sections.push(`- ${lead.aulas_de_surf} ${lead.aulas_de_surf > 1 ? labels.surfLessons : labels.surfLesson} × ${people} ${people > 1 ? labels.people : labels.person} (${formatCurrency(pricePerLesson)}/aula - faixa ${tierLabel}) = ${formatCurrency(surfCost)}`);
   }
   

@@ -119,14 +119,16 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     const extraLessons = Math.max(0, totalLessons - includedLessons);
     
     if (totalLessons > 0) {
-      // Usar preço baseado na faixa para o total de aulas por pessoa
-      const pricePerLesson = getSurfLessonPrice(totalLessons, (config as any).surfLessonPricing);
-      const totalCost = pricePerLesson * totalLessons * numberOfPeople;
+      // Calcular TOTAL de aulas (por pessoa x número de pessoas) para determinar faixa
+      const totalSurfLessons = totalLessons * numberOfPeople;
+      // Usar preço baseado na faixa do TOTAL de aulas
+      const pricePerLesson = getSurfLessonPrice(totalSurfLessons, (config as any).surfLessonPricing);
+      const totalCost = pricePerLesson * totalSurfLessons;
       
       result.fixedItemsCost += totalCost;
       result.breakdown.fixedItems.push({
-        name: `Aulas de surf (${totalLessons} aulas por pessoa - faixa ${totalLessons <= 3 ? '1-3' : totalLessons <= 7 ? '4-7' : '8+'})`,
-        quantity: totalLessons * numberOfPeople,
+        name: `Aulas de surf (${totalLessons} aulas por pessoa x ${numberOfPeople} ${numberOfPeople > 1 ? 'pessoas' : 'pessoa'} = ${totalSurfLessons} total - faixa ${totalSurfLessons <= 3 ? '1-3' : totalSurfLessons <= 7 ? '4-7' : '8+'})`,
+        quantity: totalSurfLessons,
         unitPrice: pricePerLesson,
         cost: totalCost,
       });
@@ -173,18 +175,29 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
       const freeYogaDays = calculateFreeYogaDays(input.checkInStart, input.checkInEnd);
       const chargedYogaLessons = Math.max(0, totalYogaLessons - freeYogaDays);
       
-      if (chargedYogaLessons > 0) {
-        const yogaItem = config.items.find(item => item.id === 'yoga-lesson');
-        if (yogaItem) {
-          const cost = yogaItem.price * chargedYogaLessons * numberOfPeople;
-          result.fixedItemsCost += cost;
-          result.breakdown.fixedItems.push({
-            name: `Aulas de yoga (${chargedYogaLessons} aulas cobradas de ${totalYogaLessons} - ${freeYogaDays} dias grátis)`,
-            quantity: chargedYogaLessons * numberOfPeople,
-            unitPrice: yogaItem.price,
-            cost,
-          });
+      const yogaItem = config.items.find(item => item.id === 'yoga-lesson');
+      if (yogaItem) {
+        const cost = yogaItem.price * chargedYogaLessons * numberOfPeople;
+        
+        // Sempre adicionar ao breakdown, mesmo que custo seja 0, para mostrar na aba de preços
+        result.fixedItemsCost += cost;
+        
+        // Mensagem diferente dependendo se há aulas grátis
+        let yogaName = '';
+        if (freeYogaDays > 0 && chargedYogaLessons > 0) {
+          yogaName = `Aulas de yoga (${totalYogaLessons} total: ${freeYogaDays} grátis + ${chargedYogaLessons} cobradas)`;
+        } else if (freeYogaDays > 0 && chargedYogaLessons === 0) {
+          yogaName = `Aulas de yoga (${totalYogaLessons} aulas - todas grátis)`;
+        } else {
+          yogaName = `Aulas de yoga (${totalYogaLessons} aulas)`;
         }
+        
+        result.breakdown.fixedItems.push({
+          name: yogaName,
+          quantity: chargedYogaLessons * numberOfPeople,
+          unitPrice: yogaItem.price,
+          cost,
+        });
       }
     }
   }

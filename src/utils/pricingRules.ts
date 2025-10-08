@@ -150,9 +150,11 @@ export function generateCalculationMessage(lead: any, calculation: any): string 
   // Calcular aulas de surf
   const surfLessons = lead.aulas_de_surf || 0;
   if (surfLessons > 0) {
-    const surfPrice = getSurfLessonPrice(surfLessons, calculation.surfLessonPricing);
-    const surfTotal = surfLessons * surfPrice * people;
-    message += `Aulas de Surf: ${surfLessons * people} × R$ ${surfPrice} = ${formatCurrency(surfTotal)}\n`;
+    // IMPORTANTE: Usar o TOTAL de aulas para determinar a faixa de preço
+    const totalSurfLessons = surfLessons * people;
+    const surfPrice = getSurfLessonPrice(totalSurfLessons, calculation.surfLessonPricing);
+    const surfTotal = totalSurfLessons * surfPrice;
+    message += `Aulas de Surf: ${totalSurfLessons} total (${surfLessons} × ${people} pessoas) × R$ ${surfPrice} = ${formatCurrency(surfTotal)}\n`;
   }
   
   // Calcular yoga (considerando dias grátis)
