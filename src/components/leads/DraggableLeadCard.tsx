@@ -28,11 +28,11 @@ export const DraggableLeadCard = ({ lead }: DraggableLeadCardProps) => {
       style={style}
       className={`relative ${isDragging ? 'opacity-50' : ''}`}
     >
-      {/* Handle de Drag - Apenas este elemento inicia o drag */}
+      {/* Handle de Drag - Lado direito, abaixo do status */}
       <div
         {...listeners}
         {...attributes}
-        className="absolute left-1 top-1 z-10 cursor-grab active:cursor-grabbing p-1 hover:bg-accent/50 rounded transition-colors"
+        className="absolute right-1 top-8 z-10 cursor-grab active:cursor-grabbing p-1 hover:bg-accent/50 rounded transition-colors"
         title="Segurar para arrastar"
       >
         <GripVertical className="w-4 h-4 text-muted-foreground" />
