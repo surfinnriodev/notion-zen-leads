@@ -139,7 +139,7 @@ export const LeadsBoard = () => {
   const [editingColumn, setEditingColumn] = useState<string | null>(null);
   const [isLoadingColumns, setIsLoadingColumns] = useState(true);
   const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null);
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'created', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'updated', direction: 'desc' });
   const [filterConfig, setFilterConfig] = useState<FilterConfig>({ search: '' });
 
   // Carregar configurações salvas
@@ -217,7 +217,7 @@ export const LeadsBoard = () => {
       const { data, error } = await supabase
         .from("reservations")
         .select("*")
-        .order('created_at', { ascending: false });
+        .order('updated_at', { ascending: false }); // Ordenar por updated_at (mais recentes primeiro)
 
       console.log("📊 Resultado da query:", { data, error, count: data?.length });
 
@@ -274,7 +274,11 @@ export const LeadsBoard = () => {
 
   const updateLeadStatusMutation = useMutation({
     mutationFn: async ({ leadId, newStatus }: { leadId: string | number, newStatus: string | null }) => {
-      console.log("📝 Iniciando atualização de status:", { leadId, newStatus });
+      console.log("📝 [MUTATION] Iniciando atualização de status:", { 
+        leadId, 
+        leadIdType: typeof leadId,
+        newStatus 
+      });
       
       const { data, error } = await supabase
         .from("reservations")
@@ -284,21 +288,21 @@ export const LeadsBoard = () => {
         .single();
 
       if (error) {
-        console.error("❌ Erro ao atualizar status:", error);
+        console.error("❌ [MUTATION] Erro ao atualizar status:", error);
         throw error;
       }
       
-      console.log("✅ Status atualizado com sucesso:", data);
+      console.log("✅ [MUTATION] Status atualizado com sucesso no banco:", data);
       return data;
     },
     onSuccess: (data) => {
-      console.log("🔄 Invalidando queries após sucesso");
+      console.log("🔄 [MUTATION] Invalidando queries após sucesso, dados retornados:", data);
       queryClient.invalidateQueries({ queryKey: ["leads-board"] });
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       toast.success("Status atualizado com sucesso!");
     },
     onError: (error) => {
-      console.error("❌ Erro na mutation:", error);
+      console.error("❌ [MUTATION] Erro na mutation:", error);
       toast.error("Erro ao atualizar status: " + error.message);
     },
   });
@@ -388,6 +392,10 @@ export const LeadsBoard = () => {
           aValue = new Date(a.created_at || 0).getTime();
           bValue = new Date(b.created_at || 0).getTime();
           break;
+        case 'updated':
+          aValue = new Date(a.updated_at || 0).getTime();
+          bValue = new Date(b.updated_at || 0).getTime();
+          break;
         case 'checkin':
           aValue = new Date(a.check_in_start || 0).getTime();
           bValue = new Date(b.check_in_start || 0).getTime();
@@ -401,7 +409,11 @@ export const LeadsBoard = () => {
           bValue = b.number_of_people || 0;
           break;
         default:
-          return 0;
+          // Ordenação padrão por updated_at (mais recente primeiro)
+          aValue = new Date(a.updated_at || 0).getTime();
+          bValue = new Date(b.updated_at || 0).getTime();
+          // Sempre decrescente para updated_at por padrão
+          return bValue - aValue;
       }
 
       if (aValue < bValue) {
@@ -474,7 +486,15 @@ export const LeadsBoard = () => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
+    console.log("📦 DragEnd event:", { 
+      activeId: active.id, 
+      activeType: typeof active.id,
+      overId: over?.id,
+      overType: typeof over?.id 
+    });
+
     if (!over) {
+      console.log("⚠️ No drop target");
       setActiveId(null);
       setDraggedColumnId(null);
       return;

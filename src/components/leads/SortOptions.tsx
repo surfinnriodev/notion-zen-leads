@@ -9,10 +9,11 @@ import {
   User,
   Mail,
   DollarSign,
-  Hash
+  Hash,
+  Clock
 } from "lucide-react";
 
-export type SortField = 'name' | 'email' | 'created' | 'checkin' | 'price' | 'people';
+export type SortField = 'name' | 'email' | 'created' | 'checkin' | 'price' | 'people' | 'updated';
 export type SortDirection = 'asc' | 'desc';
 
 export interface SortConfig {
@@ -26,6 +27,7 @@ interface SortOptionsProps {
 }
 
 const sortOptions = [
+  { value: 'updated', label: 'Última atualização', icon: Clock },
   { value: 'name', label: 'Nome', icon: User },
   { value: 'email', label: 'Email', icon: Mail },
   { value: 'created', label: 'Data de Criação', icon: Calendar },
