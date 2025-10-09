@@ -463,8 +463,10 @@ export const LeadsBoard = () => {
     const isColumn = columns.some(col => col.id === activeId);
 
     if (isColumn) {
+      console.log("🔄 Iniciando drag de coluna:", activeId);
       setDraggedColumnId(activeId);
     } else {
+      console.log("🔄 Iniciando drag de lead:", activeId);
       setActiveId(activeId);
     }
   };
@@ -498,8 +500,11 @@ export const LeadsBoard = () => {
     }
 
     // Lógica original para mover leads
-    const leadId = activeId;
+    const leadIdString = activeId;
     const newColumnId = overId;
+    
+    // Converter ID para número se necessário
+    const leadId = parseInt(leadIdString);
     
     // Encontrar o status da coluna de destino
     const targetColumn = columns.find(col => col.id === newColumnId);
@@ -513,7 +518,7 @@ export const LeadsBoard = () => {
 
     const currentLead = leads?.find(lead => lead.id === leadId);
     if (!currentLead) {
-      console.error("Lead não encontrado:", leadId);
+      console.error("Lead não encontrado:", { leadIdString, leadId, availableLeads: leads?.map(l => l.id) });
       setActiveId(null);
       return;
     }
@@ -528,9 +533,13 @@ export const LeadsBoard = () => {
     const targetStatus = normalizeStatus(newStatus);
 
     console.log("🔄 Drag and drop:", { 
-      leadId, 
-      currentStatus, 
-      targetStatus, 
+      leadId,
+      leadName: currentLead.name,
+      currentStatus: currentLead.status,
+      currentStatusNormalized: currentStatus, 
+      newStatus,
+      targetStatusNormalized: targetStatus,
+      targetColumn: targetColumn.title,
       willUpdate: currentStatus !== targetStatus 
     });
 
@@ -538,7 +547,7 @@ export const LeadsBoard = () => {
     if (currentStatus !== targetStatus) {
       // Atualizar para o status real da coluna (não o normalizado)
       const statusToSave = newStatus === "novo" ? "novo" : newStatus;
-      console.log("✅ Atualizando lead status para:", statusToSave);
+      console.log("✅ Chamando mutation para atualizar lead status para:", statusToSave);
       updateLeadStatusMutation.mutate({ leadId, newStatus: statusToSave });
     } else {
       console.log("ℹ️ Lead já está neste status, sem mudanças");
@@ -547,7 +556,7 @@ export const LeadsBoard = () => {
     setActiveId(null);
   };
 
-  const activeLead = activeId ? leads?.find(lead => lead.id === activeId) : null;
+  const activeLead = activeId ? leads?.find(lead => lead.id === parseInt(activeId)) : null;
 
   if (isLoading || isLoadingColumns) {
     return (
