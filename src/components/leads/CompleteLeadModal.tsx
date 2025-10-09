@@ -139,12 +139,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       if (updatedData.skate !== undefined) mappedData.skate = updatedData.skate;
       if (updatedData.analise_de_video_extra !== undefined) mappedData.analise_de_video = updatedData.analise_de_video_extra;
       if (updatedData.analise_de_video_package !== undefined) mappedData.analise_de_video_package = updatedData.analise_de_video_package;
-      // Garantir que massagem_extra sempre seja número (int4)
-      if (updatedData.massagem_extra !== undefined) {
-        mappedData.massagem_extra = typeof updatedData.massagem_extra === 'boolean' 
-          ? (updatedData.massagem_extra ? 1 : 0) 
-          : (Number(updatedData.massagem_extra) || 0);
-      }
+      if (updatedData.massagem_extra !== undefined) mappedData.massagem_extra = updatedData.massagem_extra;
       if (updatedData.massagem_package !== undefined) mappedData.massagem_package = updatedData.massagem_package;
       if (updatedData.surf_guide_package !== undefined) mappedData.surf_guide_package = updatedData.surf_guide_package;
       if (updatedData.transfer_extra !== undefined) mappedData.transfer_extra = updatedData.transfer_extra;

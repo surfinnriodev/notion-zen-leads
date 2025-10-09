@@ -11,8 +11,6 @@ export const AVAILABLE_PRICING_ITEMS: PricingItem[] = [
   { id: 'breakfast', name: 'Café da manhã', price: 30, billingType: 'per_person', category: 'boolean', dbColumn: 'breakfast' },
   { id: 'aluguel_prancha', name: 'Aluguel prancha', price: 100, billingType: 'per_person', category: 'boolean', dbColumn: 'aluguel_de_prancha' },
   { id: 'transfer', name: 'Transfer', price: 300, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer' },
-  { id: 'transfer_extra', name: 'Transfer extra', price: 300, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer_extra' },
-  { id: 'massagem_extra', name: 'Massagem extra', price: 250, billingType: 'per_person', category: 'boolean', dbColumn: 'massagem_extra' },
   { id: 'rio_city_tour', name: 'Rio City Tour', price: 700, billingType: 'per_person', category: 'boolean', dbColumn: 'rio_city_tour' },
   { id: 'carioca_experience', name: 'Carioca Experience', price: 840, billingType: 'per_person', category: 'boolean', dbColumn: 'carioca_experience' },
   { id: 'hike_extra', name: 'Trilha extra', price: 300, billingType: 'per_person', category: 'boolean', dbColumn: 'hike_extra' },
@@ -26,7 +24,9 @@ export const AVAILABLE_PRICING_ITEMS: PricingItem[] = [
   { id: 'surf_guide_package', name: 'Surf guide (pacote)', price: 350, billingType: 'per_person', category: 'fixed', dbColumn: 'surf_guide_package' },
   { id: 'analise_de_video', name: 'Análise de vídeo', price: 350, billingType: 'per_person', category: 'fixed', dbColumn: 'analise_de_video' },
   { id: 'analise_de_video_package', name: 'Análise vídeo (pacote)', price: 350, billingType: 'per_person', category: 'fixed', dbColumn: 'analise_de_video_package' },
+  { id: 'massagem_extra', name: 'Massagem extra', price: 250, billingType: 'per_person', category: 'fixed', dbColumn: 'massagem_extra' },
   { id: 'massagem_package', name: 'Massagem (pacote)', price: 250, billingType: 'per_person', category: 'fixed', dbColumn: 'massagem_package' },
+  { id: 'transfer_extra', name: 'Transfer extra', price: 300, billingType: 'per_reservation', category: 'fixed', dbColumn: 'transfer_extra' },
   { id: 'transfer_package', name: 'Transfer (pacote)', price: 300, billingType: 'per_reservation', category: 'fixed', dbColumn: 'transfer_package' },
 ];
 
@@ -133,8 +133,6 @@ export const usePricingConfig = () => {
       { id: 'breakfast', name: 'Café da manhã', price: 30, billingType: 'per_person', category: 'boolean', dbColumn: 'breakfast' },
       { id: 'aluguel_prancha', name: 'Aluguel prancha', price: 100, billingType: 'per_person', category: 'boolean', dbColumn: 'aluguel_de_prancha' },
       { id: 'transfer', name: 'Transfer', price: 300, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer' },
-      { id: 'transfer_extra', name: 'Transfer extra', price: 300, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer_extra' },
-      { id: 'massagem_extra', name: 'Massagem extra', price: 250, billingType: 'per_person', category: 'boolean', dbColumn: 'massagem_extra' },
       { id: 'rio_city_tour', name: 'Rio City Tour', price: 700, billingType: 'per_person', category: 'boolean', dbColumn: 'rio_city_tour' },
       { id: 'carioca_experience', name: 'Carioca Experience', price: 840, billingType: 'per_person', category: 'boolean', dbColumn: 'carioca_experience' },
       { id: 'hike_extra', name: 'Trilha extra', price: 300, billingType: 'per_person', category: 'boolean', dbColumn: 'hike_extra' },
@@ -148,7 +146,9 @@ export const usePricingConfig = () => {
       { id: 'surf_guide_package', name: 'Surf guide (pacote)', price: 350, billingType: 'per_person', category: 'fixed', dbColumn: 'surf_guide_package' },
       { id: 'analise_de_video', name: 'Análise de vídeo', price: 350, billingType: 'per_person', category: 'fixed', dbColumn: 'analise_de_video' },
       { id: 'analise_de_video_package', name: 'Análise vídeo (pacote)', price: 350, billingType: 'per_person', category: 'fixed', dbColumn: 'analise_de_video_package' },
+      { id: 'massagem_extra', name: 'Massagem extra', price: 250, billingType: 'per_person', category: 'fixed', dbColumn: 'massagem_extra' },
       { id: 'massagem_package', name: 'Massagem (pacote)', price: 250, billingType: 'per_person', category: 'fixed', dbColumn: 'massagem_package' },
+      { id: 'transfer_extra', name: 'Transfer extra', price: 300, billingType: 'per_reservation', category: 'fixed', dbColumn: 'transfer_extra' },
       { id: 'transfer_package', name: 'Transfer (pacote)', price: 300, billingType: 'per_reservation', category: 'fixed', dbColumn: 'transfer_package' },
     ]
   };

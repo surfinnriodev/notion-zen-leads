@@ -61,7 +61,7 @@ const Leads = () => {
       skate: 0,
       analise_de_video_extra: 0,
       analise_de_video_package: 0,
-      massagem_extra: false,
+      massagem_extra: 0,
       massagem_package: 0,
       surf_guide_package: 0,
       transfer_extra: 0,
