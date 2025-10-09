@@ -66,8 +66,22 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
                 {(() => {
                   try {
                     if (lead.check_in_start) {
-                      const startDate = format(new Date(lead.check_in_start), "dd/MM", { locale: ptBR });
-                      const endDate = lead.check_in_end ? format(new Date(lead.check_in_end), "dd/MM", { locale: ptBR }) : startDate;
+                      // Extrair apenas a parte da data (YYYY-MM-DD) sem conversão de timezone
+                      const startDateStr = lead.check_in_start.includes('T') 
+                        ? lead.check_in_start.split('T')[0] 
+                        : lead.check_in_start;
+                      const [year, month, day] = startDateStr.split('-');
+                      const startDate = `${day}/${month}`;
+                      
+                      let endDate = startDate;
+                      if (lead.check_in_end) {
+                        const endDateStr = lead.check_in_end.includes('T') 
+                          ? lead.check_in_end.split('T')[0] 
+                          : lead.check_in_end;
+                        const [endYear, endMonth, endDay] = endDateStr.split('-');
+                        endDate = `${endDay}/${endMonth}`;
+                      }
+                      
                       return `${startDate} - ${endDate}`;
                     }
                   } catch (e) {

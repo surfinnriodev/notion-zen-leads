@@ -273,7 +273,9 @@ export const LeadsBoard = () => {
   }
 
   const updateLeadStatusMutation = useMutation({
-    mutationFn: async ({ leadId, newStatus }: { leadId: string, newStatus: string | null }) => {
+    mutationFn: async ({ leadId, newStatus }: { leadId: string | number, newStatus: string | null }) => {
+      console.log("📝 Iniciando atualização de status:", { leadId, newStatus });
+      
       const { data, error } = await supabase
         .from("reservations")
         .update({ status: newStatus })
@@ -281,15 +283,22 @@ export const LeadsBoard = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Erro ao atualizar status:", error);
+        throw error;
+      }
+      
+      console.log("✅ Status atualizado com sucesso:", data);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("🔄 Invalidando queries após sucesso");
       queryClient.invalidateQueries({ queryKey: ["leads-board"] });
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       toast.success("Status atualizado com sucesso!");
     },
     onError: (error) => {
+      console.error("❌ Erro na mutation:", error);
       toast.error("Erro ao atualizar status: " + error.message);
     },
   });
@@ -491,17 +500,48 @@ export const LeadsBoard = () => {
     // Lógica original para mover leads
     const leadId = activeId;
     const newColumnId = overId;
-    const newStatus = columns.find(col => col.id === newColumnId)?.status || null;
+    
+    // Encontrar o status da coluna de destino
+    const targetColumn = columns.find(col => col.id === newColumnId);
+    if (!targetColumn) {
+      console.error("Coluna de destino não encontrada:", newColumnId);
+      setActiveId(null);
+      return;
+    }
+    
+    const newStatus = targetColumn.status;
 
     const currentLead = leads?.find(lead => lead.id === leadId);
     if (!currentLead) {
+      console.error("Lead não encontrado:", leadId);
       setActiveId(null);
       return;
     }
 
+    // Normalizar status para comparação (tratar "novo", "lead", null e "" como equivalentes)
+    const normalizeStatus = (status: string | null | undefined): string => {
+      if (!status || status === "" || status.toLowerCase() === "lead") return "novo";
+      return status.toLowerCase();
+    };
+
+    const currentStatus = normalizeStatus(currentLead.status);
+    const targetStatus = normalizeStatus(newStatus);
+
+    console.log("🔄 Drag and drop:", { 
+      leadId, 
+      currentStatus, 
+      targetStatus, 
+      willUpdate: currentStatus !== targetStatus 
+    });
+
     // Se o status mudou, atualizar
-    if (currentLead.status !== newStatus) {
-      updateLeadStatusMutation.mutate({ leadId, newStatus });
+    if (currentStatus !== targetStatus) {
+      // Atualizar para o status real da coluna (não o normalizado)
+      const statusToSave = newStatus === "novo" ? "novo" : newStatus;
+      console.log("✅ Atualizando lead status para:", statusToSave);
+      updateLeadStatusMutation.mutate({ leadId, newStatus: statusToSave });
+    } else {
+      console.log("ℹ️ Lead já está neste status, sem mudanças");
     }
 
     setActiveId(null);

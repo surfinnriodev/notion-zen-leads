@@ -139,7 +139,12 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       if (updatedData.skate !== undefined) mappedData.skate = updatedData.skate;
       if (updatedData.analise_de_video_extra !== undefined) mappedData.analise_de_video = updatedData.analise_de_video_extra;
       if (updatedData.analise_de_video_package !== undefined) mappedData.analise_de_video_package = updatedData.analise_de_video_package;
-      if (updatedData.massagem_extra !== undefined) mappedData.massagem_extra = updatedData.massagem_extra;
+      // Garantir que massagem_extra sempre seja número (int4)
+      if (updatedData.massagem_extra !== undefined) {
+        mappedData.massagem_extra = typeof updatedData.massagem_extra === 'boolean' 
+          ? (updatedData.massagem_extra ? 1 : 0) 
+          : (Number(updatedData.massagem_extra) || 0);
+      }
       if (updatedData.massagem_package !== undefined) mappedData.massagem_package = updatedData.massagem_package;
       if (updatedData.surf_guide_package !== undefined) mappedData.surf_guide_package = updatedData.surf_guide_package;
       if (updatedData.transfer_extra !== undefined) mappedData.transfer_extra = updatedData.transfer_extra;
@@ -267,15 +272,31 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       const cleanSubject = messageSubject.trim();
       const cleanContent = messageContent.trim();
       
-      // Construir mensagem com formatação preservada
+      // Construir mensagem com formatação preservada (sem nenhum encoding)
       const fullMessage = `Assunto: ${cleanSubject}\n\n${cleanContent}`;
       
-      // Copiar usando a API moderna de clipboard
+      // Garantir que não há encoding URL
+      const decodedMessage = decodeURIComponent(encodeURIComponent(fullMessage));
+      
+      // Copiar usando a API moderna de clipboard (texto puro)
       await navigator.clipboard.writeText(fullMessage);
       toast.success("Mensagem copiada para a área de transferência!");
     } catch (error) {
       console.error("Erro ao copiar mensagem:", error);
-      toast.error("Erro ao copiar mensagem. Tente novamente.");
+      // Fallback para método antigo se clipboard API não funcionar
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = `Assunto: ${messageSubject.trim()}\n\n${messageContent.trim()}`;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        toast.success("Mensagem copiada para a área de transferência!");
+      } catch (fallbackError) {
+        toast.error("Erro ao copiar mensagem. Tente novamente.");
+      }
     }
   };
 
@@ -491,90 +512,46 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                   <Label htmlFor="check_in_start">Check-in *</Label>
                   <Input
                     id="check_in_start"
-                    type="text"
-                    placeholder="dd/mm/aaaa"
+                    type="date"
                     value={formData.check_in_start ? (() => {
                       try {
-                        const date = new Date(formData.check_in_start);
-                        return date.toLocaleDateString('pt-BR');
+                        // Extrair apenas a parte da data (YYYY-MM-DD) sem conversão de timezone
+                        if (formData.check_in_start.includes('T')) {
+                          return formData.check_in_start.split('T')[0];
+                        }
+                        return formData.check_in_start;
                       } catch {
                         return '';
                       }
                     })() : ""}
                     onChange={(e) => {
-                      const value = e.target.value;
-                      // Aceitar formato dd/mm/aaaa
-                      const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-                      if (match) {
-                        const [, day, month, year] = match;
-                        const isoDate = `${year}-${month}-${day}`;
-                        handleInputChange("check_in_start", isoDate);
-                      } else {
-                        // Permitir digitação parcial
-                        handleInputChange("check_in_start", value);
-                      }
-                    }}
-                    onBlur={(e) => {
-                      // Tentar converter ao perder o foco
-                      const value = e.target.value;
-                      const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-                      if (match) {
-                        const [, day, month, year] = match;
-                        const paddedDay = day.padStart(2, '0');
-                        const paddedMonth = month.padStart(2, '0');
-                        const isoDate = `${year}-${paddedMonth}-${paddedDay}`;
-                        handleInputChange("check_in_start", isoDate);
-                      }
+                      // Salvar apenas a data no formato YYYY-MM-DD (sem timezone)
+                      handleInputChange("check_in_start", e.target.value);
                     }}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Formato: dd/mm/aaaa (ex: 25/12/2024)
-                  </p>
                 </div>
 
                 <div>
                   <Label htmlFor="check_in_end">Check-out *</Label>
                   <Input
                     id="check_in_end"
-                    type="text"
-                    placeholder="dd/mm/aaaa"
+                    type="date"
                     value={formData.check_in_end ? (() => {
                       try {
-                        const date = new Date(formData.check_in_end);
-                        return date.toLocaleDateString('pt-BR');
+                        // Extrair apenas a parte da data (YYYY-MM-DD) sem conversão de timezone
+                        if (formData.check_in_end.includes('T')) {
+                          return formData.check_in_end.split('T')[0];
+                        }
+                        return formData.check_in_end;
                       } catch {
                         return '';
                       }
                     })() : ""}
                     onChange={(e) => {
-                      const value = e.target.value;
-                      // Aceitar formato dd/mm/aaaa
-                      const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-                      if (match) {
-                        const [, day, month, year] = match;
-                        const isoDate = `${year}-${month}-${day}`;
-                        handleInputChange("check_in_end", isoDate);
-                      } else {
-                        // Permitir digitação parcial
-                        handleInputChange("check_in_end", value);
-                      }
-                    }}
-                    onBlur={(e) => {
-                      // Tentar converter ao perder o foco
-                      const value = e.target.value;
-                      const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-                      if (match) {
-                        const [, day, month, year] = match;
-                        const paddedDay = day.padStart(2, '0');
-                        const paddedMonth = month.padStart(2, '0');
-                        const isoDate = `${year}-${paddedMonth}-${paddedDay}`;
-                        handleInputChange("check_in_end", isoDate);
-                      }
+                      // Salvar apenas a data no formato YYYY-MM-DD (sem timezone)
+                      handleInputChange("check_in_end", e.target.value);
                     }}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Formato: dd/mm/aaaa (ex: 30/12/2024)
-                  </p>
                 </div>
 
                 <div>
@@ -1161,8 +1138,24 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                   <div><strong>Nome:</strong> {lead.name || "N/A"}</div>
                   <div><strong>Email:</strong> {lead.email || "N/A"}</div>
                   <div><strong>Telefone:</strong> {lead.telefone || "N/A"}</div>
-                  <div><strong>Check-in:</strong> {lead.check_in_start ? new Date(lead.check_in_start).toLocaleDateString('pt-BR') : "N/A"}</div>
-                  <div><strong>Check-out:</strong> {lead.check_in_end ? new Date(lead.check_in_end).toLocaleDateString('pt-BR') : "N/A"}</div>
+                  <div><strong>Check-in:</strong> {lead.check_in_start ? (() => {
+                    try {
+                      const dateStr = lead.check_in_start.includes('T') ? lead.check_in_start.split('T')[0] : lead.check_in_start;
+                      const [year, month, day] = dateStr.split('-');
+                      return `${day}/${month}/${year}`;
+                    } catch {
+                      return "N/A";
+                    }
+                  })() : "N/A"}</div>
+                  <div><strong>Check-out:</strong> {lead.check_in_end ? (() => {
+                    try {
+                      const dateStr = lead.check_in_end.includes('T') ? lead.check_in_end.split('T')[0] : lead.check_in_end;
+                      const [year, month, day] = dateStr.split('-');
+                      return `${day}/${month}/${year}`;
+                    } catch {
+                      return "N/A";
+                    }
+                  })() : "N/A"}</div>
                   <div><strong>Pessoas:</strong> {lead.number_of_people || 0}</div>
                   <div><strong>Quarto:</strong> {lead.tipo_de_quarto || "N/A"}</div>
                   <div><strong>Pacote:</strong> {lead.pacote || "Sem pacote"}</div>
