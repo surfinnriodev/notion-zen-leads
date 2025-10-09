@@ -21,7 +21,7 @@ export const Layout = ({ children }: LayoutProps) => {
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="text-lg font-semibold text-foreground">Zen Leads</h1>
+          <h1 className="text-lg font-semibold text-foreground">Surf Inn</h1>
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="sm" className="p-2">

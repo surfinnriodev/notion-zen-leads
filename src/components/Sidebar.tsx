@@ -24,7 +24,7 @@ export const Sidebar = () => {
         {/* Header */}
         <div className="flex items-center px-6 py-4 border-b border-border">
           <LayoutDashboard className="w-6 h-6 text-primary mr-3" />
-          <h1 className="text-lg font-semibold text-foreground">Zen Leads</h1>
+          <h1 className="text-lg font-semibold text-foreground">Surf Inn</h1>
         </div>
 
         {/* Navigation */}

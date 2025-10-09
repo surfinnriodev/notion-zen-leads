@@ -1,4 +1,5 @@
 import { differenceInDays, getDay, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 /**
  * Calcula o preço das aulas de surf baseado na quantidade (faixas de preço)
@@ -24,13 +25,21 @@ export function getSurfLessonPrice(quantity: number, surfLessonPricing?: { tier1
  * Yoga é grátis nas quartas e sextas-feiras às 7h da manhã
  * IMPORTANTE: Se o check-in é no mesmo dia da aula de yoga, não conta como grátis
  * pois o check-in é às 11h e a aula às 7h (não dá tempo de participar)
- * @param checkInStart Data de check-in
- * @param checkInEnd Data de check-out
+ * @param checkInStart Data de check-in (formato YYYY-MM-DD)
+ * @param checkInEnd Data de check-out (formato YYYY-MM-DD)
  * @returns Número de dias de yoga grátis
  */
 export function calculateFreeYogaDays(checkInStart: string, checkInEnd: string): number {
-  const start = new Date(checkInStart);
-  const end = new Date(checkInEnd);
+  // Extrair apenas a parte da data (YYYY-MM-DD) sem conversão de timezone
+  const startDateStr = checkInStart.includes('T') ? checkInStart.split('T')[0] : checkInStart;
+  const endDateStr = checkInEnd.includes('T') ? checkInEnd.split('T')[0] : checkInEnd;
+  
+  // Criar datas usando os componentes para evitar problemas de timezone
+  const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
+  const [endYear, endMonth, endDay] = endDateStr.split('-').map(Number);
+  
+  const start = new Date(startYear, startMonth - 1, startDay); // Mês é 0-indexed
+  const end = new Date(endYear, endMonth - 1, endDay);
   
   let freeDays = 0;
   const current = new Date(start);
@@ -45,11 +54,13 @@ export function calculateFreeYogaDays(checkInStart: string, checkInEnd: string):
     // Quarta-feira = 3, Sexta-feira = 5
     if (dayOfWeek === 3 || dayOfWeek === 5) {
       freeDays++;
+      console.log(`📅 Yoga grátis em: ${format(current, 'dd/MM/yyyy (EEEE)', { locale: ptBR })}`);
     }
     
     current.setDate(current.getDate() + 1);
   }
   
+  console.log(`🧘 Total de dias de yoga grátis: ${freeDays} (entre ${startDateStr} e ${endDateStr}, excluindo dia do check-in)`);
   return freeDays;
 }
 
