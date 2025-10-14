@@ -506,8 +506,11 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
   if (lead.aluguel_de_prancha) {
     const boardItem = config.items?.find((i: any) => i.id === 'unlimited-board-rental');
     const boardPrice = boardItem?.price || 0;
-    const boardCost = nights * boardPrice;
-    sections.push(`- ${labels.unlimitedBoard} (${nights} ${labels.days}) = ${formatCurrency(boardCost)}`);
+    const boardCost = boardPrice * nights * (boardItem?.billingType === 'per_person' ? people : 1);
+    const displayText = boardItem?.billingType === 'per_person' 
+      ? `- ${labels.unlimitedBoard} (${nights} ${labels.days} × ${people} ${people > 1 ? labels.people : labels.person}) = ${formatCurrency(boardCost)}`
+      : `- ${labels.unlimitedBoard} (${nights} ${labels.days}) = ${formatCurrency(boardCost)}`;
+    sections.push(displayText);
   }
   
   // Transfer - considerar os incluídos no pacote

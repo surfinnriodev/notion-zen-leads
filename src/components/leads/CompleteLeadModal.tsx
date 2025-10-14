@@ -6,6 +6,7 @@ import { usePricingConfig } from "@/hooks/usePricingConfig";
 import { useMessageTemplates } from "@/hooks/useMessageTemplates";
 import { useMessageHistory } from "@/hooks/useMessageHistory";
 import { processTemplate } from "@/utils/messageProcessor";
+import { copyToClipboard } from "@/utils/clipboard";
 import {
   Dialog,
   DialogContent,
@@ -271,57 +272,11 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       const fullMessage = `Assunto: ${cleanSubject}\n\n${cleanContent}`;
       
       // Verificar se estamos no Safari/iOS e usar método específico
-      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      
-      if (isSafari || isIOS) {
-        // Para Safari/iOS, usar método de textarea que funciona melhor
-        const textArea = document.createElement("textarea");
-        textArea.value = fullMessage;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-9999px";
-        textArea.style.top = "-9999px";
-        textArea.style.opacity = "0";
-        textArea.setAttribute("readonly", "");
-        document.body.appendChild(textArea);
-        
-        // Selecionar e copiar
-        textArea.select();
-        textArea.setSelectionRange(0, 99999); // Para dispositivos móveis
-        
-        const successful = document.execCommand("copy");
-        document.body.removeChild(textArea);
-        
-        if (successful) {
-          toast.success("Mensagem copiada para a área de transferência!");
-        } else {
-          throw new Error("Falha na cópia");
-        }
-      } else {
-        // Para outros navegadores, usar API moderna
-        await navigator.clipboard.writeText(fullMessage);
-        toast.success("Mensagem copiada para a área de transferência!");
-      }
+      await copyToClipboard(fullMessage);
+      toast.success("Mensagem copiada para a área de transferência!");
     } catch (error) {
       console.error("Erro ao copiar mensagem:", error);
-      // Fallback universal para todos os navegadores
-      try {
-        const textArea = document.createElement("textarea");
-        textArea.value = `Assunto: ${messageSubject.trim()}\n\n${messageContent.trim()}`;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-9999px";
-        textArea.style.top = "-9999px";
-        textArea.style.opacity = "0";
-        textArea.setAttribute("readonly", "");
-        document.body.appendChild(textArea);
-        textArea.select();
-        textArea.setSelectionRange(0, 99999);
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
-        toast.success("Mensagem copiada para a área de transferência!");
-      } catch (fallbackError) {
-        toast.error("Erro ao copiar mensagem. Tente novamente.");
-      }
+      toast.error("Erro ao copiar mensagem. Tente novamente.");
     }
   };
 
@@ -1134,9 +1089,14 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                   {customMessage && (
                     <div className="flex gap-2 mt-2">
                       <Button
-                        onClick={() => {
-                          navigator.clipboard.writeText(customMessage);
-                          toast.success("Mensagem copiada!");
+                        onClick={async () => {
+                          try {
+                            await copyToClipboard(customMessage);
+                            toast.success("Mensagem copiada!");
+                          } catch (error) {
+                            console.error("Erro ao copiar:", error);
+                            toast.error("Erro ao copiar mensagem.");
+                          }
                         }}
                         variant="outline"
                         className="flex items-center gap-2"
