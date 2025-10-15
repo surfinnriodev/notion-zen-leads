@@ -7,7 +7,7 @@ import { useMessageTemplates } from "@/hooks/useMessageTemplates";
 import { useMessageHistory } from "@/hooks/useMessageHistory";
 import { processTemplate } from "@/utils/messageProcessor";
 import { copyToClipboard } from "@/utils/clipboard";
-import { useIsMobileOrSafari, selectAllText } from "@/hooks/use-mobile-safari";
+import { selectAllText } from "@/hooks/use-mobile-safari";
 import {
   Dialog,
   DialogContent,
@@ -46,7 +46,6 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
   const { templates } = useMessageTemplates();
   const { addMessage } = useMessageHistory();
   const queryClient = useQueryClient();
-  const isMobileOrSafari = useIsMobileOrSafari();
   const [formData, setFormData] = useState<Partial<LeadWithCalculation>>({});
   const [calculatedLead, setCalculatedLead] = useState<LeadWithCalculation | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
@@ -1066,15 +1065,13 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                         <Copy className="w-4 h-4" />
                         Copiar
                       </Button>
-                      {isMobileOrSafari && (
-                        <Button
-                          onClick={() => selectAllText("messageContent")}
-                          variant="outline"
-                          className="flex items-center gap-2"
-                        >
-                          Selecionar Tudo
-                        </Button>
-                      )}
+                      <Button
+                        onClick={() => selectAllText("messageContent")}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        Selecionar Tudo
+                      </Button>
                       <Button
                         onClick={handleSendMessage}
                         className="flex items-center gap-2"
@@ -1115,15 +1112,13 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                         <Copy className="w-4 h-4" />
                         Copiar
                       </Button>
-                      {isMobileOrSafari && (
-                        <Button
-                          onClick={() => selectAllText("customMessage")}
-                          variant="outline"
-                          className="flex items-center gap-2"
-                        >
-                          Selecionar Tudo
-                        </Button>
-                      )}
+                      <Button
+                        onClick={() => selectAllText("customMessage")}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        Selecionar Tudo
+                      </Button>
                       <Button
                         onClick={handleSendMessage}
                         className="flex items-center gap-2"
