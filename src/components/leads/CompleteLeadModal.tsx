@@ -54,11 +54,33 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
   const [customMessage, setCustomMessage] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  // Função para converter nome do pacote para ID
+  const getPackageIdFromName = (packageName: string | null): string | null => {
+    if (!packageName || !config.packages) return null;
+    
+    const packageConfig = config.packages.find((pkg: any) => pkg.name === packageName);
+    return packageConfig ? packageConfig.id : null;
+  };
+
+  // Função para converter ID do pacote para nome
+  const getPackageNameFromId = (packageId: string | null): string | null => {
+    if (!packageId || !config.packages) return null;
+    
+    const packageConfig = config.packages.find((pkg: any) => pkg.id === packageId);
+    return packageConfig ? packageConfig.name : null;
+  };
+
   // Inicializar formData quando o lead muda
   useEffect(() => {
     if (lead) {
       // Mapear para o formato legado para compatibilidade
       const legacyLead = mapReservaToLegacyFormat(lead);
+      
+      // Converter nome do pacote para ID se necessário
+      if (lead.pacote) {
+        const packageId = getPackageIdFromName(lead.pacote);
+        legacyLead.pacote = packageId || lead.pacote; // Fallback para o nome original se não encontrar ID
+      }
       
       // Inicializar room_category e room_type se ainda não existirem
       if (!lead.room_category && lead.tipo_de_quarto) {
@@ -129,7 +151,11 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       if (updatedData.status !== undefined) mappedData.status = updatedData.status;
       if (updatedData.number_of_people !== undefined) mappedData.number_of_people = updatedData.number_of_people;
       if (updatedData.tipo_de_quarto !== undefined) mappedData.tipo_de_quarto = updatedData.tipo_de_quarto;
-      if (updatedData.pacote !== undefined) mappedData.pacote = updatedData.pacote;
+      if (updatedData.pacote !== undefined) {
+        // Converter ID do pacote para nome antes de salvar
+        const packageName = getPackageNameFromId(updatedData.pacote);
+        mappedData.pacote = packageName || updatedData.pacote;
+      }
       if (updatedData.obs_do_cliente !== undefined) mappedData.obs_do_cliente = updatedData.obs_do_cliente;
       if (updatedData.resumo_dos_servicos !== undefined) mappedData.resumo_dos_servicos = updatedData.resumo_dos_servicos;
       if (updatedData.nivel_de_surf !== undefined) mappedData.nivel_de_surf = updatedData.nivel_de_surf;

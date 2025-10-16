@@ -201,8 +201,8 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
       }
     }
   }
-  addFixedItem(input.surfSkate, packageIncludes.surfSkate, 'surf-skate', 'Surf-skate');
-  addFixedItem(input.videoAnalysis, packageIncludes.videoAnalysis, 'video-analysis', 'Análise de vídeo');
+  addFixedItem(input.surfSkate, packageIncludes.surfSkate, 'skate', 'Surf-skate');
+  addFixedItem(input.videoAnalysis, packageIncludes.videoAnalysis, 'analise_de_video', 'Análise de vídeo');
   
   // Massagem - IMPORTANTE: massagem_package NÃO é cobrada (já está incluída)
   // Cobrar APENAS massagem_extra
@@ -235,7 +235,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     }
   }
   
-  addFixedItem(input.surfGuide, packageIncludes.surfGuide, 'surf-guide', 'Surf guide');
+  addFixedItem(input.surfGuide, packageIncludes.surfGuide, 'surf_guide', 'Surf guide');
 
   // Transfer - usar a quantidade definida pelo usuário
   if (input.transfer && input.transfer > 0) {

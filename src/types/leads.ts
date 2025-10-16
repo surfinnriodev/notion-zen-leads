@@ -81,13 +81,21 @@ function calculateDaysBetween(startDate: string | null, endDate: string | null):
   }
 }
 
-export function convertLeadToCalculationInput(lead: NotionReserva): CalculationInput {
+export function convertLeadToCalculationInput(lead: NotionReserva, config?: any): CalculationInput {
+  // Função para converter nome do pacote para ID
+  const getPackageIdFromName = (packageName: string | null): string | null => {
+    if (!packageName || !config?.packages) return null;
+    
+    const packageConfig = config.packages.find((pkg: any) => pkg.name === packageName);
+    return packageConfig ? packageConfig.id : null;
+  };
+
   return {
     checkInStart: lead.check_in_start || '',
     checkInEnd: lead.check_in_end || '',
     numberOfPeople: lead.number_of_people || 1,
     roomCategory: mapRoomType(lead.tipo_de_quarto),
-    packageId: lead.pacote || undefined,
+    packageId: getPackageIdFromName(lead.pacote) || undefined,
 
     // Itens diários
     breakfast: lead.breakfast ? 1 : 0, // Convert boolean to days count - will need to calculate actual days
@@ -116,7 +124,7 @@ export function convertLeadToCalculationInput(lead: NotionReserva): CalculationI
 
 export function calculateLeadPrice(lead: NotionReserva, config: any): LeadWithCalculation {
   try {
-    const input = convertLeadToCalculationInput(lead);
+    const input = convertLeadToCalculationInput(lead, config);
 
     // Update daily items to use actual number of days
     if (input.checkInStart && input.checkInEnd) {

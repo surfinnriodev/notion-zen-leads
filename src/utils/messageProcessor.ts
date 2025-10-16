@@ -454,7 +454,7 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
   
   // Surf Skate
   if (lead.skate && lead.skate > 0) {
-    const skateItem = config.items?.find((i: any) => i.id === 'surf-skate');
+    const skateItem = config.items?.find((i: any) => i.id === 'skate');
     const skatePrice = skateItem?.price || 0;
     const skateCost = lead.skate * people * skatePrice;
     sections.push(`- ${lead.skate} ${lead.skate > 1 ? labels.sessions : labels.session} ${labels.surfSkate} × ${people} ${people > 1 ? labels.people : labels.person} = ${formatCurrency(skateCost)}`);
@@ -463,7 +463,7 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
   // Surf Guide
   const totalSurfGuide = (lead.surf_guide || 0) + (lead.surf_guide_package || 0);
   if (totalSurfGuide > 0) {
-    const guideItem = config.items?.find((i: any) => i.id === 'surf-guide');
+    const guideItem = config.items?.find((i: any) => i.id === 'surf_guide');
     const guidePrice = guideItem?.price || 0;
     const guideCost = totalSurfGuide * guidePrice;
     sections.push(`- ${totalSurfGuide} ${totalSurfGuide > 1 ? labels.days : labels.day} ${labels.surfGuide} = ${formatCurrency(guideCost)}`);
@@ -472,7 +472,7 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
   // Análise de Vídeo
   const totalVideo = (lead.analise_de_video || 0) + (lead.analise_de_video_package || 0);
   if (totalVideo > 0) {
-    const videoItem = config.items?.find((i: any) => i.id === 'video-analysis');
+    const videoItem = config.items?.find((i: any) => i.id === 'analise_de_video');
     const videoPrice = videoItem?.price || 0;
     const videoCost = totalVideo * videoPrice;
     sections.push(`- ${totalVideo} ${labels.videoAnalysis} = ${formatCurrency(videoCost)}`);
