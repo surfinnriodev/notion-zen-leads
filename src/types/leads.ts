@@ -5,7 +5,7 @@ import { calculatePrice } from "@/utils/priceCalculator";
 export type NotionReserva = Tables<"reservations">;
 
 export interface LeadWithCalculation extends NotionReserva {
-  calculatedPrice?: PricingResult;
+  calculatedPrice?: CalculationResult;
   totalPrice?: number;
 }
 

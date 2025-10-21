@@ -242,7 +242,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     }
   }
   
-  addFixedItem(input.surfGuide, packageIncludes.surfGuide, 'surf_guide', 'Surf guide');
+  addFixedItem(input.surfGuide, packageIncludes.surfGuide, 'surf-guide', 'Surf guide');
 
   // Transfer - SEMPRE calcular se solicitado
   if (input.transfer && input.transfer > 0) {
