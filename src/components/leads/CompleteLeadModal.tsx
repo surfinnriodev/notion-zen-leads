@@ -557,6 +557,16 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 </div>
 
                 <div>
+                  <Label htmlFor="created_at">Data de Criação</Label>
+                  <Input
+                    id="created_at"
+                    value={formData.created_at ? new Date(formData.created_at).toLocaleString('pt-BR') : ""}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+
+                <div>
                   <Label htmlFor="notion_page_id">Notion Page ID</Label>
                   <Input
                     id="notion_page_id"
