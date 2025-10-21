@@ -186,7 +186,6 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
 
   // Aulas de yoga com dias grátis - SEMPRE calcular se solicitado
   if (input.yogaLessons && input.yogaLessons > 0) {
-    const includedLessons = packageIncludes.yogaLessons || 0;
     const totalYogaLessons = input.yogaLessons;
     
     if (totalYogaLessons > 0) {
@@ -209,10 +208,6 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
           yogaName = `Aulas de yoga (${totalYogaLessons} aulas - todas grátis)`;
         } else {
           yogaName = `Aulas de yoga (${totalYogaLessons} aulas)`;
-        }
-        
-        if (includedLessons > 0) {
-          yogaName += ` (${includedLessons} incluídas no pacote)`;
         }
         
         result.breakdown.fixedItems.push({
