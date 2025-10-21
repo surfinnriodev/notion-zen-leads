@@ -26,8 +26,10 @@ export const useKanbanStatuses = () => {
           'fup 1',
           'link de pagamento enviado',
           'pago | a se hospedar',
+          'hospedado',
+          'hospedagem concluída',
           'perdido',
-          'hospedagem concluída'
+          'origem'
         ];
 
         // Buscar status únicos dos dados reais

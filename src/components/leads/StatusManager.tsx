@@ -65,67 +65,69 @@ export const StatusManager = ({ onStatusChange }: StatusManagerProps) => {
     if (statusData) {
       // Sempre usar ordem padrão - não carregar configuração salva
       let defaultStatuses: StatusInfo[] = [];
-        // Ordem padrão dos status conforme solicitado
-        const defaultStatusOrder = [
-          'novo',
-          'dúvidas',
-          'orçamento enviado',
-          'fup 1',
-          'link de pagamento enviado',
-          'pago | a se hospedar',
-          'perdido',
-          'hospedagem concluída'
-        ];
+      
+      // Ordem padrão dos status conforme solicitado
+      const defaultStatusOrder = [
+        'novo',
+        'dúvidas',
+        'orçamento enviado',
+        'fup 1',
+        'link de pagamento enviado',
+        'pago | a se hospedar',
+        'hospedado',
+        'hospedagem concluída',
+        'perdido',
+        'origem'
+      ];
 
-        defaultStatuses = [];
+      defaultStatuses = [];
+      
+      // Primeiro, adicionar status na ordem padrão
+      defaultStatusOrder.forEach((statusName, index) => {
+        let count = 0;
+        let statusId = statusName.toLowerCase().replace(/[^a-z0-9]/g, '-');
         
-        // Primeiro, adicionar status na ordem padrão
-        defaultStatusOrder.forEach((statusName, index) => {
-          let count = 0;
-          let statusId = statusName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-          
-          if (statusName === 'novo') {
-            count = statusData.noStatusCount;
-            statusId = 'novo';
-          } else {
-            // Buscar por variações do nome do status
-            const matchingStatus = Object.keys(statusData.statusCounts).find(key => 
-              key.toLowerCase().includes(statusName.toLowerCase()) ||
-              statusName.toLowerCase().includes(key.toLowerCase())
-            );
-            if (matchingStatus) {
-              count = statusData.statusCounts[matchingStatus];
-            }
-          }
-          
-          defaultStatuses.push({
-            id: statusId,
-            title: statusName,
-            status: statusName,
-            count: count,
-            color: getStatusColor(index)
-          });
-        });
-
-        // Depois, adicionar outros status encontrados nos dados que não estão na ordem padrão
-        Object.entries(statusData.statusCounts).forEach(([status, count], index) => {
-          const normalizedStatus = status.toLowerCase().replace(/[^a-z0-9]/g, '-');
-          const alreadyAdded = defaultStatuses.some(col => 
-            col.status.toLowerCase().includes(status.toLowerCase()) ||
-            status.toLowerCase().includes(col.status.toLowerCase())
+        if (statusName === 'novo') {
+          count = statusData.noStatusCount;
+          statusId = 'novo';
+        } else {
+          // Buscar por variações do nome do status
+          const matchingStatus = Object.keys(statusData.statusCounts).find(key => 
+            key.toLowerCase().includes(statusName.toLowerCase()) ||
+            statusName.toLowerCase().includes(key.toLowerCase())
           );
-          
-          if (!alreadyAdded && status !== 'novo') {
-            defaultStatuses.push({
-              id: normalizedStatus,
-              title: status,
-              status: status,
-              count: count,
-              color: getStatusColor(defaultStatuses.length)
-            });
+          if (matchingStatus) {
+            count = statusData.statusCounts[matchingStatus];
           }
+        }
+        
+        defaultStatuses.push({
+          id: statusId,
+          title: statusName,
+          status: statusName,
+          count: count,
+          color: getStatusColor(index)
         });
-      }
+      });
+
+      // Depois, adicionar outros status encontrados nos dados que não estão na ordem padrão
+      Object.entries(statusData.statusCounts).forEach(([status, count], index) => {
+        const normalizedStatus = status.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        const alreadyAdded = defaultStatuses.some(col => 
+          col.status.toLowerCase().includes(status.toLowerCase()) ||
+          status.toLowerCase().includes(col.status.toLowerCase())
+        );
+        
+        if (!alreadyAdded && status !== 'novo') {
+          defaultStatuses.push({
+            id: normalizedStatus,
+            title: status,
+            status: status,
+            count: count,
+            color: getStatusColor(defaultStatuses.length)
+          });
+        }
+      });
 
       setStatuses(defaultStatuses);
     }
