@@ -479,7 +479,7 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
     sections.push(`- ${totalVideo} ${labels.videoAnalysis} = ${formatCurrency(videoCost)}`);
   }
   
-  // Massagem - cobrar APENAS as extras (massagem_package já está incluída no pacote)
+  // Massagem - SEMPRE cobrar todas as massagens (extras + pacote)
   const massagemExtra = lead.massagem_extra || 0;
   const massagemPackage = lead.massagem_package || 0;
   const totalMassage = massagemExtra + massagemPackage;
@@ -488,19 +488,14 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
     const massageItem = config.items?.find((i: any) => i.id === 'massage');
     const massagePrice = massageItem?.price || 0;
     
-    // Cobrar APENAS as extras
-    const massageCost = massagemExtra * massagePrice;
+    // Cobrar TODAS as massagens (extras + pacote)
+    const massageCost = totalMassage * massagePrice;
     
-    if (massagemExtra > 0) {
-      let massageLabel = `${massagemExtra} ${labels.massage}`;
-      if (massagemPackage > 0) {
-        massageLabel += ` (${massagemPackage} incluída${massagemPackage > 1 ? 's' : ''} no pacote)`;
-      }
-      sections.push(`- ${massageLabel} = ${formatCurrency(massageCost)}`);
-    } else if (massagemPackage > 0) {
-      // Apenas as do pacote (grátis)
-      sections.push(`- ${massagemPackage} ${labels.massage} (incluída${massagemPackage > 1 ? 's' : ''} no pacote) = ${formatCurrency(0)}`);
+    let massageLabel = `${totalMassage} ${labels.massage}`;
+    if (massagemExtra > 0 && massagemPackage > 0) {
+      massageLabel += ` (${massagemExtra} extra${massagemExtra > 1 ? 's' : ''} + ${massagemPackage} do pacote)`;
     }
+    sections.push(`- ${massageLabel} = ${formatCurrency(massageCost)}`);
   }
   
   // Aluguel de Prancha

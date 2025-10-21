@@ -222,8 +222,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   addFixedItem(input.surfSkate, packageIncludes.surfSkate, 'skate', 'Surf-skate');
   addFixedItem(input.videoAnalysis, packageIncludes.videoAnalysis, 'analise_de_video', 'Análise de vídeo');
   
-  // Massagem - IMPORTANTE: massagem_package NÃO é cobrada (já está incluída)
-  // Cobrar APENAS massagem_extra
+  // Massagem - SEMPRE cobrar todas as massagens (extras + pacote)
   const massageExtra = input.massageExtra || 0;
   const massagePackage = input.massagePackage || 0;
   const totalMassages = massageExtra + massagePackage;
@@ -231,25 +230,15 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   if (totalMassages > 0) {
     const massageItem = config.items.find(item => item.id === 'massage');
     if (massageItem) {
-      // Cobrar APENAS as extras
-      if (massageExtra > 0) {
-        const cost = massageItem.price * massageExtra;
-        result.fixedItemsCost += cost;
-        result.breakdown.fixedItems.push({
-          name: `Massagem (${massageExtra} ${massageExtra === 1 ? 'extra' : 'extras'}${massagePackage > 0 ? `, ${massagePackage} incluída${massagePackage > 1 ? 's' : ''} no pacote` : ''})`,
-          quantity: massageExtra,
-          unitPrice: massageItem.price,
-          cost,
-        });
-      } else if (massagePackage > 0) {
-        // Mostrar que tem massagens mas são incluídas (grátis)
-        result.breakdown.fixedItems.push({
-          name: `Massagem (${massagePackage} incluída${massagePackage > 1 ? 's' : ''} no pacote)`,
-          quantity: 0,
-          unitPrice: massageItem.price,
-          cost: 0,
-        });
-      }
+      // Cobrar TODAS as massagens (extras + pacote)
+      const totalCost = massageItem.price * totalMassages;
+      result.fixedItemsCost += totalCost;
+      result.breakdown.fixedItems.push({
+        name: `Massagem (${totalMassages} ${totalMassages === 1 ? 'sessão' : 'sessões'}${massageExtra > 0 && massagePackage > 0 ? ` - ${massageExtra} extra${massageExtra > 1 ? 's' : ''} + ${massagePackage} do pacote` : ''})`,
+        quantity: totalMassages,
+        unitPrice: massageItem.price,
+        cost: totalCost,
+      });
     }
   }
   
