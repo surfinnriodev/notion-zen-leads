@@ -64,25 +64,63 @@ const generateDefaultColumns = async (): Promise<StatusInfo[]> => {
       .select('*', { count: 'exact', head: true })
       .or('status.is.null,status.eq.');
 
-    const columns: StatusInfo[] = [
-      {
-        id: "novo",
-        title: "Novos",
-        status: "novo",
-        count: (noStatusCount || 0) + (statusCounts['novo'] || 0),
-        color: "#6B7280"
-      }
+    // Ordem padrão dos status conforme solicitado
+    const defaultStatusOrder = [
+      'novo',
+      'dúvidas',
+      'orçamento enviado',
+      'fup 1',
+      'link de pagamento enviado',
+      'pago | a se hospedar',
+      'perdido',
+      'hospedagem concluída'
     ];
 
-    // Adicionar status encontrados nos dados (exceto "novo" que já foi adicionado)
+    const columns: StatusInfo[] = [];
+    
+    // Primeiro, adicionar status na ordem padrão
+    defaultStatusOrder.forEach((statusName, index) => {
+      let count = 0;
+      let statusId = statusName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      
+      if (statusName === 'novo') {
+        count = (noStatusCount || 0) + (statusCounts['novo'] || 0);
+        statusId = 'novo';
+      } else {
+        // Buscar por variações do nome do status
+        const matchingStatus = Object.keys(statusCounts).find(key => 
+          key.toLowerCase().includes(statusName.toLowerCase()) ||
+          statusName.toLowerCase().includes(key.toLowerCase())
+        );
+        if (matchingStatus) {
+          count = statusCounts[matchingStatus];
+        }
+      }
+      
+      columns.push({
+        id: statusId,
+        title: statusName,
+        status: statusName,
+        count: count,
+        color: getStatusColor(index)
+      });
+    });
+
+    // Depois, adicionar outros status encontrados nos dados que não estão na ordem padrão
     Object.entries(statusCounts).forEach(([status, count], index) => {
-      if (status !== 'novo') { // Evitar duplicar a coluna "Novos"
+      const normalizedStatus = status.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const alreadyAdded = columns.some(col => 
+        col.status.toLowerCase().includes(status.toLowerCase()) ||
+        status.toLowerCase().includes(col.status.toLowerCase())
+      );
+      
+      if (!alreadyAdded && status !== 'novo') {
         columns.push({
-          id: status.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          id: normalizedStatus,
           title: status,
           status: status,
           count: count,
-          color: getStatusColor(index + 1)
+          color: getStatusColor(columns.length)
         });
       }
     });
@@ -91,11 +129,14 @@ const generateDefaultColumns = async (): Promise<StatusInfo[]> => {
   } catch (e) {
     console.error('Erro ao gerar colunas padrão:', e);
     return [
-      { id: "novo", title: "Novos", status: "novo", count: 0 },
-      { id: "contato", title: "Em Contato", status: "contato", count: 0 },
-      { id: "proposta", title: "Proposta Enviada", status: "proposta", count: 0 },
-      { id: "confirmado", title: "Confirmado", status: "confirmado", count: 0 },
-      { id: "cancelado", title: "Cancelado", status: "cancelado", count: 0 },
+      { id: "novo", title: "Novos", status: "novo", count: 0, color: "#6B7280" },
+      { id: "duvidas", title: "Dúvidas", status: "dúvidas", count: 0, color: "#EF4444" },
+      { id: "orcamento-enviado", title: "Orçamento Enviado", status: "orçamento enviado", count: 0, color: "#F97316" },
+      { id: "fup-1", title: "FUP 1", status: "fup 1", count: 0, color: "#EAB308" },
+      { id: "link-de-pagamento-enviado", title: "Link de Pagamento Enviado", status: "link de pagamento enviado", count: 0, color: "#22C55E" },
+      { id: "pago-a-se-hospedar", title: "Pago | A se Hospedar", status: "pago | a se hospedar", count: 0, color: "#10B981" },
+      { id: "perdido", title: "Perdido", status: "perdido", count: 0, color: "#F43F5E" },
+      { id: "hospedagem-concluida", title: "Hospedagem Concluída", status: "hospedagem concluída", count: 0, color: "#6366F1" },
     ];
   }
 };
@@ -112,12 +153,7 @@ const getStatusColor = (index: number) => {
 // Função para carregar/salvar configurações de status
 const getStatusConfig = async (): Promise<StatusInfo[]> => {
   try {
-    const saved = localStorage.getItem('leads-status-config');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-
-    // Se não há configuração salva, gerar a partir dos dados reais
+    // Sempre gerar nova configuração com ordem padrão
     const defaultColumns = await generateDefaultColumns();
     localStorage.setItem('leads-status-config', JSON.stringify(defaultColumns));
     return defaultColumns;

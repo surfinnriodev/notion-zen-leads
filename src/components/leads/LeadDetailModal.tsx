@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LeadWithCalculation, calculateLeadPrice, getLeadDisplayPrice } from "@/types/leads";
 import { usePricingConfig } from "@/hooks/usePricingConfig";
 import { useMessageTemplates } from "@/hooks/useMessageTemplates";
+import { useKanbanStatuses } from "@/hooks/useKanbanStatuses";
 import { processTemplate } from "@/utils/messageProcessor";
 import { copyToClipboard } from "@/utils/clipboard";
 import { selectAllText } from "@/hooks/use-mobile-safari";
@@ -33,6 +34,7 @@ interface LeadDetailModalProps {
 export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps) => {
   const { config } = usePricingConfig();
   const { templates } = useMessageTemplates();
+  const { statuses: kanbanStatuses } = useKanbanStatuses();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<LeadWithCalculation>>({});
   const [calculatedLead, setCalculatedLead] = useState<LeadWithCalculation | null>(null);
@@ -140,13 +142,53 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
 
   if (!lead) return null;
 
-  const statusOptions = [
-    { value: "novo", label: "Novo" },
-    { value: "contato", label: "Em Contato" },
-    { value: "proposta", label: "Proposta Enviada" },
-    { value: "confirmado", label: "Confirmado" },
-    { value: "cancelado", label: "Cancelado" },
+  // Fallback para garantir que sempre temos opções de status
+  const fallbackStatusOptions = [
+    { value: "novo", label: "Novos" },
+    { value: "dúvidas", label: "Dúvidas" },
+    { value: "orçamento enviado", label: "Orçamento Enviado" },
+    { value: "fup 1", label: "FUP 1" },
+    { value: "link de pagamento enviado", label: "Link de Pagamento Enviado" },
+    { value: "pago | a se hospedar", label: "Pago | A se Hospedar" },
+    { value: "perdido", label: "Perdido" },
+    { value: "hospedagem concluída", label: "Hospedagem Concluída" },
   ];
+
+  const statusOptions = kanbanStatuses.length > 0 
+    ? kanbanStatuses.map(status => ({
+        value: status.status,
+        label: status.title
+      }))
+    : fallbackStatusOptions;
+
+  console.log('🔍 Kanban statuses in DebugModal:', kanbanStatuses);
+  console.log('🔍 Status options:', statusOptions);
+  console.log('🔍 Current lead status:', lead.status);
+  console.log('🔍 Form data status:', formData.status);
+  console.log('🔍 Available status values:', statusOptions.map(opt => opt.value));
+
+  // Função para normalizar o status e encontrar a opção correspondente
+  const normalizeStatus = (status: string | null | undefined): string => {
+    if (!status) return "novo";
+    
+    // Buscar por correspondência exata primeiro
+    const exactMatch = statusOptions.find(opt => opt.value === status);
+    if (exactMatch) return status;
+    
+    // Buscar por correspondência parcial (case insensitive)
+    const partialMatch = statusOptions.find(opt => 
+      opt.value.toLowerCase().includes(status.toLowerCase()) ||
+      status.toLowerCase().includes(opt.value.toLowerCase())
+    );
+    if (partialMatch) return partialMatch.value;
+    
+    // Se não encontrar, retornar "novo"
+    console.log('⚠️ Status not found in options, using "novo":', status);
+    return "novo";
+  };
+
+  const normalizedStatus = normalizeStatus(formData.status || lead.status);
+  console.log('🔍 Normalized status:', normalizedStatus);
 
   const roomCategories = config.roomCategories || [];
 
@@ -191,7 +233,7 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
               <div>
                 <Label htmlFor="status">Status</Label>
                 <Select
-                  value={formData.status || "novo"}
+                  value={normalizedStatus}
                   onValueChange={(value) => handleInputChange("status", value)}
                 >
                   <SelectTrigger>

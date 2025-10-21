@@ -23,6 +23,8 @@ export const MessageTemplateForm = ({ template, onSave, onCancel }: MessageTempl
   });
 
   const [detectedVariables, setDetectedVariables] = useState<string[]>([]);
+  const [editableVariables, setEditableVariables] = useState<string[]>([]);
+  const [showVariableEditor, setShowVariableEditor] = useState(false);
 
   useEffect(() => {
     if (template) {
@@ -31,6 +33,7 @@ export const MessageTemplateForm = ({ template, onSave, onCancel }: MessageTempl
         subject: template.subject,
         content: template.content,
       });
+      setEditableVariables(template.variables || []);
     }
   }, [template]);
 
@@ -40,6 +43,11 @@ export const MessageTemplateForm = ({ template, onSave, onCancel }: MessageTempl
     const contentVars = extractVariablesFromText(formData.content);
     const allVars = [...new Set([...subjectVars, ...contentVars])];
     setDetectedVariables(allVars);
+    
+    // Se não há variáveis editáveis definidas, usar as detectadas
+    if (editableVariables.length === 0) {
+      setEditableVariables(allVars);
+    }
   }, [formData.subject, formData.content]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -51,7 +59,7 @@ export const MessageTemplateForm = ({ template, onSave, onCancel }: MessageTempl
 
     onSave({
       ...formData,
-      variables: detectedVariables,
+      variables: editableVariables,
     });
   };
 
@@ -73,6 +81,20 @@ export const MessageTemplateForm = ({ template, onSave, onCancel }: MessageTempl
         textarea.setSelectionRange(start + variable.length + 4, start + variable.length + 4);
       }, 10);
     }
+  };
+
+  const addVariableToEditable = (variable: string) => {
+    if (!editableVariables.includes(variable)) {
+      setEditableVariables([...editableVariables, variable]);
+    }
+  };
+
+  const removeVariableFromEditable = (variable: string) => {
+    setEditableVariables(editableVariables.filter(v => v !== variable));
+  };
+
+  const toggleVariableEditor = () => {
+    setShowVariableEditor(!showVariableEditor);
   };
 
   return (
@@ -122,10 +144,20 @@ export const MessageTemplateForm = ({ template, onSave, onCancel }: MessageTempl
                   />
                 </div>
 
-                {/* Variáveis Detectadas */}
+                {/* Variáveis Detectadas e Editor */}
                 {detectedVariables.length > 0 && (
                   <div>
-                    <Label>Variáveis Detectadas</Label>
+                    <div className="flex items-center justify-between">
+                      <Label>Variáveis Detectadas</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={toggleVariableEditor}
+                      >
+                        {showVariableEditor ? 'Ocultar Editor' : 'Editar Variáveis'}
+                      </Button>
+                    </div>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {detectedVariables.map((variable) => (
                         <span
@@ -136,6 +168,46 @@ export const MessageTemplateForm = ({ template, onSave, onCancel }: MessageTempl
                         </span>
                       ))}
                     </div>
+                    
+                    {showVariableEditor && (
+                      <div className="mt-4 p-3 border rounded-lg bg-gray-50">
+                        <Label className="text-sm font-medium">Variáveis Editáveis</Label>
+                        <p className="text-xs text-gray-600 mb-3">
+                          Selecione quais variáveis podem ser editadas ao usar este template
+                        </p>
+                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                          {AVAILABLE_VARIABLES.map((variable) => (
+                            <div key={variable.key} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`var-${variable.key}`}
+                                checked={editableVariables.includes(variable.key)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    addVariableToEditable(variable.key);
+                                  } else {
+                                    removeVariableFromEditable(variable.key);
+                                  }
+                                }}
+                                className="rounded"
+                              />
+                              <label
+                                htmlFor={`var-${variable.key}`}
+                                className="text-sm cursor-pointer flex-1"
+                              >
+                                <div className="flex items-center">
+                                  <span className="font-medium">{variable.label}</span>
+                                  <span className="text-gray-500 ml-2">{`{{${variable.key}}}`}</span>
+                                </div>
+                                <div className="text-xs text-gray-400 mt-1">
+                                  {variable.description}
+                                </div>
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -154,6 +226,9 @@ export const MessageTemplateForm = ({ template, onSave, onCancel }: MessageTempl
                         <div className="font-medium text-sm">{variable.label}</div>
                         <div className="text-xs text-muted-foreground">
                           {`{{${variable.key}}}`} → {variable.example}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {variable.description}
                         </div>
                       </div>
                       <Button

@@ -63,48 +63,68 @@ export const StatusManager = ({ onStatusChange }: StatusManagerProps) => {
   // Carregar configurações salvas ou usar dados reais
   useEffect(() => {
     if (statusData) {
-      const saved = localStorage.getItem('leads-status-config');
+      // Sempre usar ordem padrão - não carregar configuração salva
       let defaultStatuses: StatusInfo[] = [];
-
-      if (saved) {
-        try {
-          const savedConfig = JSON.parse(saved);
-          defaultStatuses = savedConfig;
-        } catch {
-          // Fallback to real data
-        }
-      }
-
-      // Se não há configuração salva, criar a partir dos dados reais
-      if (defaultStatuses.length === 0) {
-        defaultStatuses = [
-          {
-            id: "novo",
-            title: "Novos",
-            status: "novo",
-            count: statusData.noStatusCount,
-            color: "#6B7280"
-          }
+        // Ordem padrão dos status conforme solicitado
+        const defaultStatusOrder = [
+          'novo',
+          'dúvidas',
+          'orçamento enviado',
+          'fup 1',
+          'link de pagamento enviado',
+          'pago | a se hospedar',
+          'perdido',
+          'hospedagem concluída'
         ];
 
-        // Adicionar status reais encontrados nos dados
-        Object.entries(statusData.statusCounts).forEach(([status, count], index) => {
+        defaultStatuses = [];
+        
+        // Primeiro, adicionar status na ordem padrão
+        defaultStatusOrder.forEach((statusName, index) => {
+          let count = 0;
+          let statusId = statusName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+          
+          if (statusName === 'novo') {
+            count = statusData.noStatusCount;
+            statusId = 'novo';
+          } else {
+            // Buscar por variações do nome do status
+            const matchingStatus = Object.keys(statusData.statusCounts).find(key => 
+              key.toLowerCase().includes(statusName.toLowerCase()) ||
+              statusName.toLowerCase().includes(key.toLowerCase())
+            );
+            if (matchingStatus) {
+              count = statusData.statusCounts[matchingStatus];
+            }
+          }
+          
           defaultStatuses.push({
-            id: status.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-            title: status,
-            status: status,
+            id: statusId,
+            title: statusName,
+            status: statusName,
             count: count,
-            color: getStatusColor(index + 1)
+            color: getStatusColor(index)
           });
         });
-      } else {
-        // Atualizar contagens dos status salvos
-        defaultStatuses = defaultStatuses.map(status => ({
-          ...status,
-          count: status.status === "novo"
-            ? statusData.noStatusCount
-            : statusData.statusCounts[status.status] || 0
-        }));
+
+        // Depois, adicionar outros status encontrados nos dados que não estão na ordem padrão
+        Object.entries(statusData.statusCounts).forEach(([status, count], index) => {
+          const normalizedStatus = status.toLowerCase().replace(/[^a-z0-9]/g, '-');
+          const alreadyAdded = defaultStatuses.some(col => 
+            col.status.toLowerCase().includes(status.toLowerCase()) ||
+            status.toLowerCase().includes(col.status.toLowerCase())
+          );
+          
+          if (!alreadyAdded && status !== 'novo') {
+            defaultStatuses.push({
+              id: normalizedStatus,
+              title: status,
+              status: status,
+              count: count,
+              color: getStatusColor(defaultStatuses.length)
+            });
+          }
+        });
       }
 
       setStatuses(defaultStatuses);

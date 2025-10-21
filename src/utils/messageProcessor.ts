@@ -106,8 +106,8 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
     nights: 'nights',
     people: 'people',
     person: 'person',
-    checkIn: 'Check-in',
-    checkOut: 'Check-out',
+    checkIn: 'Arrival',
+    checkOut: 'Departure',
     activities: 'ACTIVITIES:',
     surfLesson: 'Surf Lesson',
     surfLessons: 'Surf Lessons',
@@ -143,8 +143,8 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
     nights: 'noites',
     people: 'pessoas',
     person: 'pessoa',
-    checkIn: 'Check-in',
-    checkOut: 'Check-out',
+    checkIn: 'Chegada',
+    checkOut: 'Saída',
     activities: 'ATIVIDADES:',
     surfLesson: 'Aula de Surf',
     surfLessons: 'Aulas de Surf',
@@ -189,7 +189,8 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
     }
     
     sections.push(`${roomDescription}`);
-    sections.push(`${labels.checkIn}: ${formatDate(lead.check_in_start)} | ${labels.checkOut}: ${formatDate(lead.check_in_end)}`);
+    sections.push(`${labels.checkIn}: ${formatDate(lead.check_in_start)}`);
+    sections.push(`${labels.checkOut}: ${formatDate(lead.check_in_end)}`);
     sections.push(`${nights} ${nights !== 1 ? labels.nights : labels.night} • ${people} ${people > 1 ? labels.people : labels.person}`);
     sections.push('');
   }

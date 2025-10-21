@@ -34,12 +34,11 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   // 1. Verificar se há pacote selecionado
   const selectedPackage = input.packageId ? config.packages.find(p => p.id === input.packageId) : null;
   
+  // IMPORTANTE: Não incluir valor do pacote no cálculo - apenas usar para referência dos itens incluídos
   if (selectedPackage) {
-    result.packageCost = selectedPackage.fixedPrice;
-    result.breakdown.package = {
-      name: selectedPackage.name,
-      cost: selectedPackage.fixedPrice,
-    };
+    // Não adicionar ao custo total - apenas referenciar para saber o que está incluído
+    result.packageCost = 0; // Zerar custo do pacote
+    // Não adicionar ao breakdown para não aparecer na aba de preços
   } else {
     // 2. Calcular hospedagem se não houver pacote
     // Buscar por ID ou por nome completo (ex: "Private: Double")
@@ -76,17 +75,24 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   }
 
   // 3. Calcular itens diários (café da manhã, prancha)
+  // IMPORTANTE: Remover dependência do pacote - calcular todos os itens individualmente
   const packageIncludes = selectedPackage?.includedItems || {};
 
-  // Café da manhã (vai para valor pendente)
-  if (input.breakfast && !packageIncludes.breakfast) {
+  // Café da manhã (vai para valor pendente) - SEMPRE calcular se solicitado
+  if (input.breakfast && input.breakfast > 0) {
     const breakfastItem = config.items.find(item => item.id === 'breakfast');
     if (breakfastItem) {
       const cost = breakfastItem.price * numberOfNights * (breakfastItem.billingType === 'per_person' ? numberOfPeople : 1);
       result.dailyItemsCost += cost;
       breakfastOnlyCost = cost; // Salvar custo apenas do café da manhã
+      
+      let breakfastName = 'Café da manhã';
+      if (packageIncludes.breakfast) {
+        breakfastName += ' (incluído no pacote)';
+      }
+      
       result.breakdown.dailyItems.push({
-        name: 'Café da manhã',
+        name: breakfastName,
         quantity: numberOfNights * (breakfastItem.billingType === 'per_person' ? numberOfPeople : 1),
         unitPrice: breakfastItem.price,
         cost,
@@ -94,15 +100,21 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     }
   }
 
-  // Aluguel de prancha ilimitado (vai para valor depósito, como serviço)
-  if (input.unlimitedBoardRental && !packageIncludes.unlimitedBoardRental) {
+  // Aluguel de prancha ilimitado (vai para valor depósito, como serviço) - SEMPRE calcular se solicitado
+  if (input.unlimitedBoardRental && input.unlimitedBoardRental > 0) {
     const boardItem = config.items.find(item => item.id === 'unlimited-board-rental');
     if (boardItem) {
       const cost = boardItem.price * numberOfNights * (boardItem.billingType === 'per_person' ? numberOfPeople : 1);
       // Mover para fixedItemsCost ao invés de dailyItemsCost
       result.fixedItemsCost += cost;
+      
+      let boardName = 'Aluguel prancha ilimitado';
+      if (packageIncludes.unlimitedBoardRental) {
+        boardName += ' (incluído no pacote)';
+      }
+      
       result.breakdown.fixedItems.push({
-        name: 'Aluguel prancha ilimitado',
+        name: boardName,
         quantity: numberOfNights * (boardItem.billingType === 'per_person' ? numberOfPeople : 1),
         unitPrice: boardItem.price,
         cost,
@@ -112,11 +124,10 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
 
   // 4. Calcular itens fixos
   
-  // Aulas de surf com faixas de preço
-  if (input.surfLessons) {
+  // Aulas de surf com faixas de preço - SEMPRE calcular se solicitado
+  if (input.surfLessons && input.surfLessons > 0) {
     const includedLessons = packageIncludes.surfLessons || 0;
     const totalLessons = input.surfLessons;
-    const extraLessons = Math.max(0, totalLessons - includedLessons);
     
     if (totalLessons > 0) {
       // Calcular TOTAL de aulas (por pessoa x número de pessoas) para determinar faixa
@@ -126,8 +137,14 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
       const totalCost = pricePerLesson * totalSurfLessons;
       
       result.fixedItemsCost += totalCost;
+      
+      let surfName = `Aulas de surf (${totalLessons} aulas por pessoa x ${numberOfPeople} ${numberOfPeople > 1 ? 'pessoas' : 'pessoa'} = ${totalSurfLessons} total - faixa ${totalSurfLessons <= 3 ? '1-3' : totalSurfLessons <= 7 ? '4-7' : '8+'})`;
+      if (includedLessons > 0) {
+        surfName += ` (${includedLessons} incluídas no pacote)`;
+      }
+      
       result.breakdown.fixedItems.push({
-        name: `Aulas de surf (${totalLessons} aulas por pessoa x ${numberOfPeople} ${numberOfPeople > 1 ? 'pessoas' : 'pessoa'} = ${totalSurfLessons} total - faixa ${totalSurfLessons <= 3 ? '1-3' : totalSurfLessons <= 7 ? '4-7' : '8+'})`,
+        name: surfName,
         quantity: totalSurfLessons,
         unitPrice: pricePerLesson,
         cost: totalCost,
@@ -135,7 +152,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     }
   }
 
-  // Função helper para itens fixos simples
+  // Função helper para itens fixos simples - SEMPRE calcular se solicitado
   const addFixedItem = (
     inputValue: number | undefined, 
     includedCount: number | undefined, 
@@ -143,29 +160,31 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     name: string
   ) => {
     if (inputValue && inputValue > 0) {
-      const extraCount = Math.max(0, inputValue - (includedCount || 0));
+      const item = config.items.find(i => i.id === itemId);
       
-      if (extraCount > 0) {
-        const item = config.items.find(i => i.id === itemId);
+      if (item) {
+        const cost = item.price * inputValue * (item.billingType === 'per_person' ? numberOfPeople : 1);
         
-        if (item) {
-          const cost = item.price * extraCount * (item.billingType === 'per_person' ? numberOfPeople : 1);
-          
-          result.fixedItemsCost += cost;
-          result.breakdown.fixedItems.push({
-            name: `${name} (${extraCount} ${extraCount === 1 ? 'sessão extra' : 'sessões extras'})`,
-            quantity: extraCount * (item.billingType === 'per_person' ? numberOfPeople : 1),
-            unitPrice: item.price,
-            cost,
-          });
-        } else {
-          console.log(`❌ Item não encontrado: ${itemId} - Itens disponíveis:`, config.items?.map(i => i.id));
+        result.fixedItemsCost += cost;
+        
+        let itemName = `${name} (${inputValue} ${inputValue === 1 ? 'sessão' : 'sessões'})`;
+        if (includedCount && includedCount > 0) {
+          itemName += ` (${includedCount} incluída${includedCount > 1 ? 's' : ''} no pacote)`;
         }
+        
+        result.breakdown.fixedItems.push({
+          name: itemName,
+          quantity: inputValue * (item.billingType === 'per_person' ? numberOfPeople : 1),
+          unitPrice: item.price,
+          cost,
+        });
+      } else {
+        console.log(`❌ Item não encontrado: ${itemId} - Itens disponíveis:`, config.items?.map(i => i.id));
       }
     }
   };
 
-  // Aulas de yoga com dias grátis
+  // Aulas de yoga com dias grátis - SEMPRE calcular se solicitado
   if (input.yogaLessons && input.yogaLessons > 0) {
     const includedLessons = packageIncludes.yogaLessons || 0;
     const totalYogaLessons = input.yogaLessons;
@@ -190,6 +209,10 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
           yogaName = `Aulas de yoga (${totalYogaLessons} aulas - todas grátis)`;
         } else {
           yogaName = `Aulas de yoga (${totalYogaLessons} aulas)`;
+        }
+        
+        if (includedLessons > 0) {
+          yogaName += ` (${includedLessons} incluídas no pacote)`;
         }
         
         result.breakdown.fixedItems.push({
@@ -237,46 +260,32 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   
   addFixedItem(input.surfGuide, packageIncludes.surfGuide, 'surf_guide', 'Surf guide');
 
-  // Transfer - usar a quantidade definida pelo usuário
+  // Transfer - SEMPRE calcular se solicitado
   if (input.transfer && input.transfer > 0) {
     const includedTransfers = packageIncludes.transfer || 0;
     const totalTransfers = input.transfer; // Já inclui transfer_extra + transfer_package + transfer
-    const transfersToCobrar = Math.max(0, totalTransfers - includedTransfers);
     
-    if (transfersToCobrar > 0) {
-      const transferItem = config.items.find(item => item.id === 'transfer');
-      if (transferItem) {
-        const cost = transferItem.price * transfersToCobrar;
-        result.fixedItemsCost += cost;
-        
-        let transferDescription = `Transfer (${transfersToCobrar} ${transfersToCobrar === 1 ? 'trecho' : 'trechos'}`;
-        if (includedTransfers > 0) {
-          transferDescription += ` - ${includedTransfers} incluído${includedTransfers > 1 ? 's' : ''} no pacote`;
-        }
-        transferDescription += ')';
-        
-        result.breakdown.fixedItems.push({
-          name: transferDescription,
-          quantity: transfersToCobrar,
-          unitPrice: transferItem.price,
-          cost,
-        });
+    const transferItem = config.items.find(item => item.id === 'transfer');
+    if (transferItem) {
+      const cost = transferItem.price * totalTransfers;
+      result.fixedItemsCost += cost;
+      
+      let transferDescription = `Transfer (${totalTransfers} ${totalTransfers === 1 ? 'trecho' : 'trechos'}`;
+      if (includedTransfers > 0) {
+        transferDescription += ` - ${includedTransfers} incluído${includedTransfers > 1 ? 's' : ''} no pacote`;
       }
-    } else if (totalTransfers > 0 && includedTransfers >= totalTransfers) {
-      // Mostrar na aba de preços mesmo que seja grátis (incluído no pacote)
-      const transferItem = config.items.find(item => item.id === 'transfer');
-      if (transferItem) {
-        result.breakdown.fixedItems.push({
-          name: `Transfer (${totalTransfers} ${totalTransfers === 1 ? 'trecho' : 'trechos'} - incluído${totalTransfers > 1 ? 's' : ''} no pacote)`,
-          quantity: 0,
-          unitPrice: transferItem.price,
-          cost: 0,
-        });
-      }
+      transferDescription += ')';
+      
+      result.breakdown.fixedItems.push({
+        name: transferDescription,
+        quantity: totalTransfers,
+        unitPrice: transferItem.price,
+        cost,
+      });
     }
   }
 
-  // Atividades
+  // Atividades - SEMPRE calcular se solicitado
   const activities = [
     { key: 'hike', name: 'Trilha', value: input.hike, itemId: 'hike' },
     { key: 'rioCityTour', name: 'Rio City Tour', value: input.rioCityTour, itemId: 'rio-city-tour' },
@@ -303,7 +312,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   result.totalCost = result.packageCost + result.accommodationCost + result.dailyItemsCost + result.fixedItemsCost;
 
   // Calcular valor retido e valor pendente
-  const servicesCost = result.packageCost + result.fixedItemsCost; // Pacote + Serviços (aulas, extras, prancha)
+  const servicesCost = result.fixedItemsCost; // Apenas Serviços (aulas, extras, prancha) - SEM pacote
   const feeCost = 0; // Taxa sempre será acrescentada manualmente
   const accommodationCost = result.accommodationCost;
   const breakfastCost = breakfastOnlyCost; // APENAS café da manhã (não inclui prancha)
