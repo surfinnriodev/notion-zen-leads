@@ -539,6 +539,24 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 </div>
 
                 <div>
+                  <Label htmlFor="origem">Origem</Label>
+                  <Select
+                    value={formData.origem || ""}
+                    onValueChange={(value) => handleInputChange("origem", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a origem" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Site">Site</SelectItem>
+                      <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+                      <SelectItem value="E-mail">E-mail</SelectItem>
+                      <SelectItem value="Tripaneer">Tripaneer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
                   <Label htmlFor="notion_page_id">Notion Page ID</Label>
                   <Input
                     id="notion_page_id"
