@@ -163,7 +163,8 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
       const item = config.items.find(i => i.id === itemId);
       
       if (item) {
-        const cost = item.price * inputValue * (item.billingType === 'per_person' ? numberOfPeople : 1);
+        // SEMPRE multiplicar por número de pessoas
+        const cost = item.price * inputValue * numberOfPeople;
         
         result.fixedItemsCost += cost;
         
@@ -174,7 +175,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
         
         result.breakdown.fixedItems.push({
           name: itemName,
-          quantity: inputValue * (item.billingType === 'per_person' ? numberOfPeople : 1),
+          quantity: inputValue * numberOfPeople,
           unitPrice: item.price,
           cost,
         });
@@ -230,12 +231,12 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   if (totalMassages > 0) {
     const massageItem = config.items.find(item => item.id === 'massage');
     if (massageItem) {
-      // Cobrar TODAS as massagens (extras + pacote) multiplicado por número de pessoas
-      const totalCost = massageItem.price * totalMassages * (massageItem.billingType === 'per_person' ? numberOfPeople : 1);
+      // SEMPRE multiplicar por número de pessoas
+      const totalCost = massageItem.price * totalMassages * numberOfPeople;
       result.fixedItemsCost += totalCost;
       result.breakdown.fixedItems.push({
         name: `Massagem (${totalMassages} ${totalMassages === 1 ? 'sessão' : 'sessões'}${massageExtra > 0 && massagePackage > 0 ? ` - ${massageExtra} extra${massageExtra > 1 ? 's' : ''} + ${massagePackage} do pacote` : ''})`,
-        quantity: totalMassages * (massageItem.billingType === 'per_person' ? numberOfPeople : 1),
+        quantity: totalMassages * numberOfPeople,
         unitPrice: massageItem.price,
         cost: totalCost,
       });
@@ -251,6 +252,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     
     const transferItem = config.items.find(item => item.id === 'transfer');
     if (transferItem) {
+      // Transfer: até 3 pessoas = 1 transfer, não multiplica por pessoas
       const cost = transferItem.price * totalTransfers;
       result.fixedItemsCost += cost;
       
