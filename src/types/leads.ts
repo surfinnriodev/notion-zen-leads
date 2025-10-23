@@ -7,6 +7,18 @@ export type NotionReserva = Tables<"reservations">;
 export interface LeadWithCalculation extends NotionReserva {
   calculatedPrice?: CalculationResult;
   totalPrice?: number;
+  
+  // Legacy format properties (for compatibility with modal and other components)
+  include_breakfast?: boolean;
+  aluguel_prancha_ilimitado?: boolean;
+  analise_de_video_extra?: number;
+  rio_city_tour_extra?: boolean;
+  carioca_experience_extra?: boolean;
+  
+  // Old field names (for backwards compatibility)
+  nome?: string; // maps to name
+  phone?: string; // maps to telefone
+  numero_de_pessoas?: number; // maps to number_of_people
 }
 
 // Mapeamento entre valores do Supabase e IDs da configuração
@@ -109,9 +121,9 @@ export function convertLeadToCalculationInput(lead: NotionReserva, config?: any)
     massage: (lead.massagem_extra || 0) + (lead.massagem_package || 0),
     massageExtra: lead.massagem_extra || 0, // Separado para cálculo correto
     massagePackage: lead.massagem_package || 0, // Separado para cálculo correto
-    surfGuide: (lead.surf_guide ? 1 : 0) + (lead.surf_guide_package || 0),
-    transfer: (lead.transfer_extra || 0) + (lead.transfer_package || 0) + (lead.transfer ? 1 : 0),
-    transferExtra: lead.transfer_extra || 0, // Separado para cálculo correto
+    surfGuide: (lead.surf_guide_package || 0) + (lead.surf_guide ? 1 : 0),
+    transfer: (typeof lead.transfer_extra === 'boolean' ? (lead.transfer_extra ? 1 : 0) : (lead.transfer_extra || 0)) + (lead.transfer_package || 0),
+    transferExtra: typeof lead.transfer_extra === 'boolean' ? (lead.transfer_extra ? 1 : 0) : (lead.transfer_extra || 0), // Separado para cálculo correto
     transferPackage: lead.transfer_package || 0, // Separado para cálculo correto
 
     // Experiências (convertendo boolean para numeric)
@@ -241,9 +253,14 @@ export function mapReservaToLegacyFormat(lead: NotionReserva): any {
     aluguel_prancha_ilimitado: lead.aluguel_de_prancha,
 
     // Experience booleans - mapping database fields to legacy modal field names
-    hike_extra: lead.hike_extra,
-    rio_city_tour_extra: lead.rio_city_tour,
-    carioca_experience_extra: lead.carioca_experience,
+    hike_extra: lead.hike_extra || false,
+    rio_city_tour_extra: lead.rio_city_tour || false,
+    carioca_experience_extra: lead.carioca_experience || false,
+    
+    // Old field names for backwards compatibility
+    nome: lead.name,
+    phone: lead.telefone,
+    numero_de_pessoas: lead.number_of_people,
   };
 }
 

@@ -60,7 +60,8 @@ export const MessageTemplateForm = ({ template, onSave, onCancel }: MessageTempl
     onSave({
       ...formData,
       variables: editableVariables,
-    });
+      is_active: true,
+    } as any);
   };
 
   const insertVariable = (variable: string) => {
