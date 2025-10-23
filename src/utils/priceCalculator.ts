@@ -230,12 +230,12 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   if (totalMassages > 0) {
     const massageItem = config.items.find(item => item.id === 'massage');
     if (massageItem) {
-      // Cobrar TODAS as massagens (extras + pacote)
-      const totalCost = massageItem.price * totalMassages;
+      // Cobrar TODAS as massagens (extras + pacote) multiplicado por número de pessoas
+      const totalCost = massageItem.price * totalMassages * (massageItem.billingType === 'per_person' ? numberOfPeople : 1);
       result.fixedItemsCost += totalCost;
       result.breakdown.fixedItems.push({
         name: `Massagem (${totalMassages} ${totalMassages === 1 ? 'sessão' : 'sessões'}${massageExtra > 0 && massagePackage > 0 ? ` - ${massageExtra} extra${massageExtra > 1 ? 's' : ''} + ${massagePackage} do pacote` : ''})`,
-        quantity: totalMassages,
+        quantity: totalMassages * (massageItem.billingType === 'per_person' ? numberOfPeople : 1),
         unitPrice: massageItem.price,
         cost: totalCost,
       });

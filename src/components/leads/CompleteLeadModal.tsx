@@ -249,13 +249,36 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       }
     }
 
-    // Atualizar transfer_package automaticamente quando o pacote muda
+    // Atualizar atividades automaticamente quando o pacote muda
     if (field === 'pacote') {
       const selectedPackage = config.packages?.find(pkg => 
         pkg.id === value || pkg.name === value
       );
-      updatedData.transfer_package = selectedPackage?.includedItems?.transfer || 0;
-      console.log('✈️ Updated transfer_package from package:', updatedData.transfer_package);
+      
+      if (selectedPackage?.includedItems) {
+        // Atualizar todas as atividades incluídas no pacote
+        updatedData.transfer_package = selectedPackage.includedItems.transfer || 0;
+        updatedData.aulas_de_surf = selectedPackage.includedItems.surfLessons || 0;
+        updatedData.aulas_de_yoga = selectedPackage.includedItems.yogaLessons || 0;
+        updatedData.skate = selectedPackage.includedItems.surfSkate || 0;
+        updatedData.analise_de_video_package = selectedPackage.includedItems.videoAnalysis || 0;
+        updatedData.massagem_package = selectedPackage.includedItems.massage || 0;
+        updatedData.surf_guide_package = selectedPackage.includedItems.surfGuide || 0;
+        updatedData.breakfast = selectedPackage.includedItems.breakfast || false;
+        updatedData.aluguel_de_prancha = selectedPackage.includedItems.unlimitedBoardRental || false;
+        
+        console.log('📦 Updated activities from package:', {
+          transfer: updatedData.transfer_package,
+          surf: updatedData.aulas_de_surf,
+          yoga: updatedData.aulas_de_yoga,
+          skate: updatedData.skate,
+          video: updatedData.analise_de_video_package,
+          massage: updatedData.massagem_package,
+          guide: updatedData.surf_guide_package,
+          breakfast: updatedData.breakfast,
+          board: updatedData.aluguel_de_prancha
+        });
+      }
     }
 
     setFormData(updatedData);

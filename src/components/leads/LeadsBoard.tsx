@@ -72,8 +72,10 @@ const generateDefaultColumns = async (): Promise<StatusInfo[]> => {
       'fup 1',
       'link de pagamento enviado',
       'pago | a se hospedar',
+      'hospedado',
+      'hospedagem concluída',
       'perdido',
-      'hospedagem concluída'
+      'origem'
     ];
 
     const columns: StatusInfo[] = [];
