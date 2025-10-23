@@ -123,61 +123,6 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
       }
     }
 
-    // Recalcular atividades quando a quantidade de pessoas muda
-    if (field === 'number_of_people') {
-      const oldPeople = formData.number_of_people || 1;
-      const newPeople = value || 1;
-      
-      if (oldPeople !== newPeople && newPeople > 0) {
-        console.log(`👥 People changed from ${oldPeople} to ${newPeople}, recalculating activities...`);
-        
-        // Recalcular atividades baseado na nova quantidade de pessoas
-        // Manter as quantidades por pessoa, mas ajustar os totais
-        const ratio = newPeople / oldPeople;
-        
-        // Ajustar atividades que são cobradas por pessoa
-        if (updatedData.aulas_de_surf) {
-          updatedData.aulas_de_surf = Math.round(updatedData.aulas_de_surf * ratio);
-        }
-        if (updatedData.aulas_de_yoga) {
-          updatedData.aulas_de_yoga = Math.round(updatedData.aulas_de_yoga * ratio);
-        }
-        if (updatedData.skate) {
-          updatedData.skate = Math.round(updatedData.skate * ratio);
-        }
-        if (updatedData.analise_de_video_extra) {
-          updatedData.analise_de_video_extra = Math.round(updatedData.analise_de_video_extra * ratio);
-        }
-        if (updatedData.analise_de_video_package) {
-          updatedData.analise_de_video_package = Math.round(updatedData.analise_de_video_package * ratio);
-        }
-        if (updatedData.massagem_extra) {
-          updatedData.massagem_extra = Math.round(updatedData.massagem_extra * ratio);
-        }
-        if (updatedData.massagem_package) {
-          updatedData.massagem_package = Math.round(updatedData.massagem_package * ratio);
-        }
-        if (updatedData.surf_guide_package) {
-          updatedData.surf_guide_package = Math.round(updatedData.surf_guide_package * ratio);
-        }
-        if (updatedData.transfer_extra) {
-          updatedData.transfer_extra = Math.round(updatedData.transfer_extra * ratio);
-        }
-        if (updatedData.transfer_package) {
-          updatedData.transfer_package = Math.round(updatedData.transfer_package * ratio);
-        }
-        
-        console.log('🔄 Recalculated activities:', {
-          surf: updatedData.aulas_de_surf,
-          yoga: updatedData.aulas_de_yoga,
-          skate: updatedData.skate,
-          video: updatedData.analise_de_video_extra,
-          massage: updatedData.massagem_extra,
-          guide: updatedData.surf_guide_package,
-          transfer: updatedData.transfer_extra
-        });
-      }
-    }
 
     setFormData(updatedData);
 
