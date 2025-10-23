@@ -269,7 +269,7 @@ export const LeadsBoard = () => {
         console.log("📋 Resumo de status:", statusSummary);
         console.log("🏷️ Primeiros 5 leads:", data.slice(0, 5).map(l => ({
           id: l.id,
-          nome: l.nome || l.name,
+          nome: (l as any).nome || l.name,
           status: l.status,
           created_at: l.created_at
         })));
@@ -492,7 +492,7 @@ export const LeadsBoard = () => {
       statusLeads: statusLeads.length,
       sample: statusLeads.slice(0, 2).map(l => ({
         id: l.id,
-        nome: l.nome || l.name,
+        nome: (l as any).nome || l.name,
         status: l.status
       }))
     });

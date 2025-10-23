@@ -64,7 +64,7 @@ const Leads = () => {
       massagem_extra: 0,
       massagem_package: 0,
       surf_guide_package: 0,
-      transfer_extra: 0,
+      transfer_extra: false,
       transfer_package: 0,
       breakfast: false,
       aluguel_de_prancha: false,

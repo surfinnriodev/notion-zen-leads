@@ -281,61 +281,9 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       }
     }
 
-    // Recalcular atividades quando a quantidade de pessoas muda
-    if (field === 'number_of_people') {
-      const oldPeople = formData.number_of_people || 1;
-      const newPeople = value || 1;
-      
-      if (oldPeople !== newPeople && newPeople > 0) {
-        console.log(`👥 People changed from ${oldPeople} to ${newPeople}, recalculating activities...`);
-        
-        // Recalcular atividades baseado na nova quantidade de pessoas
-        // Manter as quantidades por pessoa, mas ajustar os totais
-        const ratio = newPeople / oldPeople;
-        
-        // Ajustar atividades que são cobradas por pessoa
-        if (updatedData.aulas_de_surf) {
-          updatedData.aulas_de_surf = Math.round(updatedData.aulas_de_surf * ratio);
-        }
-        if (updatedData.aulas_de_yoga) {
-          updatedData.aulas_de_yoga = Math.round(updatedData.aulas_de_yoga * ratio);
-        }
-        if (updatedData.skate) {
-          updatedData.skate = Math.round(updatedData.skate * ratio);
-        }
-        if (updatedData.analise_de_video_extra) {
-          updatedData.analise_de_video_extra = Math.round(updatedData.analise_de_video_extra * ratio);
-        }
-        if (updatedData.analise_de_video_package) {
-          updatedData.analise_de_video_package = Math.round(updatedData.analise_de_video_package * ratio);
-        }
-        if (updatedData.massagem_extra) {
-          updatedData.massagem_extra = Math.round(updatedData.massagem_extra * ratio);
-        }
-        if (updatedData.massagem_package) {
-          updatedData.massagem_package = Math.round(updatedData.massagem_package * ratio);
-        }
-        if (updatedData.surf_guide_package) {
-          updatedData.surf_guide_package = Math.round(updatedData.surf_guide_package * ratio);
-        }
-        if (updatedData.transfer_extra) {
-          updatedData.transfer_extra = Math.round(updatedData.transfer_extra * ratio);
-        }
-        if (updatedData.transfer_package) {
-          updatedData.transfer_package = Math.round(updatedData.transfer_package * ratio);
-        }
-        
-        console.log('🔄 Recalculated activities:', {
-          surf: updatedData.aulas_de_surf,
-          yoga: updatedData.aulas_de_yoga,
-          skate: updatedData.skate,
-          video: updatedData.analise_de_video_extra,
-          massage: updatedData.massagem_extra,
-          guide: updatedData.surf_guide_package,
-          transfer: updatedData.transfer_extra
-        });
-      }
-    }
+    // Não recalcular atividades quando a quantidade de pessoas muda
+    // Os valores na aba de atividades são "por pessoa"
+    // O cálculo do orçamento multiplica automaticamente pelo número de pessoas
 
     setFormData(updatedData);
 
@@ -363,7 +311,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
     console.log("📝 Found template:", template);
     if (template && calculatedLead) {
       console.log("🔄 Processing template with lead:", calculatedLead);
-      const processed = processTemplate(template, calculatedLead, config);
+      const processed = processTemplate(template as any, calculatedLead as any, config);
       console.log("✅ Processed message:", processed);
       setMessageSubject(processed.subject);
       setMessageContent(processed.content);
@@ -392,13 +340,14 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
     if (!lead) return;
 
     // Registrar mensagem no histórico
-    const messageData = {
+    const messageData: any = {
       lead_id: lead.id,
       template_id: selectedTemplate || null,
       subject: messageSubject || customMessage.split('\n')[0] || 'Mensagem personalizada',
       content: messageContent || customMessage,
       message_type: selectedTemplate ? 'template' : 'custom',
       sent_via: 'manual',
+      sent_at: new Date().toISOString(),
     };
 
     addMessage(messageData);
@@ -1058,18 +1007,20 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="aluguel_de_prancha">Aluguel de Prancha Ilimitado</Label>
-                  <Select
-                    value={formData.aluguel_de_prancha ? "sim" : "nao"}
-                    onValueChange={(value) => handleInputChange("aluguel_de_prancha", value === "sim")}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="nao">Não</SelectItem>
-                      <SelectItem value="sim">Sim</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="aluguel_de_prancha"
+                    type="number"
+                    min="0"
+                    step="1"
+                    className="w-full"
+                    value={(formData.aluguel_de_prancha || formData.aluguel_prancha_ilimitado) ? 1 : 0}
+                    onChange={(e) => {
+                      const value = e.target.value === '' || e.target.value === '0' ? false : true;
+                      handleInputChange("aluguel_de_prancha", value);
+                      handleInputChange("aluguel_prancha_ilimitado", value);
+                    }}
+                    onFocus={(e) => e.target.select()}
+                  />
                   <p className="text-xs text-muted-foreground mt-1">
                     Prancha disponível durante toda a estadia
                   </p>
