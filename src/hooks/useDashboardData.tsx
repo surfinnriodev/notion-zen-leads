@@ -64,7 +64,7 @@ export const useDashboardData = () => {
       const statusSample = leads.slice(0, 5).map(lead => ({
         id: lead.id,
         status: lead.status,
-        nome: (lead as any).nome || lead.name
+        nome: lead.nome || lead.name
       }));
       console.log("🔍 Amostra de status dos leads:", statusSample);
 

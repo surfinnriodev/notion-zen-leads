@@ -211,8 +211,7 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
   }
   
   if (lead.surf_guide || lead.surf_guide_package) {
-    const surfGuideVal = typeof lead.surf_guide === 'boolean' ? (lead.surf_guide ? 1 : 0) : (lead.surf_guide || 0);
-    const total = surfGuideVal + (lead.surf_guide_package || 0);
+    const total = (lead.surf_guide || 0) + (lead.surf_guide_package || 0);
     activities.push(`• ${total} ${total > 1 ? labels.surfGuideDays : labels.surfGuideDay}`);
   }
   
@@ -589,7 +588,7 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation, packagesOrCo
 
   // Calcular o preço total incluindo ajustes de hospedagem e taxa extra
   let totalPrice = lead.totalPrice || 0;
-  let accommodationPrice = (lead as any).accommodationCost || (lead.calculatedPrice?.accommodationCost) || 0;
+  let accommodationPrice = lead.accommodationCost || 0;
   
   // Se houver calculatedPrice, usar os valores de lá
   if (lead.calculatedPrice) {
