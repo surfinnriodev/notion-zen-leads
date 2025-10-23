@@ -159,14 +159,11 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     itemId: string, 
     name: string
   ) => {
-    console.log(`🔍 addFixedItem called for ${name}:`, { inputValue, includedCount, itemId, name });
     if (inputValue && inputValue > 0) {
       const item = config.items.find(i => i.id === itemId);
-      console.log(`🔍 Item found for ${name}:`, item);
       
       if (item) {
         const cost = item.price * inputValue * (item.billingType === 'per_person' ? numberOfPeople : 1);
-        console.log(`💰 Cost calculated for ${name}:`, { price: item.price, inputValue, numberOfPeople, billingType: item.billingType, cost });
         
         result.fixedItemsCost += cost;
         
@@ -181,12 +178,9 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
           unitPrice: item.price,
           cost,
         });
-        console.log(`✅ Item added to breakdown for ${name}:`, result.breakdown.fixedItems[result.breakdown.fixedItems.length - 1]);
       } else {
         console.log(`❌ Item não encontrado: ${itemId} - Itens disponíveis:`, config.items?.map(i => i.id));
       }
-    } else {
-      console.log(`⚠️ Input value is 0 or undefined for ${name}:`, inputValue);
     }
   };
 
@@ -225,15 +219,6 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
       }
     }
   }
-  // Debug surf skate - verificar se está sendo processado
-  console.log('🛹 Surf skate debug:', {
-    inputValue: input.surfSkate,
-    packageIncludes: packageIncludes.surfSkate,
-    itemId: 'skate',
-    numberOfPeople,
-    availableItems: config.items?.map(i => ({ id: i.id, name: i.name, price: i.price, billingType: i.billingType }))
-  });
-  
   addFixedItem(input.surfSkate, packageIncludes.surfSkate, 'skate', 'Surf-skate');
   addFixedItem(input.videoAnalysis, packageIncludes.videoAnalysis, 'analise_de_video', 'Análise de vídeo');
   
