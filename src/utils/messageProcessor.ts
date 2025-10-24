@@ -110,6 +110,12 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
     nights,
     people
   });
+  console.log("🔍 formatCompleteSummary - Tipos dos dados:", {
+    surf_guide_type: typeof lead.surf_guide,
+    surf_guide_package_type: typeof lead.surf_guide_package,
+    surf_guide_value: lead.surf_guide,
+    surf_guide_package_value: lead.surf_guide_package
+  });
   
   const labels = language === 'en' ? {
     accommodation: 'ACCOMMODATION:',
@@ -224,6 +230,12 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
   if (lead.surf_guide || lead.surf_guide_package) {
     const surfGuideBoolean = lead.surf_guide ? 1 : 0;
     const total = surfGuideBoolean + (lead.surf_guide_package || 0);
+    console.log("🔍 Surf Guide formatCompleteSummary:", {
+      surf_guide: lead.surf_guide,
+      surf_guide_package: lead.surf_guide_package,
+      surfGuideBoolean,
+      total
+    });
     activities.push(`• ${total} ${total > 1 ? labels.surfGuideDays : labels.surfGuideDay}`);
   }
   
@@ -332,6 +344,12 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
     surf_guide_package: lead.surf_guide_package,
     nights,
     people
+  });
+  console.log("🔍 formatInternalResume - Tipos dos dados:", {
+    surf_guide_type: typeof lead.surf_guide,
+    surf_guide_package_type: typeof lead.surf_guide_package,
+    surf_guide_value: lead.surf_guide,
+    surf_guide_package_value: lead.surf_guide_package
   });
   
   const labels = language === 'en' ? {
@@ -487,10 +505,18 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
   // Surf Guide
   const surfGuideBoolean = lead.surf_guide ? 1 : 0;
   const totalSurfGuide = surfGuideBoolean + (lead.surf_guide_package || 0);
+  console.log("🔍 Surf Guide Debug:", {
+    surf_guide: lead.surf_guide,
+    surf_guide_package: lead.surf_guide_package,
+    surfGuideBoolean,
+    totalSurfGuide,
+    configItems: config.items?.map(i => ({ id: i.id, name: i.name }))
+  });
   if (totalSurfGuide > 0) {
-    const guideItem = config.items?.find((i: any) => i.id === 'surf_guide');
+    const guideItem = config.items?.find((i: any) => i.id === 'surf-guide');
     const guidePrice = guideItem?.price || 0;
     const guideCost = totalSurfGuide * guidePrice;
+    console.log("🔍 Surf Guide Item:", { guideItem, guidePrice, guideCost });
     sections.push(`- ${totalSurfGuide} ${totalSurfGuide > 1 ? labels.days : labels.day} ${labels.surfGuide} = ${formatCurrency(guideCost)}`);
   }
   
