@@ -105,6 +105,8 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
     aulas_de_surf: lead.aulas_de_surf,
     skate: lead.skate,
     aulas_de_yoga: lead.aulas_de_yoga,
+    surf_guide: lead.surf_guide,
+    surf_guide_package: lead.surf_guide_package,
     nights,
     people
   });
@@ -220,7 +222,8 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
   }
   
   if (lead.surf_guide || lead.surf_guide_package) {
-    const total = (lead.surf_guide || 0) + (lead.surf_guide_package || 0);
+    const surfGuideBoolean = lead.surf_guide ? 1 : 0;
+    const total = surfGuideBoolean + (lead.surf_guide_package || 0);
     activities.push(`• ${total} ${total > 1 ? labels.surfGuideDays : labels.surfGuideDay}`);
   }
   
@@ -325,6 +328,8 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
     aulas_de_surf: lead.aulas_de_surf,
     skate: lead.skate,
     aulas_de_yoga: lead.aulas_de_yoga,
+    surf_guide: lead.surf_guide,
+    surf_guide_package: lead.surf_guide_package,
     nights,
     people
   });
@@ -480,7 +485,8 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
   }
   
   // Surf Guide
-  const totalSurfGuide = (lead.surf_guide || 0) + (lead.surf_guide_package || 0);
+  const surfGuideBoolean = lead.surf_guide ? 1 : 0;
+  const totalSurfGuide = surfGuideBoolean + (lead.surf_guide_package || 0);
   if (totalSurfGuide > 0) {
     const guideItem = config.items?.find((i: any) => i.id === 'surf_guide');
     const guidePrice = guideItem?.price || 0;

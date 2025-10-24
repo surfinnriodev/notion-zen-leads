@@ -181,6 +181,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       if (updatedData.hike_extra !== undefined) mappedData.hike_extra = Boolean(updatedData.hike_extra);
       if (updatedData.rio_city_tour_extra !== undefined) mappedData.rio_city_tour = Boolean(updatedData.rio_city_tour_extra);
       if (updatedData.carioca_experience_extra !== undefined) mappedData.carioca_experience = Boolean(updatedData.carioca_experience_extra);
+      if (updatedData.surf_guide !== undefined) mappedData.surf_guide = Boolean(updatedData.surf_guide);
 
       // Datas - usar campos diretos ao invés de JSON
       if (updatedData.check_in_start !== undefined) mappedData.check_in_start = updatedData.check_in_start;
