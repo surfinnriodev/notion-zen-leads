@@ -68,7 +68,7 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
       if (!lead) throw new Error("No lead to update");
 
       const { data, error } = await supabase
-        .from("notion_reservas")
+        .from("reservations")
         .update(updatedData)
         .eq("id", lead.id)
         .select()

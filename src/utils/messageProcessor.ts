@@ -100,6 +100,15 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
   const nights = calculateNights(lead.check_in_start, lead.check_in_end);
   const people = lead.number_of_people || 1;
   
+  // Debug: verificar dados do lead
+  console.log("🔍 formatCompleteSummary - Dados do lead:", {
+    aulas_de_surf: lead.aulas_de_surf,
+    skate: lead.skate,
+    aulas_de_yoga: lead.aulas_de_yoga,
+    nights,
+    people
+  });
+  
   const labels = language === 'en' ? {
     accommodation: 'ACCOMMODATION:',
     night: 'night',
@@ -310,6 +319,15 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
   const sections: string[] = [];
   const nights = calculateNights(lead.check_in_start, lead.check_in_end);
   const people = lead.number_of_people || 1;
+  
+  // Debug: verificar dados do lead
+  console.log("🔍 formatInternalResume - Dados do lead:", {
+    aulas_de_surf: lead.aulas_de_surf,
+    skate: lead.skate,
+    aulas_de_yoga: lead.aulas_de_yoga,
+    nights,
+    people
+  });
   
   const labels = language === 'en' ? {
     title: 'DETAILED SERVICE SUMMARY',

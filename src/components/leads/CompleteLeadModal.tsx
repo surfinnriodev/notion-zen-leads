@@ -164,16 +164,16 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       if (updatedData.notion_page_id !== undefined) mappedData.notion_page_id = updatedData.notion_page_id;
 
       // Atividades - mapear para os campos corretos da tabela reservations
-      if (updatedData.aulas_de_surf !== undefined) mappedData.aulas_de_surf = updatedData.aulas_de_surf;
-      if (updatedData.aulas_de_yoga !== undefined) mappedData.aulas_de_yoga = updatedData.aulas_de_yoga;
-      if (updatedData.skate !== undefined) mappedData.skate = updatedData.skate;
-      if (updatedData.analise_de_video_extra !== undefined) mappedData.analise_de_video = updatedData.analise_de_video_extra;
-      if (updatedData.analise_de_video_package !== undefined) mappedData.analise_de_video_package = updatedData.analise_de_video_package;
-      if (updatedData.massagem_extra !== undefined) mappedData.massagem_extra = updatedData.massagem_extra;
-      if (updatedData.massagem_package !== undefined) mappedData.massagem_package = updatedData.massagem_package;
-      if (updatedData.surf_guide_package !== undefined) mappedData.surf_guide_package = updatedData.surf_guide_package;
-      if (updatedData.transfer_extra !== undefined) mappedData.transfer_extra = updatedData.transfer_extra;
-      if (updatedData.transfer_package !== undefined) mappedData.transfer_package = updatedData.transfer_package;
+      if (updatedData.aulas_de_surf !== undefined) mappedData.aulas_de_surf = Number(updatedData.aulas_de_surf) || 0;
+      if (updatedData.aulas_de_yoga !== undefined) mappedData.aulas_de_yoga = Number(updatedData.aulas_de_yoga) || 0;
+      if (updatedData.skate !== undefined) mappedData.skate = Number(updatedData.skate) || 0;
+      if (updatedData.analise_de_video_extra !== undefined) mappedData.analise_de_video = Number(updatedData.analise_de_video_extra) || 0;
+      if (updatedData.analise_de_video_package !== undefined) mappedData.analise_de_video_package = Number(updatedData.analise_de_video_package) || 0;
+      if (updatedData.massagem_extra !== undefined) mappedData.massagem_extra = Number(updatedData.massagem_extra) || 0;
+      if (updatedData.massagem_package !== undefined) mappedData.massagem_package = Number(updatedData.massagem_package) || 0;
+      if (updatedData.surf_guide_package !== undefined) mappedData.surf_guide_package = Number(updatedData.surf_guide_package) || 0;
+      if (updatedData.transfer_extra !== undefined) mappedData.transfer_extra = Number(updatedData.transfer_extra) || 0;
+      if (updatedData.transfer_package !== undefined) mappedData.transfer_package = Number(updatedData.transfer_package) || 0;
 
       // Booleans fields - mapping to correct database field names
       if (updatedData.include_breakfast !== undefined) mappedData.breakfast = Boolean(updatedData.include_breakfast);
