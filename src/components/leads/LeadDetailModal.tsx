@@ -501,6 +501,31 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
               </div>
             </div>
 
+            {/* Serviços Diários */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="breakfast">Café da Manhã</Label>
+                <Input
+                  id="breakfast"
+                  type="checkbox"
+                  className="w-4 h-4"
+                  checked={formData.breakfast || false}
+                  onChange={(e) => handleInputChange("breakfast", e.target.checked)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="aluguel_de_prancha">Aluguel de Prancha Ilimitado</Label>
+                <Input
+                  id="aluguel_de_prancha"
+                  type="checkbox"
+                  className="w-4 h-4"
+                  checked={formData.aluguel_de_prancha || false}
+                  onChange={(e) => handleInputChange("aluguel_de_prancha", e.target.checked)}
+                />
+              </div>
+            </div>
+
             {/* Atividades */}
             <div className="grid grid-cols-2 gap-4">
               <div>
