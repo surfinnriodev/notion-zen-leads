@@ -11,9 +11,9 @@ export const AVAILABLE_PRICING_ITEMS: PricingItem[] = [
   { id: 'breakfast', name: 'Café da manhã', price: 30, billingType: 'per_person', category: 'boolean', dbColumn: 'breakfast' },
   { id: 'aluguel_prancha', name: 'Aluguel prancha', price: 100, billingType: 'per_person', category: 'boolean', dbColumn: 'aluguel_de_prancha' },
   { id: 'transfer', name: 'Transfer', price: 300, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer' },
-  { id: 'rio_city_tour', name: 'Rio City Tour', price: 700, billingType: 'per_person', category: 'boolean', dbColumn: 'rio_city_tour' },
-  { id: 'carioca_experience', name: 'Carioca Experience', price: 840, billingType: 'per_person', category: 'boolean', dbColumn: 'carioca_experience' },
-  { id: 'hike_extra', name: 'Trilha extra', price: 300, billingType: 'per_person', category: 'boolean', dbColumn: 'hike_extra' },
+  { id: 'rio-city-tour', name: 'Rio City Tour', price: 700, billingType: 'per_person', category: 'boolean', dbColumn: 'rio_city_tour' },
+  { id: 'carioca-experience', name: 'Carioca Experience', price: 840, billingType: 'per_person', category: 'boolean', dbColumn: 'carioca_experience' },
+  { id: 'hike', name: 'Trilha', price: 300, billingType: 'per_person', category: 'boolean', dbColumn: 'hike_extra' },
 
   // Itens numéricos (quantidade) - Aulas de surf com faixas de preço (não editável individualmente)
   // { id: 'aulas_de_surf', name: 'Aulas de surf', price: 180, billingType: 'per_person', category: 'fixed', dbColumn: 'aulas_de_surf' },
@@ -133,9 +133,9 @@ export const usePricingConfig = () => {
       { id: 'breakfast', name: 'Café da manhã', price: 30, billingType: 'per_person', category: 'boolean', dbColumn: 'breakfast' },
       { id: 'aluguel_prancha', name: 'Aluguel prancha', price: 100, billingType: 'per_person', category: 'boolean', dbColumn: 'aluguel_de_prancha' },
       { id: 'transfer', name: 'Transfer', price: 300, billingType: 'per_reservation', category: 'boolean', dbColumn: 'transfer' },
-      { id: 'rio_city_tour', name: 'Rio City Tour', price: 700, billingType: 'per_person', category: 'boolean', dbColumn: 'rio_city_tour' },
-      { id: 'carioca_experience', name: 'Carioca Experience', price: 840, billingType: 'per_person', category: 'boolean', dbColumn: 'carioca_experience' },
-      { id: 'hike_extra', name: 'Trilha extra', price: 300, billingType: 'per_person', category: 'boolean', dbColumn: 'hike_extra' },
+      { id: 'rio-city-tour', name: 'Rio City Tour', price: 700, billingType: 'per_person', category: 'boolean', dbColumn: 'rio_city_tour' },
+      { id: 'carioca-experience', name: 'Carioca Experience', price: 840, billingType: 'per_person', category: 'boolean', dbColumn: 'carioca_experience' },
+      { id: 'hike', name: 'Trilha', price: 300, billingType: 'per_person', category: 'boolean', dbColumn: 'hike_extra' },
 
       // Itens numéricos (quantidade) - Aulas de surf com faixas de preço (não editável individualmente)
       // { id: 'aulas_de_surf', name: 'Aulas de surf', price: 180, billingType: 'per_person', category: 'fixed', dbColumn: 'aulas_de_surf' },
