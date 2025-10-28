@@ -273,9 +273,9 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
 
   // Atividades - SEMPRE calcular se solicitado
   const activities = [
-    { key: 'hike', name: 'Trilha', value: input.hike, itemId: 'hike' },
-    { key: 'rioCityTour', name: 'Rio City Tour', value: input.rioCityTour, itemId: 'rio-city-tour' },
-    { key: 'cariocaExperience', name: 'Carioca Experience', value: input.cariocaExperience, itemId: 'carioca-experience' },
+    { key: 'hike', name: 'Trilha', value: input.hike, itemId: 'hike_extra' },
+    { key: 'rioCityTour', name: 'Rio City Tour', value: input.rioCityTour, itemId: 'rio_city_tour' },
+    { key: 'cariocaExperience', name: 'Carioca Experience', value: input.cariocaExperience, itemId: 'carioca_experience' },
   ];
 
   activities.forEach(activity => {

@@ -501,6 +501,44 @@ export const LeadDetailModal = ({ lead, isOpen, onClose }: LeadDetailModalProps)
               </div>
             </div>
 
+            {/* Atividades */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="hike_extra">Trilha</Label>
+                <Input
+                  id="hike_extra"
+                  type="checkbox"
+                  className="w-4 h-4"
+                  checked={formData.hike_extra || false}
+                  onChange={(e) => handleInputChange("hike_extra", e.target.checked)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="rio_city_tour">Rio City Tour</Label>
+                <Input
+                  id="rio_city_tour"
+                  type="checkbox"
+                  className="w-4 h-4"
+                  checked={formData.rio_city_tour || false}
+                  onChange={(e) => handleInputChange("rio_city_tour", e.target.checked)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="carioca_experience">Carioca Experience</Label>
+                <Input
+                  id="carioca_experience"
+                  type="checkbox"
+                  className="w-4 h-4"
+                  checked={formData.carioca_experience || false}
+                  onChange={(e) => handleInputChange("carioca_experience", e.target.checked)}
+                />
+              </div>
+            </div>
+
             {/* Observações */}
             <div>
               <Label htmlFor="obs_do_cliente">Observações do Cliente</Label>

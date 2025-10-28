@@ -114,10 +114,10 @@ export function convertLeadToCalculationInput(lead: NotionReserva, config?: any)
     transferExtra: lead.transfer_extra || 0, // Separado para cálculo correto
     transferPackage: lead.transfer_package || 0, // Separado para cálculo correto
 
-    // Experiências (convertendo boolean para numeric)
-    hike: lead.hike_extra ? 1 : 0,
-    rioCityTour: lead.rio_city_tour ? 1 : 0,
-    cariocaExperience: lead.carioca_experience ? 1 : 0,
+    // Experiências (convertendo boolean para numeric e multiplicando por pessoas)
+    hike: lead.hike_extra ? (lead.number_of_people || 1) : 0,
+    rioCityTour: lead.rio_city_tour ? (lead.number_of_people || 1) : 0,
+    cariocaExperience: lead.carioca_experience ? (lead.number_of_people || 1) : 0,
   };
 }
 
