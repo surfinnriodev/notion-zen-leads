@@ -23,8 +23,9 @@ export function getSurfLessonPrice(quantity: number, surfLessonPricing?: { tier1
 /**
  * Calcula quantos dias de yoga grátis existem entre as datas de check-in e check-out
  * Yoga é grátis nas quartas e sextas-feiras às 7h da manhã
- * IMPORTANTE: Se o check-in é no mesmo dia da aula de yoga, não conta como grátis
- * pois o check-in é às 11h e a aula às 7h (não dá tempo de participar)
+ * IMPORTANTE: Se o check-in ou check-out é no mesmo dia da aula de yoga, não conta como grátis
+ * - Check-in às 11h e yoga às 7h (não dá tempo de participar)
+ * - Check-out no mesmo dia (não dá tempo de participar da aula)
  * @param checkInStart Data de check-in (formato YYYY-MM-DD)
  * @param checkInEnd Data de check-out (formato YYYY-MM-DD)
  * @returns Número de dias de yoga grátis
@@ -41,18 +42,29 @@ export function calculateFreeYogaDays(checkInStart: string, checkInEnd: string):
   const start = new Date(startYear, startMonth - 1, startDay); // Mês é 0-indexed
   const end = new Date(endYear, endMonth - 1, endDay);
   
-  let freeDays = 0;
-  const current = new Date(start);
+  // Normalizar datas para comparar apenas dia/mês/ano (sem hora)
+  const normalizeDate = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  };
   
+  const normalizedStart = normalizeDate(start);
+  const normalizedEnd = normalizeDate(end);
+  
+  let freeDays = 0;
   // Pular o primeiro dia (dia do check-in) pois o check-in é às 11h e yoga às 7h
+  const current = new Date(normalizedStart);
   current.setDate(current.getDate() + 1);
   
-  // Iterar através de cada dia entre check-in+1 e check-out
-  while (current < end) {
+  // Iterar através de cada dia entre check-in+1 e check-out-1 (excluindo ambos check-in e check-out)
+  while (current < normalizedEnd) {
     const dayOfWeek = getDay(current); // 0 = domingo, 1 = segunda, ..., 3 = quarta, 5 = sexta, 6 = sábado
     
     // Quarta-feira = 3, Sexta-feira = 5
-    if (dayOfWeek === 3 || dayOfWeek === 5) {
+    // O loop já exclui o dia do check-out (current < normalizedEnd), mas verificamos para garantir
+    const currentNormalized = normalizeDate(current);
+    const isCheckOutDay = currentNormalized.getTime() === normalizedEnd.getTime();
+    
+    if ((dayOfWeek === 3 || dayOfWeek === 5) && !isCheckOutDay) {
       freeDays++;
       console.log(`📅 Yoga grátis em: ${format(current, 'dd/MM/yyyy (EEEE)', { locale: ptBR })}`);
     }
@@ -60,7 +72,7 @@ export function calculateFreeYogaDays(checkInStart: string, checkInEnd: string):
     current.setDate(current.getDate() + 1);
   }
   
-  console.log(`🧘 Total de dias de yoga grátis: ${freeDays} (entre ${startDateStr} e ${endDateStr}, excluindo dia do check-in)`);
+  console.log(`🧘 Total de dias de yoga grátis: ${freeDays} (entre ${startDateStr} e ${endDateStr}, excluindo dia do check-in e check-out)`);
   return freeDays;
 }
 

@@ -470,13 +470,28 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
       (() => {
         const start = new Date(lead.check_in_start);
         const end = new Date(lead.check_in_end);
+        
+        // Normalizar datas para comparar apenas dia/mês/ano (sem hora)
+        const normalizeDate = (date: Date) => {
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        };
+        
+        const normalizedStart = normalizeDate(start);
+        const normalizedEnd = normalizeDate(end);
+        
         let freeDays = 0;
-        const current = new Date(start);
+        const current = new Date(normalizedStart);
         // Pular o primeiro dia (dia do check-in) pois o check-in é às 11h e yoga às 7h
         current.setDate(current.getDate() + 1);
-        while (current < end) {
+        
+        while (current < normalizedEnd) {
           const dayOfWeek = current.getDay();
-          if (dayOfWeek === 3 || dayOfWeek === 5) freeDays++;
+          // Não contar como grátis se for o dia do check-out (mesma lógica que check-in)
+          const currentNormalized = normalizeDate(current);
+          const isCheckOutDay = currentNormalized.getTime() === normalizedEnd.getTime();
+          if ((dayOfWeek === 3 || dayOfWeek === 5) && !isCheckOutDay) {
+            freeDays++;
+          }
           current.setDate(current.getDate() + 1);
         }
         return freeDays;
