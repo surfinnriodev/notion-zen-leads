@@ -3,7 +3,7 @@ import { MessageTemplate, MessagePreview } from '@/types/messages';
 import { PackageConfig } from '@/types/pricing';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { getSurfLessonPrice } from './pricingRules';
+import { getSurfLessonPrice, calculateFreeYogaDays } from './pricingRules';
 
 export const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -465,49 +465,28 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
   }
   
   // Yoga (com dias grátis) - Só calcular se tiver valor na tabela de atividades
+  // Usar a mesma lógica do priceCalculator.ts
   if (lead.aulas_de_yoga && lead.aulas_de_yoga > 0) {
     const yogaItem = config.items?.find((i: any) => i.id === 'yoga-lesson');
     // Só calcular se o item existir E tiver preço > 0 na tabela de atividades
     if (yogaItem && yogaItem.price && yogaItem.price > 0) {
-      const freeYogaDays = lead.check_in_start && lead.check_in_end ? 
-        (() => {
-          const start = new Date(lead.check_in_start);
-          const end = new Date(lead.check_in_end);
-          
-          // Normalizar datas para comparar apenas dia/mês/ano (sem hora)
-          const normalizeDate = (date: Date) => {
-            return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-          };
-          
-          const normalizedStart = normalizeDate(start);
-          const normalizedEnd = normalizeDate(end);
-          
-          let freeDays = 0;
-          const current = new Date(normalizedStart);
-          // Pular o primeiro dia (dia do check-in) pois o check-in é às 11h e yoga às 7h
-          current.setDate(current.getDate() + 1);
-          
-          while (current < normalizedEnd) {
-            const dayOfWeek = current.getDay();
-            // Não contar como grátis se for o dia do check-out (mesma lógica que check-in)
-            const currentNormalized = normalizeDate(current);
-            const isCheckOutDay = currentNormalized.getTime() === normalizedEnd.getTime();
-            if ((dayOfWeek === 3 || dayOfWeek === 5) && !isCheckOutDay) {
-              freeDays++;
-            }
-            current.setDate(current.getDate() + 1);
-          }
-          return freeDays;
-        })() : 0;
+      // Usar a mesma função calculateFreeYogaDays que é usada no orçamento
+      const freeYogaDays = lead.check_in_start && lead.check_in_end 
+        ? calculateFreeYogaDays(lead.check_in_start, lead.check_in_end)
+        : 0;
       
-      const paidYoga = Math.max(0, lead.aulas_de_yoga - freeYogaDays);
+      const totalYogaLessons = lead.aulas_de_yoga;
+      const chargedYogaLessons = Math.max(0, totalYogaLessons - freeYogaDays);
       const yogaPrice = yogaItem.price;
-      const yogaCost = paidYoga * people * yogaPrice;
+      const yogaCost = chargedYogaLessons * people * yogaPrice;
       
-      if (freeYogaDays > 0) {
-        sections.push(`- ${freeYogaDays} ${labels.yogaLesson} ${labels.freeYoga} + ${paidYoga} ${labels.paidYoga} = ${formatCurrency(yogaCost)}`);
+      // Usar a mesma formatação do orçamento
+      if (freeYogaDays > 0 && chargedYogaLessons > 0) {
+        sections.push(`- ${totalYogaLessons} ${totalYogaLessons > 1 ? labels.yogaLessons : labels.yogaLesson} (${freeYogaDays} ${labels.freeYoga} + ${chargedYogaLessons} ${labels.paidYoga}) × ${people} ${people > 1 ? labels.people : labels.person} = ${formatCurrency(yogaCost)}`);
+      } else if (freeYogaDays > 0 && chargedYogaLessons === 0) {
+        sections.push(`- ${totalYogaLessons} ${totalYogaLessons > 1 ? labels.yogaLessons : labels.yogaLesson} (todas ${labels.freeYoga}) = ${formatCurrency(0)}`);
       } else {
-        sections.push(`- ${lead.aulas_de_yoga} ${lead.aulas_de_yoga > 1 ? labels.yogaLessons : labels.yogaLesson} × ${people} ${people > 1 ? labels.people : labels.person} = ${formatCurrency(yogaCost)}`);
+        sections.push(`- ${totalYogaLessons} ${totalYogaLessons > 1 ? labels.yogaLessons : labels.yogaLesson} × ${people} ${people > 1 ? labels.people : labels.person} = ${formatCurrency(yogaCost)}`);
       }
     }
   }
