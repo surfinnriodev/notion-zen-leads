@@ -90,6 +90,19 @@ export function convertLeadToCalculationInput(lead: NotionReserva, config?: any)
     return packageConfig ? packageConfig.id : null;
   };
 
+  // Verificar se o item transfer existe e tem preço na tabela de atividades
+  const transferItem = config?.items?.find((item: any) => item.id === 'transfer');
+  const hasTransferItem = transferItem && transferItem.price && transferItem.price > 0;
+
+  // Verificar se o lead realmente solicitou transfer (transfer_extra > 0 ou transfer = true)
+  const hasRequestedTransfer = (lead.transfer_extra && lead.transfer_extra > 0) || lead.transfer === true;
+
+  // Só incluir transfer_package no cálculo se:
+  // 1. O item transfer existir na tabela de atividades E
+  // 2. O lead realmente solicitou transfer (transfer_extra > 0 ou transfer = true)
+  // Caso contrário, transfer_package é apenas informação do pacote, mas não deve ser contado
+  const transferPackageForCalculation = (hasTransferItem && hasRequestedTransfer) ? (lead.transfer_package || 0) : 0;
+
   return {
     checkInStart: lead.check_in_start || '',
     checkInEnd: lead.check_in_end || '',
@@ -110,9 +123,9 @@ export function convertLeadToCalculationInput(lead: NotionReserva, config?: any)
     massageExtra: lead.massagem_extra || 0, // Separado para cálculo correto
     massagePackage: lead.massagem_package || 0, // Separado para cálculo correto
     surfGuide: (lead.surf_guide ? 1 : 0) + (lead.surf_guide_package || 0),
-    transfer: (lead.transfer_extra || 0) + (lead.transfer_package || 0) + (lead.transfer ? 1 : 0),
+    transfer: (lead.transfer_extra || 0) + transferPackageForCalculation + (lead.transfer ? 1 : 0),
     transferExtra: lead.transfer_extra || 0, // Separado para cálculo correto
-    transferPackage: lead.transfer_package || 0, // Separado para cálculo correto
+    transferPackage: lead.transfer_package || 0, // Separado para cálculo correto (sempre manter para referência)
 
     // Experiências (convertendo boolean para numeric e multiplicando por pessoas)
     hike: lead.hike_extra ? (lead.number_of_people || 1) : 0,
