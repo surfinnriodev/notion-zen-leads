@@ -464,48 +464,51 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
     sections.push(`- ${lead.aulas_de_surf} ${lead.aulas_de_surf > 1 ? labels.surfLessons : labels.surfLesson} × ${people} ${people > 1 ? labels.people : labels.person} (${formatCurrency(pricePerLesson)}/aula - faixa ${tierLabel}) = ${formatCurrency(surfCost)}`);
   }
   
-  // Yoga (com dias grátis)
+  // Yoga (com dias grátis) - Só calcular se tiver valor na tabela de atividades
   if (lead.aulas_de_yoga && lead.aulas_de_yoga > 0) {
-    const freeYogaDays = lead.check_in_start && lead.check_in_end ? 
-      (() => {
-        const start = new Date(lead.check_in_start);
-        const end = new Date(lead.check_in_end);
-        
-        // Normalizar datas para comparar apenas dia/mês/ano (sem hora)
-        const normalizeDate = (date: Date) => {
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        };
-        
-        const normalizedStart = normalizeDate(start);
-        const normalizedEnd = normalizeDate(end);
-        
-        let freeDays = 0;
-        const current = new Date(normalizedStart);
-        // Pular o primeiro dia (dia do check-in) pois o check-in é às 11h e yoga às 7h
-        current.setDate(current.getDate() + 1);
-        
-        while (current < normalizedEnd) {
-          const dayOfWeek = current.getDay();
-          // Não contar como grátis se for o dia do check-out (mesma lógica que check-in)
-          const currentNormalized = normalizeDate(current);
-          const isCheckOutDay = currentNormalized.getTime() === normalizedEnd.getTime();
-          if ((dayOfWeek === 3 || dayOfWeek === 5) && !isCheckOutDay) {
-            freeDays++;
-          }
-          current.setDate(current.getDate() + 1);
-        }
-        return freeDays;
-      })() : 0;
-    
-    const paidYoga = Math.max(0, lead.aulas_de_yoga - freeYogaDays);
     const yogaItem = config.items?.find((i: any) => i.id === 'yoga-lesson');
-    const yogaPrice = yogaItem?.price || 120;
-    const yogaCost = paidYoga * people * yogaPrice;
-    
-    if (freeYogaDays > 0) {
-      sections.push(`- ${freeYogaDays} ${labels.yogaLesson} ${labels.freeYoga} + ${paidYoga} ${labels.paidYoga} = ${formatCurrency(yogaCost)}`);
-    } else {
-      sections.push(`- ${lead.aulas_de_yoga} ${lead.aulas_de_yoga > 1 ? labels.yogaLessons : labels.yogaLesson} × ${people} ${people > 1 ? labels.people : labels.person} = ${formatCurrency(yogaCost)}`);
+    // Só calcular se o item existir E tiver preço > 0 na tabela de atividades
+    if (yogaItem && yogaItem.price && yogaItem.price > 0) {
+      const freeYogaDays = lead.check_in_start && lead.check_in_end ? 
+        (() => {
+          const start = new Date(lead.check_in_start);
+          const end = new Date(lead.check_in_end);
+          
+          // Normalizar datas para comparar apenas dia/mês/ano (sem hora)
+          const normalizeDate = (date: Date) => {
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+          };
+          
+          const normalizedStart = normalizeDate(start);
+          const normalizedEnd = normalizeDate(end);
+          
+          let freeDays = 0;
+          const current = new Date(normalizedStart);
+          // Pular o primeiro dia (dia do check-in) pois o check-in é às 11h e yoga às 7h
+          current.setDate(current.getDate() + 1);
+          
+          while (current < normalizedEnd) {
+            const dayOfWeek = current.getDay();
+            // Não contar como grátis se for o dia do check-out (mesma lógica que check-in)
+            const currentNormalized = normalizeDate(current);
+            const isCheckOutDay = currentNormalized.getTime() === normalizedEnd.getTime();
+            if ((dayOfWeek === 3 || dayOfWeek === 5) && !isCheckOutDay) {
+              freeDays++;
+            }
+            current.setDate(current.getDate() + 1);
+          }
+          return freeDays;
+        })() : 0;
+      
+      const paidYoga = Math.max(0, lead.aulas_de_yoga - freeYogaDays);
+      const yogaPrice = yogaItem.price;
+      const yogaCost = paidYoga * people * yogaPrice;
+      
+      if (freeYogaDays > 0) {
+        sections.push(`- ${freeYogaDays} ${labels.yogaLesson} ${labels.freeYoga} + ${paidYoga} ${labels.paidYoga} = ${formatCurrency(yogaCost)}`);
+      } else {
+        sections.push(`- ${lead.aulas_de_yoga} ${lead.aulas_de_yoga > 1 ? labels.yogaLessons : labels.yogaLesson} × ${people} ${people > 1 ? labels.people : labels.person} = ${formatCurrency(yogaCost)}`);
+      }
     }
   }
   
@@ -574,29 +577,32 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
     sections.push(displayText);
   }
   
-  // Transfer - considerar os incluídos no pacote
+  // Transfer - considerar os incluídos no pacote - Só calcular se tiver valor na tabela de atividades
   const totalTransfers = (lead.transfer_extra || 0) + (lead.transfer_package || 0) + (lead.transfer ? 1 : 0);
   if (totalTransfers > 0) {
     const transferItem = config.items?.find((i: any) => i.id === 'transfer');
-    const transferPrice = transferItem?.price || 0;
-    
-    // Verificar se há pacote e quantos transfers estão incluídos
-    const selectedPackage = lead.pacote && config.packages?.find((pkg: any) => 
-      pkg.id === lead.pacote || pkg.name === lead.pacote
-    );
-    const includedTransfers = selectedPackage?.includedItems?.transfer || 0;
-    const transfersToCobrar = Math.max(0, totalTransfers - includedTransfers);
-    
-    if (transfersToCobrar > 0) {
-      const transferCost = transfersToCobrar * transferPrice;
-      let transferLabel = `${transfersToCobrar} ${transfersToCobrar > 1 ? labels.legs : labels.leg}`;
-      if (includedTransfers > 0) {
-        transferLabel += ` (${includedTransfers} incluído${includedTransfers > 1 ? 's' : ''} no pacote)`;
+    // Só calcular se o item existir E tiver preço > 0 na tabela de atividades
+    if (transferItem && transferItem.price && transferItem.price > 0) {
+      const transferPrice = transferItem.price;
+      
+      // Verificar se há pacote e quantos transfers estão incluídos
+      const selectedPackage = lead.pacote && config.packages?.find((pkg: any) => 
+        pkg.id === lead.pacote || pkg.name === lead.pacote
+      );
+      const includedTransfers = selectedPackage?.includedItems?.transfer || 0;
+      const transfersToCobrar = Math.max(0, totalTransfers - includedTransfers);
+      
+      if (transfersToCobrar > 0) {
+        const transferCost = transfersToCobrar * transferPrice;
+        let transferLabel = `${transfersToCobrar} ${transfersToCobrar > 1 ? labels.legs : labels.leg}`;
+        if (includedTransfers > 0) {
+          transferLabel += ` (${includedTransfers} incluído${includedTransfers > 1 ? 's' : ''} no pacote)`;
+        }
+        sections.push(`- ${transferLabel} ${labels.transfer} = ${formatCurrency(transferCost)}`);
+      } else if (includedTransfers > 0) {
+        // Todos estão incluídos no pacote
+        sections.push(`- ${totalTransfers} ${totalTransfers > 1 ? labels.legs : labels.leg} ${labels.transfer} (incluído${totalTransfers > 1 ? 's' : ''} no pacote) = ${formatCurrency(0)}`);
       }
-      sections.push(`- ${transferLabel} ${labels.transfer} = ${formatCurrency(transferCost)}`);
-    } else if (includedTransfers > 0) {
-      // Todos estão incluídos no pacote
-      sections.push(`- ${totalTransfers} ${totalTransfers > 1 ? labels.legs : labels.leg} ${labels.transfer} (incluído${totalTransfers > 1 ? 's' : ''} no pacote) = ${formatCurrency(0)}`);
     }
   }
   

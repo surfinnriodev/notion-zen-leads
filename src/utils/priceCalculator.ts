@@ -245,13 +245,14 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
   
   addFixedItem(input.surfGuide, packageIncludes.surfGuide, 'surf-guide', 'Surf guide');
 
-  // Transfer - SEMPRE calcular se solicitado
+  // Transfer - Só calcular se tiver valor na tabela de atividades
   if (input.transfer && input.transfer > 0) {
     const includedTransfers = packageIncludes.transfer || 0;
     const totalTransfers = input.transfer; // Já inclui transfer_extra + transfer_package + transfer
     
     const transferItem = config.items.find(item => item.id === 'transfer');
-    if (transferItem) {
+    // Só calcular se o item existir E tiver preço > 0 na tabela de atividades
+    if (transferItem && transferItem.price && transferItem.price > 0) {
       // Transfer: até 3 pessoas = 1 transfer, não multiplica por pessoas
       const cost = transferItem.price * totalTransfers;
       result.fixedItemsCost += cost;
