@@ -556,32 +556,28 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
     sections.push(displayText);
   }
   
-  // Transfer - considerar os incluídos no pacote - Só calcular se tiver valor na tabela de atividades
+  // Transfer - Usar a mesma lógica do orçamento (priceCalculator.ts)
+  // Calcular TODOS os transfers pelo preço, não subtrair os incluídos no pacote
   const totalTransfers = (lead.transfer_extra || 0) + (lead.transfer_package || 0) + (lead.transfer ? 1 : 0);
   if (totalTransfers > 0) {
     const transferItem = config.items?.find((i: any) => i.id === 'transfer');
     // Só calcular se o item existir E tiver preço > 0 na tabela de atividades
     if (transferItem && transferItem.price && transferItem.price > 0) {
-      const transferPrice = transferItem.price;
-      
-      // Verificar se há pacote e quantos transfers estão incluídos
+      // Verificar se há pacote e quantos transfers estão incluídos (apenas para descrição)
       const selectedPackage = lead.pacote && config.packages?.find((pkg: any) => 
         pkg.id === lead.pacote || pkg.name === lead.pacote
       );
       const includedTransfers = selectedPackage?.includedItems?.transfer || 0;
-      const transfersToCobrar = Math.max(0, totalTransfers - includedTransfers);
       
-      if (transfersToCobrar > 0) {
-        const transferCost = transfersToCobrar * transferPrice;
-        let transferLabel = `${transfersToCobrar} ${transfersToCobrar > 1 ? labels.legs : labels.leg}`;
-        if (includedTransfers > 0) {
-          transferLabel += ` (${includedTransfers} incluído${includedTransfers > 1 ? 's' : ''} no pacote)`;
-        }
-        sections.push(`- ${transferLabel} ${labels.transfer} = ${formatCurrency(transferCost)}`);
-      } else if (includedTransfers > 0) {
-        // Todos estão incluídos no pacote
-        sections.push(`- ${totalTransfers} ${totalTransfers > 1 ? labels.legs : labels.leg} ${labels.transfer} (incluído${totalTransfers > 1 ? 's' : ''} no pacote) = ${formatCurrency(0)}`);
+      // Calcular TODOS os transfers pelo preço (mesma lógica do orçamento)
+      // Transfer: até 3 pessoas = 1 transfer, não multiplica por pessoas
+      const transferCost = transferItem.price * totalTransfers;
+      
+      let transferLabel = `${totalTransfers} ${totalTransfers === 1 ? labels.leg : labels.legs}`;
+      if (includedTransfers > 0) {
+        transferLabel += ` (${includedTransfers} incluído${includedTransfers > 1 ? 's' : ''} no pacote)`;
       }
+      sections.push(`- ${transferLabel} ${labels.transfer} = ${formatCurrency(transferCost)}`);
     }
   }
   

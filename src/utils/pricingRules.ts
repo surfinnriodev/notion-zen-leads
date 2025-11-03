@@ -23,9 +23,10 @@ export function getSurfLessonPrice(quantity: number, surfLessonPricing?: { tier1
 /**
  * Calcula quantos dias de yoga grátis existem entre as datas de check-in e check-out
  * Yoga é grátis nas quartas e sextas-feiras às 7h da manhã
- * IMPORTANTE: Se o check-in ou check-out é no mesmo dia da aula de yoga, não conta como grátis
- * - Check-in às 11h e yoga às 7h (não dá tempo de participar)
- * - Check-out no mesmo dia (não dá tempo de participar da aula)
+ * IMPORTANTE: 
+ * - Se o check-in é no mesmo dia da aula de yoga, não conta como grátis (check-in às 11h e yoga às 7h)
+ * - Sexta-feira SEMPRE conta como grátis, MESMO que seja no dia do check-out
+ * - Quarta-feira não conta se for no dia do check-out
  * @param checkInStart Data de check-in (formato YYYY-MM-DD)
  * @param checkInEnd Data de check-out (formato YYYY-MM-DD)
  * @returns Número de dias de yoga grátis
@@ -55,16 +56,21 @@ export function calculateFreeYogaDays(checkInStart: string, checkInEnd: string):
   const current = new Date(normalizedStart);
   current.setDate(current.getDate() + 1);
   
-  // Iterar através de cada dia entre check-in+1 e check-out-1 (excluindo ambos check-in e check-out)
-  while (current < normalizedEnd) {
+  // Iterar através de cada dia entre check-in+1 e check-out (incluindo check-out se for sexta)
+  while (current <= normalizedEnd) {
     const dayOfWeek = getDay(current); // 0 = domingo, 1 = segunda, ..., 3 = quarta, 5 = sexta, 6 = sábado
-    
-    // Quarta-feira = 3, Sexta-feira = 5
-    // O loop já exclui o dia do check-out (current < normalizedEnd), mas verificamos para garantir
     const currentNormalized = normalizeDate(current);
     const isCheckOutDay = currentNormalized.getTime() === normalizedEnd.getTime();
     
-    if ((dayOfWeek === 3 || dayOfWeek === 5) && !isCheckOutDay) {
+    // Quarta-feira = 3, Sexta-feira = 5
+    // Sexta-feira SEMPRE conta como grátis, mesmo no check-out
+    // Quarta-feira só conta se NÃO for no dia do check-out
+    if (dayOfWeek === 5) {
+      // Sexta-feira: sempre grátis
+      freeDays++;
+      console.log(`📅 Yoga grátis em: ${format(current, 'dd/MM/yyyy (EEEE)', { locale: ptBR })}${isCheckOutDay ? ' [CHECK-OUT]' : ''}`);
+    } else if (dayOfWeek === 3 && !isCheckOutDay) {
+      // Quarta-feira: só se não for check-out
       freeDays++;
       console.log(`📅 Yoga grátis em: ${format(current, 'dd/MM/yyyy (EEEE)', { locale: ptBR })}`);
     }
@@ -72,7 +78,7 @@ export function calculateFreeYogaDays(checkInStart: string, checkInEnd: string):
     current.setDate(current.getDate() + 1);
   }
   
-  console.log(`🧘 Total de dias de yoga grátis: ${freeDays} (entre ${startDateStr} e ${endDateStr}, excluindo dia do check-in e check-out)`);
+  console.log(`🧘 Total de dias de yoga grátis: ${freeDays} (entre ${startDateStr} e ${endDateStr}, excluindo dia do check-in, sexta sempre grátis mesmo no check-out)`);
   return freeDays;
 }
 
