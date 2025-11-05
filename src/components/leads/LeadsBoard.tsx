@@ -318,9 +318,41 @@ export const LeadsBoard = () => {
         newStatus 
       });
       
+      // Primeiro, buscar o lead atual para preservar os campos de preço
+      const { data: currentLead, error: fetchError } = await supabase
+        .from("reservations")
+        .select("accommodation_price_override, extra_fee_amount, extra_fee_description, room_category, room_type")
+        .eq("id", leadId)
+        .single();
+
+      if (fetchError) {
+        console.error("❌ [MUTATION] Erro ao buscar lead atual:", fetchError);
+        throw fetchError;
+      }
+
+      // Preparar dados de atualização preservando os campos de preço
+      const updateData: any = { status: newStatus };
+      
+      // Preservar campos de preço se existirem (incluir mesmo se for 0 ou string vazia)
+      if (currentLead?.accommodation_price_override !== null && currentLead?.accommodation_price_override !== undefined) {
+        updateData.accommodation_price_override = currentLead.accommodation_price_override;
+      }
+      if (currentLead?.extra_fee_amount !== null && currentLead?.extra_fee_amount !== undefined) {
+        updateData.extra_fee_amount = currentLead.extra_fee_amount;
+      }
+      if (currentLead?.extra_fee_description !== null && currentLead?.extra_fee_description !== undefined && currentLead.extra_fee_description !== '') {
+        updateData.extra_fee_description = currentLead.extra_fee_description;
+      }
+      if (currentLead?.room_category !== null && currentLead?.room_category !== undefined && currentLead.room_category !== '') {
+        updateData.room_category = currentLead.room_category;
+      }
+      if (currentLead?.room_type !== null && currentLead?.room_type !== undefined && currentLead.room_type !== '') {
+        updateData.room_type = currentLead.room_type;
+      }
+      
       const { data, error } = await supabase
         .from("reservations")
-        .update({ status: newStatus })
+        .update(updateData)
         .eq("id", leadId)
         .select()
         .single();
