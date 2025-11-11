@@ -190,7 +190,11 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       // Novos campos de categoria de quarto e ajustes de preço
       if (updatedData.room_category !== undefined) mappedData.room_category = updatedData.room_category;
       if (updatedData.room_type !== undefined) mappedData.room_type = updatedData.room_type;
-      if (updatedData.accommodation_price_override !== undefined) mappedData.accommodation_price_override = updatedData.accommodation_price_override;
+      if (updatedData.accommodation_price_override !== undefined) {
+        mappedData.accommodation_price_override = updatedData.accommodation_price_override === null
+          ? null
+          : Number(updatedData.accommodation_price_override);
+      }
       if (updatedData.extra_fee_amount !== undefined) mappedData.extra_fee_amount = updatedData.extra_fee_amount;
       if (updatedData.extra_fee_description !== undefined) mappedData.extra_fee_description = updatedData.extra_fee_description;
 
@@ -483,7 +487,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
               <TabsTrigger value="pricing" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 px-2 text-xs sm:text-sm">
                 <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Preços</span>
-                <span className="sm:hidden">$</span>
+                <span className="sm:hidden">Preço</span>
               </TabsTrigger>
             </TabsList>
 
@@ -1445,7 +1449,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                             {calculatedLead?.calculatedPrice?.numberOfNights || 0} noites • {calculatedLead?.calculatedPrice?.numberOfPeople || 0} pessoas
                           </span>
                         </div>
-                        {formData.accommodation_price_override && (
+                        {formData.accommodation_price_override !== null && formData.accommodation_price_override !== undefined && (
                           <span className="font-medium text-primary">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(formData.accommodation_price_override)}
                           </span>
@@ -1471,7 +1475,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                             min="0"
                             step="0.01"
                             placeholder="0.00"
-                            value={formData.accommodation_price_override || ""}
+                            value={formData.accommodation_price_override ?? ""}
                             onChange={(e) => {
                               const value = e.target.value === '' ? null : parseFloat(e.target.value);
                               handleInputChange("accommodation_price_override", value);
@@ -1479,7 +1483,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                             onFocus={(e) => e.target.select()}
                             className="flex-1"
                           />
-                          {formData.accommodation_price_override && (
+                          {formData.accommodation_price_override !== null && formData.accommodation_price_override !== undefined && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -1490,7 +1494,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {formData.accommodation_price_override 
+                          {formData.accommodation_price_override !== null && formData.accommodation_price_override !== undefined
                             ? `✓ Valor definido: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(formData.accommodation_price_override)}`
                             : "Digite o valor total da hospedagem para este lead"}
                         </p>

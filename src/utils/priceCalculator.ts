@@ -253,11 +253,12 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     const transferItem = config.items.find(item => item.id === 'transfer');
     // Só calcular se o item existir E tiver preço > 0 na tabela de atividades
     if (transferItem && transferItem.price && transferItem.price > 0) {
-      // Transfer: até 3 pessoas = 1 transfer, não multiplica por pessoas
-      const cost = transferItem.price * totalTransfers;
+      const vehiclesPerTransfer = calculateTransfersForGroup(numberOfPeople);
+      const totalChargedTransfers = totalTransfers * vehiclesPerTransfer;
+      const cost = transferItem.price * totalChargedTransfers;
       result.fixedItemsCost += cost;
       
-      let transferDescription = `Transfer (${totalTransfers} ${totalTransfers === 1 ? 'trecho' : 'trechos'}`;
+      let transferDescription = `Transfer (${totalTransfers} ${totalTransfers === 1 ? 'trecho' : 'trechos'} x ${vehiclesPerTransfer} veículo${vehiclesPerTransfer > 1 ? 's' : ''} por trecho`;
       if (includedTransfers > 0) {
         transferDescription += ` - ${includedTransfers} incluído${includedTransfers > 1 ? 's' : ''} no pacote`;
       }
@@ -265,7 +266,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
       
       result.breakdown.fixedItems.push({
         name: transferDescription,
-        quantity: totalTransfers,
+        quantity: totalChargedTransfers,
         unitPrice: transferItem.price,
         cost,
       });

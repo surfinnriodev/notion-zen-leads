@@ -56,23 +56,22 @@ export function calculateFreeYogaDays(checkInStart: string, checkInEnd: string):
   const current = new Date(normalizedStart);
   current.setDate(current.getDate() + 1);
   
-  // Iterar através de cada dia entre check-in+1 e check-out (incluindo check-out se for sexta)
+  // Iterar através de cada dia entre check-in+1 e check-out (incluindo check-out)
   while (current <= normalizedEnd) {
     const dayOfWeek = getDay(current); // 0 = domingo, 1 = segunda, ..., 3 = quarta, 5 = sexta, 6 = sábado
     const currentNormalized = normalizeDate(current);
     const isCheckOutDay = currentNormalized.getTime() === normalizedEnd.getTime();
     
     // Quarta-feira = 3, Sexta-feira = 5
-    // Sexta-feira SEMPRE conta como grátis, mesmo no check-out
-    // Quarta-feira só conta se NÃO for no dia do check-out
+    // Sexta-feira e Quarta-feira SEMPRE contam como grátis, mesmo no check-out
     if (dayOfWeek === 5) {
       // Sexta-feira: sempre grátis
       freeDays++;
       console.log(`📅 Yoga grátis em: ${format(current, 'dd/MM/yyyy (EEEE)', { locale: ptBR })}${isCheckOutDay ? ' [CHECK-OUT]' : ''}`);
-    } else if (dayOfWeek === 3 && !isCheckOutDay) {
-      // Quarta-feira: só se não for check-out
+    } else if (dayOfWeek === 3) {
+      // Quarta-feira: também grátis mesmo no check-out
       freeDays++;
-      console.log(`📅 Yoga grátis em: ${format(current, 'dd/MM/yyyy (EEEE)', { locale: ptBR })}`);
+      console.log(`📅 Yoga grátis em: ${format(current, 'dd/MM/yyyy (EEEE)', { locale: ptBR })}${isCheckOutDay ? ' [CHECK-OUT]' : ''}`);
     }
     
     current.setDate(current.getDate() + 1);
@@ -89,10 +88,10 @@ export function calculateFreeYogaDays(checkInStart: string, checkInEnd: string):
  * @returns Número de transfers necessários
  */
 export function calculateTransfersForGroup(numberOfPeople: number): number {
-  if (numberOfPeople > 3) {
-    return 2; // 2 transfers para grupos acima de 3 pessoas
+  if (!numberOfPeople || numberOfPeople <= 0) {
+    return 1; // fallback seguro
   }
-  return 1; // 1 transfer para grupos de 3 pessoas ou menos
+  return Math.max(1, Math.ceil(numberOfPeople / 3));
 }
 
 /**
