@@ -7,6 +7,7 @@ import {
   Home,
   MessageCircle
 } from "lucide-react";
+import { VersionBadge } from "./VersionBadge";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: Home },
@@ -51,9 +52,7 @@ export const Sidebar = () => {
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-border">
-          <p className="text-xs text-muted-foreground">
-            Sistema de Leads v1.0
-          </p>
+          <VersionBadge variant="minimal" />
         </div>
       </div>
     </div>

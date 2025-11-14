@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 const VERSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutos
-const CURRENT_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
+const CURRENT_VERSION = import.meta.env.VITE_APP_VERSION || '1.0';
 
 export const useVersionCheck = () => {
   useEffect(() => {

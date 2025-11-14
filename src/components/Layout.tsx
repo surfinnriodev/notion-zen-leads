@@ -3,6 +3,7 @@ import { Menu, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sidebar } from "./Sidebar";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { VersionBadge } from "./VersionBadge";
 
 interface LayoutProps {
   children: ReactNode;
@@ -21,7 +22,10 @@ export const Layout = ({ children }: LayoutProps) => {
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="text-lg font-semibold text-foreground">Surf Inn</h1>
+          <div className="flex flex-col">
+            <h1 className="text-lg font-semibold text-foreground">Surf Inn</h1>
+            <VersionBadge variant="minimal" />
+          </div>
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="sm" className="p-2">
