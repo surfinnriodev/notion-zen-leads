@@ -4,8 +4,9 @@ export interface MessageTemplate {
   subject: string;
   content: string;
   variables: string[]; // Lista de variáveis usadas no template
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
 }
 
 export interface MessagePreview {

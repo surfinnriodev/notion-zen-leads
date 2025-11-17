@@ -33,17 +33,25 @@ export const BulkStatusEditor = ({ leads, statuses }: BulkStatusEditorProps) => 
       // Determinar a condição WHERE baseada no status de origem
       let query = supabase.from("reservations");
 
+      let data, error;
+      
       if (fromStatus === "novo") {
         // Status "novo" = null ou string vazia no banco
-        query = query.update({ status: toStatus === "novo" ? null : toStatus })
-          .or('status.is.null,status.eq.');
+        const result = await supabase.from("reservations")
+          .update({ status: toStatus === "novo" ? null : toStatus })
+          .or('status.is.null,status.eq.')
+          .select('id');
+        data = result.data;
+        error = result.error;
       } else {
         // Status específico
-        query = query.update({ status: toStatus === "novo" ? null : toStatus })
-          .eq('status', fromStatus);
+        const result = await supabase.from("reservations")
+          .update({ status: toStatus === "novo" ? null : toStatus })
+          .eq('status', fromStatus)
+          .select('id');
+        data = result.data;
+        error = result.error;
       }
-
-      const { data, error } = await query.select('id');
 
       if (error) throw error;
       return { affectedCount: data?.length || 0, fromStatus, toStatus };

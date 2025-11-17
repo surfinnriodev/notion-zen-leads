@@ -273,7 +273,10 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
   }
   
   // Transfers
-  const totalTransfers = (lead.transfer_extra || 0) + (lead.transfer_package || 0) + (lead.transfer ? 1 : 0);
+  const transferExtraCount = lead.transfer_extra ? 1 : 0;
+  const transferPackageCount = lead.transfer_package || 0;
+  const transferCount = lead.transfer ? 1 : 0;
+  const totalTransfers = transferExtraCount + transferPackageCount + transferCount;
   if (totalTransfers > 0) {
     sections.push(labels.transfer);
     sections.push(`• ${totalTransfers} ${totalTransfers > 1 ? labels.airportTransfers : labels.airportTransfer}`);
@@ -558,7 +561,10 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
   
   // Transfer - Usar a mesma lógica do orçamento (priceCalculator.ts)
   // Calcular TODOS os transfers pelo preço, não subtrair os incluídos no pacote
-  const totalTransfers = (lead.transfer_extra || 0) + (lead.transfer_package || 0) + (lead.transfer ? 1 : 0);
+  const transferExtraCount = lead.transfer_extra ? 1 : 0;
+  const transferPackageCount = lead.transfer_package || 0;
+  const transferCount = lead.transfer ? 1 : 0;
+  const totalTransfers = transferExtraCount + transferPackageCount + transferCount;
   if (totalTransfers > 0) {
     const transferItem = config.items?.find((i: any) => i.id === 'transfer');
     // Só calcular se o item existir E tiver preço > 0 na tabela de atividades
@@ -633,8 +639,8 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation, packagesOrCo
   const config = Array.isArray(packagesOrConfig) ? { packages: packagesOrConfig } : packagesOrConfig;
 
   // Calcular o preço total incluindo ajustes de hospedagem e taxa extra
-  let totalPrice = lead.totalPrice || 0;
-  let accommodationPrice = lead.accommodationCost || 0;
+  let totalPrice = 0;
+  let accommodationPrice = 0;
   
   // Se houver calculatedPrice, usar os valores de lá
   if (lead.calculatedPrice) {
@@ -680,14 +686,14 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation, packagesOrCo
 
   return {
     // Dados básicos
-    nome: lead.name || lead.nome || 'N/A',
+    nome: lead.name || 'N/A',
     email: lead.email || 'N/A',
-    telefone: lead.telefone || lead.phone || 'N/A',
+    telefone: lead.telefone || 'N/A',
 
     // Reserva
     check_in: formatDate(lead.check_in_start),
     check_out: formatDate(lead.check_in_end),
-    numero_pessoas: String(lead.number_of_people || lead.numero_de_pessoas || 0),
+    numero_pessoas: String(lead.number_of_people || 0),
     numero_noites: String(nights),
     tipo_quarto: roomDescription,
     pacote: packageDisplay,
@@ -700,7 +706,7 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation, packagesOrCo
     preco_total: formatCurrency(totalPrice),
     preco_hospedagem: formatCurrency(accommodationPrice),
     preco_extras: formatCurrency(totalPrice - accommodationPrice),
-    preco_pacote: formatCurrency(lead.packageCost || (lead.calculatedPrice?.packageCost || 0)),
+    preco_pacote: formatCurrency(lead.calculatedPrice?.packageCost || 0),
 
     // Outros
     nivel_surf: lead.nivel_de_surf || 'N/A',
