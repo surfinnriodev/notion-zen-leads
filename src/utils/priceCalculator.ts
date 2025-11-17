@@ -163,19 +163,23 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
       const item = config.items.find(i => i.id === itemId);
       
       if (item) {
-        // SEMPRE multiplicar por número de pessoas
-        const cost = item.price * inputValue * numberOfPeople;
+        // Respeitar billingType do item
+        const multiplier = item.billingType === 'per_person' ? numberOfPeople : 1;
+        const cost = item.price * inputValue * multiplier;
         
         result.fixedItemsCost += cost;
         
         let itemName = `${name} (${inputValue} ${inputValue === 1 ? 'sessão' : 'sessões'})`;
+        if (item.billingType === 'per_person' && numberOfPeople > 1) {
+          itemName += ` x ${numberOfPeople} pessoas`;
+        }
         if (includedCount && includedCount > 0) {
           itemName += ` (${includedCount} incluída${includedCount > 1 ? 's' : ''} no pacote)`;
         }
         
         result.breakdown.fixedItems.push({
           name: itemName,
-          quantity: inputValue * numberOfPeople,
+          quantity: inputValue * multiplier,
           unitPrice: item.price,
           cost,
         });
