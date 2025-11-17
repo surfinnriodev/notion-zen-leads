@@ -123,7 +123,8 @@ export function convertLeadToCalculationInput(lead: NotionReserva, config?: any)
     massageExtra: lead.massagem_extra || 0, // Separado para cálculo correto
     massagePackage: lead.massagem_package || 0, // Separado para cálculo correto
     surfGuide: (lead.surf_guide ? 1 : 0) + (lead.surf_guide_package || 0),
-    transfer: transferExtraCount + transferPackageForCalculation + (lead.transfer ? 1 : 0),
+    // Transfer: APENAS contar os valores da aba de atividades (transfer_extra + transfer_package)
+    transfer: hasTransferItem ? (transferExtraCount + transferPackageForCalculation) : 0,
     transferExtra: transferExtraCount, // Separado para cálculo correto
     transferPackage: lead.transfer_package || 0, // Separado para cálculo correto (sempre manter para referência)
 
