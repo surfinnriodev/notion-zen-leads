@@ -107,7 +107,7 @@ export const PriceCalculatorForm = ({ config }: PriceCalculatorFormProps) => {
       customPackagesTotal: packageCalculation.total,
       customItems: customCalculation.items,
       customPackages: packageCalculation.packages,
-      finalTotal: calculation.totalPrice + customCalculation.total + packageCalculation.total
+      finalTotal: calculation.totalCost + customCalculation.total + packageCalculation.total
     };
 
     setResult(enhancedResult);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { TablesInsert } from "@/integrations/supabase/types";
 import { LeadWithCalculation, calculateLeadPrice, getLeadDisplayPrice, mapReservaToLegacyFormat } from "@/types/leads";
 import { usePricingConfig } from "@/hooks/usePricingConfig";
 import { useMessageTemplates } from "@/hooks/useMessageTemplates";
@@ -167,7 +168,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       if (updatedData.aulas_de_surf !== undefined) mappedData.aulas_de_surf = Number(updatedData.aulas_de_surf) || 0;
       if (updatedData.aulas_de_yoga !== undefined) mappedData.aulas_de_yoga = Number(updatedData.aulas_de_yoga) || 0;
       if (updatedData.skate !== undefined) mappedData.skate = Number(updatedData.skate) || 0;
-      if (updatedData.analise_de_video_extra !== undefined) mappedData.analise_de_video = Number(updatedData.analise_de_video_extra) || 0;
+      if (updatedData.analise_de_video !== undefined) mappedData.analise_de_video = Number(updatedData.analise_de_video) || 0;
       if (updatedData.analise_de_video_package !== undefined) mappedData.analise_de_video_package = Number(updatedData.analise_de_video_package) || 0;
       if (updatedData.massagem_extra !== undefined) mappedData.massagem_extra = Number(updatedData.massagem_extra) || 0;
       if (updatedData.massagem_package !== undefined) mappedData.massagem_package = Number(updatedData.massagem_package) || 0;
@@ -176,11 +177,11 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       if (updatedData.transfer_package !== undefined) mappedData.transfer_package = Number(updatedData.transfer_package) || 0;
 
       // Booleans fields - mapping to correct database field names
-      if (updatedData.include_breakfast !== undefined) mappedData.breakfast = Boolean(updatedData.include_breakfast);
-      if (updatedData.aluguel_prancha_ilimitado !== undefined) mappedData.aluguel_de_prancha = Boolean(updatedData.aluguel_prancha_ilimitado);
+      if (updatedData.breakfast !== undefined) mappedData.breakfast = Boolean(updatedData.breakfast);
+      if (updatedData.aluguel_de_prancha !== undefined) mappedData.aluguel_de_prancha = Boolean(updatedData.aluguel_de_prancha);
       if (updatedData.hike_extra !== undefined) mappedData.hike_extra = Boolean(updatedData.hike_extra);
-      if (updatedData.rio_city_tour_extra !== undefined) mappedData.rio_city_tour = Boolean(updatedData.rio_city_tour_extra);
-      if (updatedData.carioca_experience_extra !== undefined) mappedData.carioca_experience = Boolean(updatedData.carioca_experience_extra);
+      if (updatedData.rio_city_tour !== undefined) mappedData.rio_city_tour = Boolean(updatedData.rio_city_tour);
+      if (updatedData.carioca_experience !== undefined) mappedData.carioca_experience = Boolean(updatedData.carioca_experience);
       if (updatedData.surf_guide !== undefined) mappedData.surf_guide = Boolean(updatedData.surf_guide);
 
       // Datas - usar campos diretos ao invés de JSON
@@ -342,13 +343,14 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
     if (!lead) return;
 
     // Registrar mensagem no histórico
-    const messageData = {
-      lead_id: lead.id,
+    const messageData: TablesInsert<"message_history"> = {
+      lead_id: lead.id!,
       template_id: selectedTemplate || null,
       subject: messageSubject || customMessage.split('\n')[0] || 'Mensagem personalizada',
       content: messageContent || customMessage,
-      message_type: selectedTemplate ? 'template' : 'custom',
-      sent_via: 'manual',
+      message_type: (selectedTemplate ? 'template' : 'custom') as string,
+      sent_via: ('manual') as string,
+      sent_at: new Date().toISOString(),
     };
 
     addMessage(messageData);
@@ -705,10 +707,10 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 </div>
 
                 <div>
-                  <Label htmlFor="include_breakfast">Café da Manhã Incluído</Label>
+                  <Label htmlFor="breakfast">Café da Manhã Incluído</Label>
                   <Select
-                    value={formData.include_breakfast ? "sim" : "nao"}
-                    onValueChange={(value) => handleInputChange("include_breakfast", value === "sim")}
+                    value={formData.breakfast ? "sim" : "nao"}
+                    onValueChange={(value) => handleInputChange("breakfast", value === "sim")}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione" />
@@ -724,10 +726,10 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 </div>
 
                 <div>
-                  <Label htmlFor="aluguel_prancha_ilimitado">Aluguel de Prancha Ilimitado</Label>
+                  <Label htmlFor="aluguel_de_prancha">Aluguel de Prancha Ilimitado</Label>
                   <Select
-                    value={formData.aluguel_prancha_ilimitado ? "sim" : "nao"}
-                    onValueChange={(value) => handleInputChange("aluguel_prancha_ilimitado", value === "sim")}
+                    value={formData.aluguel_de_prancha ? "sim" : "nao"}
+                    onValueChange={(value) => handleInputChange("aluguel_de_prancha", value === "sim")}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione" />
@@ -1093,10 +1095,10 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 </div>
 
                 <div>
-                  <Label htmlFor="rio_city_tour_extra">Rio City Tour</Label>
+                  <Label htmlFor="rio_city_tour">Rio City Tour</Label>
                   <Select
-                    value={formData.rio_city_tour_extra ? "sim" : "nao"}
-                    onValueChange={(value) => handleInputChange("rio_city_tour_extra", value === "sim")}
+                    value={formData.rio_city_tour ? "sim" : "nao"}
+                    onValueChange={(value) => handleInputChange("rio_city_tour", value === "sim")}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione" />
