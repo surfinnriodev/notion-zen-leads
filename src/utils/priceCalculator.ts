@@ -227,7 +227,45 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     }
   }
   addFixedItem(input.surfSkate, packageIncludes.surfSkate, 'skate', 'Surf-skate');
-  addFixedItem(input.videoAnalysis, packageIncludes.videoAnalysis, 'analise_de_video', 'Análise de vídeo');
+  
+  // Análise de Vídeo - SEMPRE multiplicar por pessoas (independente do billingType)
+  if (input.videoAnalysis && input.videoAnalysis > 0) {
+    const videoItem = config.items.find(i => i.id === 'analise_de_video');
+    if (videoItem) {
+      // SEMPRE multiplicar por número de pessoas (forçar per_person)
+      const multiplier = numberOfPeople;
+      const cost = videoItem.price * input.videoAnalysis * multiplier;
+      
+      result.fixedItemsCost += cost;
+      
+      let itemName = `Análise de vídeo (${input.videoAnalysis} ${input.videoAnalysis === 1 ? 'sessão' : 'sessões'})`;
+      if (numberOfPeople > 1) {
+        itemName += ` x ${numberOfPeople} pessoas`;
+      }
+      if (packageIncludes.videoAnalysis && packageIncludes.videoAnalysis > 0) {
+        itemName += ` (${packageIncludes.videoAnalysis} incluída${packageIncludes.videoAnalysis > 1 ? 's' : ''} no pacote)`;
+      }
+      
+      result.breakdown.fixedItems.push({
+        name: itemName,
+        quantity: input.videoAnalysis * multiplier,
+        unitPrice: videoItem.price,
+        cost,
+      });
+    } else {
+      console.error(`❌ Item 'analise_de_video' não encontrado na configuração. Itens disponíveis:`, config.items?.map(i => ({ id: i.id, name: i.name })));
+      // Fallback: usar preço padrão e SEMPRE multiplicar por pessoas
+      const defaultPrice = 350;
+      const cost = defaultPrice * input.videoAnalysis * numberOfPeople;
+      result.fixedItemsCost += cost;
+      result.breakdown.fixedItems.push({
+        name: `Análise de vídeo (${input.videoAnalysis} ${input.videoAnalysis === 1 ? 'sessão' : 'sessões'}) x ${numberOfPeople} pessoas [FALLBACK]`,
+        quantity: input.videoAnalysis * numberOfPeople,
+        unitPrice: defaultPrice,
+        cost,
+      });
+    }
+  }
   
   // Massagem - SEMPRE cobrar todas as massagens (extras + pacote)
   const massageExtra = input.massageExtra || 0;

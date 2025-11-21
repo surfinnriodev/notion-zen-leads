@@ -241,7 +241,12 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
   
   if (lead.analise_de_video || lead.analise_de_video_package) {
     const total = (lead.analise_de_video || 0) + (lead.analise_de_video_package || 0);
-    activities.push(`• ${total} ${total > 1 ? labels.videoAnalyses : labels.videoAnalysis}`);
+    // SEMPRE mostrar multiplicação por pessoas se houver mais de 1 pessoa
+    if (people > 1) {
+      activities.push(`• ${total} ${total > 1 ? labels.videoAnalyses : labels.videoAnalysis} × ${people} ${people > 1 ? labels.people : labels.person}`);
+    } else {
+      activities.push(`• ${total} ${total > 1 ? labels.videoAnalyses : labels.videoAnalysis}`);
+    }
   }
   
   if (lead.massagem_extra || lead.massagem_package) {
@@ -524,21 +529,27 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
     configItems: config.items?.map(i => ({ id: i.id, name: i.name }))
   });
   if (totalSurfGuide > 0) {
-    const guideItem = config.items?.find((i: any) => i.id === 'surf-guide');
+    // Tentar encontrar o item com diferentes IDs possíveis
+    const guideItem = config.items?.find((i: any) => i.id === 'surf_guide' || i.id === 'surf-guide');
     const guidePrice = guideItem?.price || 0;
-    const guideCost = totalSurfGuide * guidePrice;
-    console.log("🔍 Surf Guide Item:", { guideItem, guidePrice, guideCost });
-    sections.push(`- ${totalSurfGuide} ${totalSurfGuide > 1 ? labels.days : labels.day} ${labels.surfGuide} = ${formatCurrency(guideCost)}`);
+    // Multiplicar pelo número de pessoas se o billingType for per_person
+    const multiplier = guideItem?.billingType === 'per_person' ? people : 1;
+    const guideCost = totalSurfGuide * guidePrice * multiplier;
+    console.log("🔍 Surf Guide Item:", { guideItem, guidePrice, guideCost, multiplier });
+    const quantityText = guideItem?.billingType === 'per_person' && people > 1
+      ? `${totalSurfGuide} ${totalSurfGuide > 1 ? labels.days : labels.day} ${labels.surfGuide} × ${people} ${people > 1 ? labels.people : labels.person}`
+      : `${totalSurfGuide} ${totalSurfGuide > 1 ? labels.days : labels.day} ${labels.surfGuide}`;
+    sections.push(`- ${quantityText} = ${formatCurrency(guideCost)}`);
   }
   
-  // Análise de Vídeo
+  // Análise de Vídeo - SEMPRE multiplicar por pessoas (independente do billingType)
   const totalVideo = (lead.analise_de_video || 0) + (lead.analise_de_video_package || 0);
   if (totalVideo > 0) {
     const videoItem = config.items?.find((i: any) => i.id === 'analise_de_video');
     const videoPrice = videoItem?.price || 0;
-    // Multiplicar pelo número de pessoas se o billingType for per_person
-    const videoCost = totalVideo * videoPrice * (videoItem?.billingType === 'per_person' ? people : 1);
-    const quantityText = videoItem?.billingType === 'per_person' && people > 1 
+    // SEMPRE multiplicar pelo número de pessoas (forçar per_person)
+    const videoCost = totalVideo * videoPrice * people;
+    const quantityText = people > 1 
       ? `${totalVideo} ${labels.videoAnalysis} × ${people} ${people > 1 ? labels.people : labels.person}`
       : `${totalVideo} ${labels.videoAnalysis}`;
     sections.push(`- ${quantityText} = ${formatCurrency(videoCost)}`);
