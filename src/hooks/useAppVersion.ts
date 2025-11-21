@@ -20,23 +20,23 @@ export const useAppVersion = () => {
         if (response.ok) {
           const data = await response.json();
           setVersionInfo({
-            version: data.version || '1.0',
-            date: data.date || '14/11',
+            version: data.version || '1.1',
+            date: data.date || '21/11',
             timestamp: data.timestamp,
           });
         } else {
           // Fallback se não conseguir carregar
           setVersionInfo({
-            version: '1.0',
-            date: '14/11',
+            version: '1.1',
+            date: '21/11',
           });
         }
       } catch (error) {
         console.error('Erro ao carregar versão:', error);
         // Fallback em caso de erro
         setVersionInfo({
-          version: '1.0',
-          date: '14/11',
+          version: '1.1',
+          date: '21/11',
         });
       } finally {
         setIsLoading(false);
