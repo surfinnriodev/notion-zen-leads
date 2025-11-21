@@ -3,7 +3,7 @@ import { MessageTemplate, MessagePreview } from '@/types/messages';
 import { PackageConfig } from '@/types/pricing';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { getSurfLessonPrice, calculateFreeYogaDays } from './pricingRules';
+import { getSurfLessonPrice, calculateFreeYogaDays, calculateTransfersForGroup } from './pricingRules';
 
 export const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -95,7 +95,7 @@ export const formatPackageBenefits = (pkg: PackageConfig, nights: number): strin
  * Formata um resumo completo de todos os serviços contratados pelo lead
  * Inclui hospedagem, atividades, itens diários e extras
  */
-export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: PackageConfig[], language: 'pt' | 'en' = 'pt'): string => {
+export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: PackageConfig[], language: 'pt' | 'en' = 'pt', config?: any): string => {
   const sections: string[] = [];
   const nights = calculateNights(lead.check_in_start, lead.check_in_end);
   const people = lead.number_of_people || 1;
@@ -272,11 +272,22 @@ export const formatCompleteSummary = (lead: LeadWithCalculation, packages?: Pack
     sections.push('');
   }
   
-  // Transfers
-  const transferExtraCount = lead.transfer_extra ? 1 : 0;
-  const transferPackageCount = lead.transfer_package || 0;
-  const transferCount = lead.transfer ? 1 : 0;
-  const totalTransfers = transferExtraCount + transferPackageCount + transferCount;
+  // Transfers - Usar a mesma lógica do orçamento (convertLeadToCalculationInput)
+  // Verificar se o item transfer existe e tem preço na tabela de atividades
+  const transferItem = config?.items?.find((item: any) => item.id === 'transfer');
+  const hasTransferItem = transferItem && transferItem.price && transferItem.price > 0;
+  
+  // Calcular transferExtraCount da mesma forma que no orçamento (número ou boolean)
+  const transferExtraCount = typeof lead.transfer_extra === 'number'
+    ? lead.transfer_extra
+    : lead.transfer_extra
+      ? 1
+      : 0;
+  
+  // Só considerar transfer_package se hasTransferItem (mesma lógica do orçamento)
+  const transferPackageForCalculation = hasTransferItem ? (lead.transfer_package || 0) : 0;
+  const totalTransfers = transferExtraCount + transferPackageForCalculation;
+  
   if (totalTransfers > 0) {
     sections.push(labels.transfer);
     sections.push(`• ${totalTransfers} ${totalTransfers > 1 ? labels.airportTransfers : labels.airportTransfer}`);
@@ -525,8 +536,12 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
   if (totalVideo > 0) {
     const videoItem = config.items?.find((i: any) => i.id === 'analise_de_video');
     const videoPrice = videoItem?.price || 0;
-    const videoCost = totalVideo * videoPrice;
-    sections.push(`- ${totalVideo} ${labels.videoAnalysis} = ${formatCurrency(videoCost)}`);
+    // Multiplicar pelo número de pessoas se o billingType for per_person
+    const videoCost = totalVideo * videoPrice * (videoItem?.billingType === 'per_person' ? people : 1);
+    const quantityText = videoItem?.billingType === 'per_person' && people > 1 
+      ? `${totalVideo} ${labels.videoAnalysis} × ${people} ${people > 1 ? labels.people : labels.person}`
+      : `${totalVideo} ${labels.videoAnalysis}`;
+    sections.push(`- ${quantityText} = ${formatCurrency(videoCost)}`);
   }
   
   // Massagem - SEMPRE cobrar todas as massagens (extras + pacote)
@@ -559,14 +574,23 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
     sections.push(displayText);
   }
   
-  // Transfer - Usar a mesma lógica do orçamento (priceCalculator.ts)
-  // Calcular TODOS os transfers pelo preço, não subtrair os incluídos no pacote
-  const transferExtraCount = lead.transfer_extra ? 1 : 0;
-  const transferPackageCount = lead.transfer_package || 0;
-  const transferCount = lead.transfer ? 1 : 0;
-  const totalTransfers = transferExtraCount + transferPackageCount + transferCount;
+  // Transfer - Usar a mesma lógica do orçamento (convertLeadToCalculationInput + priceCalculator.ts)
+  // Verificar se o item transfer existe e tem preço na tabela de atividades
+  const transferItem = config?.items?.find((item: any) => item.id === 'transfer');
+  const hasTransferItem = transferItem && transferItem.price && transferItem.price > 0;
+  
+  // Calcular transferExtraCount da mesma forma que no orçamento (número ou boolean)
+  const transferExtraCount = typeof lead.transfer_extra === 'number'
+    ? lead.transfer_extra
+    : lead.transfer_extra
+      ? 1
+      : 0;
+  
+  // Só considerar transfer_package se hasTransferItem (mesma lógica do orçamento)
+  const transferPackageForCalculation = hasTransferItem ? (lead.transfer_package || 0) : 0;
+  const totalTransfers = transferExtraCount + transferPackageForCalculation;
+  
   if (totalTransfers > 0) {
-    const transferItem = config.items?.find((i: any) => i.id === 'transfer');
     // Só calcular se o item existir E tiver preço > 0 na tabela de atividades
     if (transferItem && transferItem.price && transferItem.price > 0) {
       // Verificar se há pacote e quantos transfers estão incluídos (apenas para descrição)
@@ -575,11 +599,15 @@ export const formatInternalResume = (lead: LeadWithCalculation, config: any, lan
       );
       const includedTransfers = selectedPackage?.includedItems?.transfer || 0;
       
-      // Calcular TODOS os transfers pelo preço (mesma lógica do orçamento)
-      // Transfer: até 3 pessoas = 1 transfer, não multiplica por pessoas
-      const transferCost = transferItem.price * totalTransfers;
+      // Calcular usando a mesma lógica do orçamento (considera veículos por transfer baseado no número de pessoas)
+      const vehiclesPerTransfer = calculateTransfersForGroup(people);
+      const totalChargedTransfers = totalTransfers * vehiclesPerTransfer;
+      const transferCost = transferItem.price * totalChargedTransfers;
       
       let transferLabel = `${totalTransfers} ${totalTransfers === 1 ? labels.leg : labels.legs}`;
+      if (vehiclesPerTransfer > 1) {
+        transferLabel += ` x ${vehiclesPerTransfer} veículo${vehiclesPerTransfer > 1 ? 's' : ''} por trecho`;
+      }
       if (includedTransfers > 0) {
         transferLabel += ` (${includedTransfers} incluído${includedTransfers > 1 ? 's' : ''} no pacote)`;
       }
@@ -671,8 +699,8 @@ export const extractVariablesFromLead = (lead: LeadWithCalculation, packagesOrCo
   }
 
   // Gerar resumo completo de serviços contratados (PT e EN)
-  const completeSummaryPT = formatCompleteSummary(lead, packages, 'pt');
-  const completeSummaryEN = formatCompleteSummary(lead, packages, 'en');
+  const completeSummaryPT = formatCompleteSummary(lead, packages, 'pt', config);
+  const completeSummaryEN = formatCompleteSummary(lead, packages, 'en', config);
 
   // Gerar resumo interno detalhado com valores (PT e EN)
   const internalResumePT = formatInternalResume(lead, config, 'pt');

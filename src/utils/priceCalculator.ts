@@ -159,17 +159,19 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     itemId: string, 
     name: string
   ) => {
-    if (inputValue && inputValue > 0) {
+    // Garantir que o valor seja numérico e maior que zero
+    const numericValue = typeof inputValue === 'number' ? inputValue : (Number(inputValue) || 0);
+    if (numericValue > 0) {
       const item = config.items.find(i => i.id === itemId);
       
       if (item) {
         // Respeitar billingType do item
         const multiplier = item.billingType === 'per_person' ? numberOfPeople : 1;
-        const cost = item.price * inputValue * multiplier;
+        const cost = item.price * numericValue * multiplier;
         
         result.fixedItemsCost += cost;
         
-        let itemName = `${name} (${inputValue} ${inputValue === 1 ? 'sessão' : 'sessões'})`;
+        let itemName = `${name} (${numericValue} ${numericValue === 1 ? 'sessão' : 'sessões'})`;
         if (item.billingType === 'per_person' && numberOfPeople > 1) {
           itemName += ` x ${numberOfPeople} pessoas`;
         }
@@ -179,7 +181,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
         
         result.breakdown.fixedItems.push({
           name: itemName,
-          quantity: inputValue * multiplier,
+          quantity: numericValue * multiplier,
           unitPrice: item.price,
           cost,
         });

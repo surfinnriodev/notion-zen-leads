@@ -168,7 +168,8 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       if (updatedData.aulas_de_surf !== undefined) mappedData.aulas_de_surf = Number(updatedData.aulas_de_surf) || 0;
       if (updatedData.aulas_de_yoga !== undefined) mappedData.aulas_de_yoga = Number(updatedData.aulas_de_yoga) || 0;
       if (updatedData.skate !== undefined) mappedData.skate = Number(updatedData.skate) || 0;
-      if (updatedData.analise_de_video !== undefined) mappedData.analise_de_video = Number(updatedData.analise_de_video) || 0;
+      // Mapear analise_de_video_extra (do formulário) para analise_de_video (banco de dados)
+      if (updatedData.analise_de_video_extra !== undefined) mappedData.analise_de_video = Number(updatedData.analise_de_video_extra) || 0;
       if (updatedData.analise_de_video_package !== undefined) mappedData.analise_de_video_package = Number(updatedData.analise_de_video_package) || 0;
       if (updatedData.massagem_extra !== undefined) mappedData.massagem_extra = Number(updatedData.massagem_extra) || 0;
       if (updatedData.massagem_package !== undefined) mappedData.massagem_package = Number(updatedData.massagem_package) || 0;
