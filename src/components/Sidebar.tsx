@@ -20,7 +20,7 @@ export const Sidebar = () => {
   const location = useLocation();
 
   return (
-    <div className="fixed inset-y-0 left-0 w-64 bg-card border-r border-border">
+    <div className="fixed inset-y-0 left-0 w-64 bg-card border-r border-border z-[100]">
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="flex items-center px-6 py-4 border-b border-border">
