@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
 import Calculator from "./pages/Calculator";
 import Messages from "./pages/Messages";
+import NotionEditPage from "./pages/NotionEditPage";
 import NotFound from "./pages/NotFound";
 import { useVersionCheck } from "./hooks/useVersionCheck";
 
@@ -19,16 +20,26 @@ const AppContent = () => {
   
   return (
     <BrowserRouter>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/leads" element={<Leads />} />
-          <Route path="/calculator" element={<Calculator />} />
-          <Route path="/messages" element={<Messages />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Layout>
+      <Routes>
+        {/* Página isolada sem Layout/Sidebar */}
+        <Route path="/notion-edit/:pageId" element={<NotionEditPage />} />
+        
+        {/* Páginas com Layout/Sidebar */}
+        <Route
+          path="/*"
+          element={
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/leads" element={<Leads />} />
+                <Route path="/calculator" element={<Calculator />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Layout>
+          }
+        />
+      </Routes>
     </BrowserRouter>
   );
 };
