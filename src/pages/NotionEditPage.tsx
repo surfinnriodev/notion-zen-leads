@@ -93,7 +93,9 @@ export default function NotionEditPage() {
     "Aluguel prancha ilimitado",
     "Análise de vídeo (Extra)",
     "Análise de vídeo (Package)",
+    "Arrival",
     "Carioca Experience (extra)",
+    "Departure",
     "Hike (extra)",
     "Include breakfast",
     "Massagem (Extra)",
@@ -338,6 +340,22 @@ export default function NotionEditPage() {
         <p className="text-muted-foreground mt-2">
           Page ID: <code className="bg-muted px-2 py-1 rounded text-sm">{pageId}</code>
         </p>
+        
+        {/* Informações do Cliente (somente leitura) */}
+        <div className="mt-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Name:</span>
+            <span className="text-sm">{properties["Name"] || "—"}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Email:</span>
+            <span className="text-sm">{properties["Email"] || "—"}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Telefone:</span>
+            <span className="text-sm">{properties["Telefone"] || "—"}</span>
+          </div>
+        </div>
       </div>
 
       <Card>
