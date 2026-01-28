@@ -100,6 +100,7 @@ export default function NotionEditPage() {
     "Include breakfast",
     "Massagem (Extra)",
     "Massagem (Package)",
+    "Number of people",
     "Rio City Tour (extra)",
     "Skate",
     "Surf Guide (Package)",
@@ -115,10 +116,26 @@ export default function NotionEditPage() {
     allowedFieldsSet.has(key)
   );
   
+  // Ordenar campos: campos de data (Arrival, Departure) primeiro, depois os demais
+  const sortedProperties = [...filteredProperties].sort(([keyA], [keyB]) => {
+    const dateFields = ["Arrival", "Departure"];
+    const aIsDate = dateFields.includes(keyA);
+    const bIsDate = dateFields.includes(keyB);
+    
+    if (aIsDate && !bIsDate) return -1;
+    if (!aIsDate && bIsDate) return 1;
+    if (aIsDate && bIsDate) {
+      // Arrival antes de Departure
+      if (keyA === "Arrival" && keyB === "Departure") return -1;
+      if (keyA === "Departure" && keyB === "Arrival") return 1;
+    }
+    return 0; // Manter ordem original para os demais
+  });
+  
   console.log("🔍 [PAGE] Campos filtrados:", {
     total: Object.keys(properties).length,
     filtrados: filteredProperties.length,
-    campos: filteredProperties.map(([key]) => key),
+    campos: sortedProperties.map(([key]) => key),
   });
 
   // Função para renderizar campo baseado no tipo
@@ -368,7 +385,7 @@ export default function NotionEditPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredProperties
+              {sortedProperties
                 .filter(([key]) => key && key.trim() !== "") // Filtrar campos com nome vazio
                 .map(([key]) => {
                   const type = propertyTypes[key] || "rich_text";
