@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+﻿import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNotionPage } from "@/hooks/useNotionPage";
 import { Button } from "@/components/ui/button";
@@ -87,26 +87,28 @@ export default function NotionEditPage() {
 
   // Lista de campos permitidos para edição (baseado na imagem fornecida)
   // Usando os nomes exatos como aparecem no Notion
-  const allowedFields = [
-    "Aulas de Yoga",
-    "Aulas de surf",
-    "Aluguel prancha ilimitado",
-    "Análise de vídeo (Extra)",
-    "Análise de vídeo (Package)",
+  const fieldOrder = [
     "Arrival",
-    "Carioca Experience (extra)",
     "Departure",
-    "Hike (extra)",
-    "Include breakfast",
-    "Massagem (Extra)",
-    "Massagem (Package)",
     "Number of people",
-    "Rio City Tour (extra)",
+    "Include breakfast",
+    "Aulas de surf",
+    "Aulas de Yoga",
     "Skate",
     "Surf Guide (Package)",
+    "Massagem (Package)",
+    "Análise de vídeo (Package)",
+    "Massagem (Extra)",
+    "Análise de vídeo (Extra)",
     "Transfer (Extra) ", // Note: tem espaço no final no Notion
     "Transfer (Package)",
+    "Aluguel prancha ilimitado",
+    "Carioca Experience (extra)",
+    "Rio City Tour (extra)",
+    "Hike (extra)",
   ];
+
+  const allowedFields = fieldOrder;
   
   // Criar um Set para busca mais eficiente
   const allowedFieldsSet = new Set(allowedFields);
@@ -116,20 +118,17 @@ export default function NotionEditPage() {
     allowedFieldsSet.has(key)
   );
   
-  // Ordenar campos: campos de data (Arrival, Departure) primeiro, depois os demais
+  const fieldOrderIndex = new Map(fieldOrder.map((field, index) => [field, index]));
+
+  // Ordenar exatamente conforme a ordem desejada no layout
   const sortedProperties = [...filteredProperties].sort(([keyA], [keyB]) => {
-    const dateFields = ["Arrival", "Departure"];
-    const aIsDate = dateFields.includes(keyA);
-    const bIsDate = dateFields.includes(keyB);
-    
-    if (aIsDate && !bIsDate) return -1;
-    if (!aIsDate && bIsDate) return 1;
-    if (aIsDate && bIsDate) {
-      // Arrival antes de Departure
-      if (keyA === "Arrival" && keyB === "Departure") return -1;
-      if (keyA === "Departure" && keyB === "Arrival") return 1;
-    }
-    return 0; // Manter ordem original para os demais
+    const indexA = fieldOrderIndex.get(keyA);
+    const indexB = fieldOrderIndex.get(keyB);
+
+    if (indexA === undefined && indexB === undefined) return keyA.localeCompare(keyB);
+    if (indexA === undefined) return 1;
+    if (indexB === undefined) return -1;
+    return indexA - indexB;
   });
   
   console.log("🔍 [PAGE] Campos filtrados:", {
@@ -139,10 +138,23 @@ export default function NotionEditPage() {
   });
 
   // Função para renderizar campo baseado no tipo
+  const fieldLabels: Record<string, string> = {
+    "Number of people": "Number Of People",
+    "Include breakfast": "Breakfast",
+    "Aulas de surf": "Aulas De Surf",
+    "Aulas de Yoga": "Aulas De Yoga",
+    "Aluguel prancha ilimitado": "Aluguel Prancha Ilimitado",
+    "Carioca Experience (extra)": "Carioca Experience (Extra)",
+    "Rio City Tour (extra)": "Rio City tour",
+    "Hike (extra)": "Hike",
+  };
+
+  // Função para renderizar campo baseado no tipo
   const renderField = (key: string, value: any, type: string) => {
-    const label = key
+    const defaultLabel = key
       .replace(/_/g, " ")
       .replace(/\b\w/g, (l) => l.toUpperCase());
+    const label = fieldLabels[key] || defaultLabel;
 
     switch (type) {
       case "title":
@@ -264,7 +276,7 @@ export default function NotionEditPage() {
         // Se for um campo sim/não, usar opções fixas
         const isSimNaoField = simNaoFields.includes(key);
         const optionsToUse = isSimNaoField 
-          ? [{ name: "sim", id: "sim" }, { name: "não", id: "nao" }]
+          ? [{ name: "Sim", id: "Sim" }, { name: "Não", id: "Não" }]
           : multiSelectOptions;
         
         return (
@@ -362,7 +374,7 @@ export default function NotionEditPage() {
         <div className="mt-4 space-y-2">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-muted-foreground">Name:</span>
-            <span className="text-sm">{properties["Name"] || "—"}</span>
+            <span className="text-sm">{properties["Full Name"] || "—"}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-muted-foreground">Email:</span>
@@ -437,3 +449,6 @@ export default function NotionEditPage() {
     </div>
   );
 }
+
+
+
