@@ -9,6 +9,7 @@ import Leads from "./pages/Leads";
 import Calculator from "./pages/Calculator";
 import Messages from "./pages/Messages";
 import NotionEditPage from "./pages/NotionEditPage";
+import NotionPaymentPage from "./pages/NotionPaymentPage";
 import NotFound from "./pages/NotFound";
 import { useVersionCheck } from "./hooks/useVersionCheck";
 
@@ -23,6 +24,7 @@ const AppContent = () => {
       <Routes>
         {/* Página isolada sem Layout/Sidebar */}
         <Route path="/notion-edit/:pageId" element={<NotionEditPage />} />
+        <Route path="/notion-payment/:pageId" element={<NotionPaymentPage />} />
         
         {/* Páginas com Layout/Sidebar */}
         <Route
