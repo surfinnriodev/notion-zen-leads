@@ -209,7 +209,15 @@ export default function NotionEditPage() {
               id={key}
               type="date"
               value={value ? value.split("T")[0] : ""}
-              onChange={(e) => handleInputChange(key, e.target.value || null)}
+              // Envia a data com horário 12:00 no fuso BRT (-03:00) pra evitar bug de timezone.
+              // Sem isso, "2026-06-15" cru vira meia-noite UTC → 21h do dia ANTERIOR em BRT,
+              // e o Notion grava o dia errado.
+              onChange={(e) =>
+                handleInputChange(
+                  key,
+                  e.target.value ? `${e.target.value}T12:00:00.000-03:00` : null
+                )
+              }
             />
           </div>
         );
