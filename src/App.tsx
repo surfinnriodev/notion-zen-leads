@@ -6,8 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
-import Calculator from "./pages/Calculator";
-import Messages from "./pages/Messages";
+import Configuracoes from "./pages/Configuracoes";
 import NotionEditPage from "./pages/NotionEditPage";
 import NotionPaymentPage from "./pages/NotionPaymentPage";
 import NotFound from "./pages/NotFound";
@@ -18,14 +17,14 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   // Hook para verificar versão e forçar reload se necessário (importante para iOS)
   useVersionCheck();
-  
+
   return (
     <BrowserRouter>
       <Routes>
         {/* Página isolada sem Layout/Sidebar */}
         <Route path="/notion-edit/:pageId" element={<NotionEditPage />} />
         <Route path="/notion-payment/:pageId" element={<NotionPaymentPage />} />
-        
+
         {/* Páginas com Layout/Sidebar */}
         <Route
           path="/*"
@@ -34,8 +33,7 @@ const AppContent = () => {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/leads" element={<Leads />} />
-                <Route path="/calculator" element={<Calculator />} />
-                <Route path="/messages" element={<Messages />} />
+                <Route path="/configuracoes" element={<Configuracoes />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>

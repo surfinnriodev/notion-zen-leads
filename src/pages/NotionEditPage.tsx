@@ -1,6 +1,10 @@
 ﻿import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNotionPage } from "@/hooks/useNotionPage";
+import { supabase } from "@/integrations/supabase/client";
+import { CotacaoPanel } from "@/components/leads/CotacaoPanel";
+import type { NotionReserva } from "@/types/leads";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,8 +19,26 @@ import { toast } from "sonner";
 export default function NotionEditPage() {
   const { pageId } = useParams<{ pageId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data, isLoading, error, updatePage, isUpdating } = useNotionPage(pageId || null);
   const [formData, setFormData] = useState<Record<string, any>>({});
+
+  // Busca a linha correspondente em `reservations` (via notion_page_id) pra
+  // alimentar o CotacaoPanel — que espera o shape da tabela, não das props do Notion.
+  const { data: reservaLead, refetch: refetchReserva } = useQuery({
+    queryKey: ["notion-edit-reserva", pageId],
+    queryFn: async () => {
+      if (!pageId) return null;
+      const { data: rows, error } = await supabase
+        .from("reservations")
+        .select("*")
+        .eq("notion_page_id", pageId)
+        .limit(1);
+      if (error) throw error;
+      return (rows?.[0] as NotionReserva) ?? null;
+    },
+    enabled: !!pageId,
+  });
 
   // Inicializar formData quando os dados forem carregados
   useEffect(() => {
@@ -34,13 +56,16 @@ export default function NotionEditPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!pageId) {
       toast.error("Page ID não encontrado");
       return;
     }
 
     updatePage(formData);
+    // Depois de salvar, `notion-update-card` também atualiza `reservations`.
+    // Espera o PATCH terminar (~1s) e refetch pra CotacaoPanel refletir.
+    setTimeout(() => refetchReserva(), 1500);
   };
 
   if (isLoading) {
@@ -399,7 +424,7 @@ export default function NotionEditPage() {
         <CardHeader>
           <CardTitle>Campos da Página</CardTitle>
           <CardDescription>
-            Edite os campos abaixo e clique em "Salvar" para atualizar no Notion via N8N
+            Edite os campos abaixo e clique em "Salvar" para atualizar no Notion via Supabase
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -442,6 +467,15 @@ export default function NotionEditPage() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Painel de cotação + envio de e-mails (mesma lógica do LeadDetailModal).
+          Ocultado se ainda não temos a linha em `reservations` (leads legados
+          criados via n8n sem `notion_page_id` linkado). */}
+      {reservaLead && (
+        <div className="mt-6">
+          <CotacaoPanel lead={reservaLead} />
+        </div>
+      )}
 
       {data.last_edited_time && (
         <Card className="mt-4">

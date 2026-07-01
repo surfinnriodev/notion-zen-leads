@@ -102,7 +102,7 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
 
   // Aluguel de prancha ilimitado (vai para valor depósito, como serviço) - SEMPRE calcular se solicitado
   if (input.unlimitedBoardRental && input.unlimitedBoardRental > 0) {
-    const boardItem = config.items.find(item => item.id === 'unlimited-board-rental');
+    const boardItem = config.items.find(item => item.id === 'aluguel_prancha');
     if (boardItem) {
       const cost = boardItem.price * numberOfNights * (boardItem.billingType === 'per_person' ? numberOfPeople : 1);
       // Mover para fixedItemsCost ao invés de dailyItemsCost

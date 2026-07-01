@@ -3,17 +3,15 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Users,
-  Calculator,
   Home,
-  MessageCircle
+  Settings
 } from "lucide-react";
 import { VersionBadge } from "./VersionBadge";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: Home },
   { name: "Leads", href: "/leads", icon: Users },
-  { name: "Calculadora", href: "/calculator", icon: Calculator },
-  { name: "Mensagens", href: "/messages", icon: MessageCircle },
+  { name: "Configurações", href: "/configuracoes", icon: Settings },
 ];
 
 export const Sidebar = () => {
