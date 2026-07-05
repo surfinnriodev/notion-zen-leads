@@ -65,9 +65,9 @@ export const FilterOptions = ({
   ).length;
 
   return (
-    <div className="flex items-center gap-2 w-full sm:w-auto">
+    <div className="flex items-center gap-2 w-full sm:w-auto min-w-0">
       {/* Busca */}
-      <div className="relative flex-1 sm:flex-initial">
+      <div className="relative flex-1 sm:flex-initial min-w-0">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           placeholder="Buscar..."
