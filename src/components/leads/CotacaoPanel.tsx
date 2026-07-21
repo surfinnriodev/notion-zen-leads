@@ -546,7 +546,7 @@ const CotacaoPanelView = ({
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Modo teste: emails vão pra <code>lucas.carmo@flowcode.cc</code> + <code>surfinnrio@gmail.com</code>.
+            Envio real: o email vai pro endereço do lead, com cópia (BCC) pra <code>surfinnrio@gmail.com</code>.
           </p>
         </div>
 
