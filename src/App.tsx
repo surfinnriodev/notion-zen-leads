@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
+import Emails from "./pages/Emails";
 import Configuracoes from "./pages/Configuracoes";
 import NotionEditPage from "./pages/NotionEditPage";
 import NotionPaymentPage from "./pages/NotionPaymentPage";
@@ -33,6 +34,7 @@ const AppContent = () => {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/leads" element={<Leads />} />
+                <Route path="/emails" element={<Emails />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

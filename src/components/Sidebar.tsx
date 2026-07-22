@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Users,
   Home,
+  Mail,
   Settings
 } from "lucide-react";
 import { VersionBadge } from "./VersionBadge";
@@ -11,6 +12,7 @@ import { VersionBadge } from "./VersionBadge";
 const navigation = [
   { name: "Dashboard", href: "/", icon: Home },
   { name: "Leads", href: "/leads", icon: Users },
+  { name: "Emails", href: "/emails", icon: Mail },
   { name: "Configurações", href: "/configuracoes", icon: Settings },
 ];
 
