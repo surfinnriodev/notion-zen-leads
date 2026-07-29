@@ -62,7 +62,14 @@ export default function NotionEditPage() {
       return;
     }
 
-    updatePage(formData);
+    // Não enviamos "Tipo Transfer": quando ele vem preenchido, o `notion-update-card`
+    // usa o tipo (Complete = 2 trechos) e IGNORA a quantidade — então editar o número
+    // de transfers aqui não refletia no valor. Omitindo, o cálculo segue a quantidade:
+    // 1 = One Way (R$300), 2 = Both Ways (R$600), × veículos (ceil(pax/3)).
+    const payload = { ...formData };
+    delete payload["Tipo Transfer"];
+
+    updatePage(payload);
     // Depois de salvar, `notion-update-card` também atualiza `reservations`.
     // Espera o PATCH terminar (~1s) e refetch pra CotacaoPanel refletir.
     setTimeout(() => refetchReserva(), 1500);
