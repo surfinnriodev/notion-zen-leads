@@ -30,26 +30,37 @@ export const AVAILABLE_PRICING_ITEMS: PricingItem[] = [
   { id: 'transfer_package', name: 'Transfer (pacote)', price: 300, billingType: 'per_reservation', category: 'fixed', dbColumn: 'transfer_package' },
 ];
 
-export const usePricingConfig = () => {
+// Região da operação. Cada região tem sua própria linha em `pricing_config`
+// (preços, quartos e pacotes independentes). Rio é o default — as configs
+// antigas têm region NULL, por isso "rio" também aceita NULL.
+export type Region = 'rio' | 'bahia';
+
+// Filtro de região: "rio" cobre também as linhas legadas (region NULL).
+const regionFilter = (q: any, region: Region) =>
+  region === 'rio' ? q.or('region.eq.rio,region.is.null') : q.eq('region', region);
+
+export const usePricingConfig = (region: Region = 'rio') => {
   const queryClient = useQueryClient();
 
-  // Buscar configuração ativa
+  // Buscar configuração ativa DA REGIÃO. Sem o filtro de região, uma config nova
+  // (ex: Bahia) sequestraria o preço do Rio — é a config ativa mais recente que vence.
   const { data: config, isLoading, error } = useQuery({
-    queryKey: ['pricing-config'],
+    queryKey: ['pricing-config', region],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('pricing_config')
-        .select('*')
-        .eq('is_active', true)
+      const { data, error } = await regionFilter(
+        supabase.from('pricing_config').select('*').eq('is_active', true),
+        region,
+      )
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
       if (error) {
-        // Se não encontrar configuração ativa, buscar a primeira disponível
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('pricing_config')
-          .select('*')
+        // Se não encontrar configuração ativa, buscar a primeira disponível DA REGIÃO
+        const { data: fallbackData, error: fallbackError } = await regionFilter(
+          supabase.from('pricing_config').select('*'),
+          region,
+        )
           .order('created_at', { ascending: false })
           .limit(1)
           .single();
@@ -171,8 +182,9 @@ export const usePricingConfig = () => {
         const { data, error } = await supabase
           .from('pricing_config')
           .insert({
-            name: 'Configuração Atualizada',
-            description: 'Configuração de preços atualizada',
+            name: `Configuração ${region}`,
+            description: `Configuração de preços — ${region}`,
+            region,
             room_categories: newConfig.roomCategories,
             packages: newConfig.packages,
             items: newConfig.items,
