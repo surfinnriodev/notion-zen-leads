@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRegion, applyRegion } from "@/contexts/RegionContext";
 import { supabase } from '@/integrations/supabase/client';
 
 export interface StatusInfo {
@@ -10,6 +11,7 @@ export interface StatusInfo {
 }
 
 export const useKanbanStatuses = () => {
+  const region = useRegion();
   const [statuses, setStatuses] = useState<StatusInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,10 +35,10 @@ export const useKanbanStatuses = () => {
         ];
 
         // Buscar status únicos dos dados reais
-        const { data: statusData } = await supabase
-          .from('reservations')
-          .select('status')
-          .not('status', 'is', null);
+        const { data: statusData } = await applyRegion(
+          supabase.from('reservations').select('status'),
+          region,
+        ).not('status', 'is', null);
 
         console.log('🔍 Status data from DB:', statusData);
 
@@ -55,10 +57,10 @@ export const useKanbanStatuses = () => {
         console.log('📊 Status counts:', statusCounts);
 
         // Buscar leads sem status
-        const { count: noStatusCount } = await supabase
-          .from('reservations')
-          .select('*', { count: 'exact', head: true })
-          .or('status.is.null,status.eq.');
+        const { count: noStatusCount } = await applyRegion(
+          supabase.from('reservations').select('*', { count: 'exact', head: true }),
+          region,
+        ).or('status.is.null,status.eq.');
 
         const getStatusColor = (index: number) => {
           const colors = [
@@ -158,7 +160,7 @@ export const useKanbanStatuses = () => {
     };
 
     loadStatuses();
-  }, []);
+  }, [region]);
 
   return { statuses, isLoading };
 };

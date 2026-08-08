@@ -12,6 +12,7 @@ import NotionEditPage from "./pages/NotionEditPage";
 import NotionPaymentPage from "./pages/NotionPaymentPage";
 import NotFound from "./pages/NotFound";
 import { useVersionCheck } from "./hooks/useVersionCheck";
+import { RegionProvider } from "./contexts/RegionContext";
 
 const queryClient = new QueryClient();
 
@@ -26,19 +27,38 @@ const AppContent = () => {
         <Route path="/notion-edit/:pageId" element={<NotionEditPage />} />
         <Route path="/notion-payment/:pageId" element={<NotionPaymentPage />} />
 
-        {/* Páginas com Layout/Sidebar */}
+        {/* Bahia — mesmas telas, escopadas por região. Precisa vir ANTES de "/*". */}
+        <Route
+          path="/bahia/*"
+          element={
+            <RegionProvider region="bahia">
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Leads />} />
+                  <Route path="/leads" element={<Leads />} />
+                  <Route path="/configuracoes" element={<Configuracoes />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            </RegionProvider>
+          }
+        />
+
+        {/* Páginas com Layout/Sidebar — Rio (rotas legadas, sem prefixo) */}
         <Route
           path="/*"
           element={
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/leads" element={<Leads />} />
-                <Route path="/emails" element={<Emails />} />
-                <Route path="/configuracoes" element={<Configuracoes />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Layout>
+            <RegionProvider region="rio">
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/leads" element={<Leads />} />
+                  <Route path="/emails" element={<Emails />} />
+                  <Route path="/configuracoes" element={<Configuracoes />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            </RegionProvider>
           }
         />
       </Routes>

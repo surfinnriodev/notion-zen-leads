@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRegion, applyRegion } from "@/contexts/RegionContext";
 import { Button } from "@/components/ui/button";
 import { List, LayoutGrid, Plus } from "lucide-react";
 import { LeadsList } from "@/components/leads/LeadsList";
@@ -13,6 +14,7 @@ import type { LeadWithCalculation } from "@/types/leads";
 export type ViewMode = "list" | "board";
 
 const Leads = () => {
+  const region = useRegion();
   const [viewMode, setViewMode] = useState<ViewMode>("board");
   const { config } = usePricingConfig();
   const [isCreating, setIsCreating] = useState(false);
@@ -20,12 +22,12 @@ const Leads = () => {
 
   // Query para buscar leads e contar
   const { data: leads } = useQuery({
-    queryKey: ["leads", config],
+    queryKey: ["leads", region, config],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("reservations")
-        .select("*")
-        .order('created_at', { ascending: false });
+      const { data, error } = await applyRegion(
+        supabase.from("reservations").select("*"),
+        region,
+      ).order('created_at', { ascending: false });
 
       if (error) {
         throw error;

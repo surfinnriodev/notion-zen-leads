@@ -1,8 +1,10 @@
 import { PricingConfigForm } from "@/components/calculator/PricingConfigForm";
+import { useRegion } from '@/contexts/RegionContext';
 import { usePricingConfig } from "@/hooks/usePricingConfig";
 
 const Configuracoes = () => {
-  const { config, updateConfig, resetToDefault } = usePricingConfig();
+  const region = useRegion();
+  const { config, updateConfig, resetToDefault } = usePricingConfig(region);
 
   return (
     <div className="p-6">

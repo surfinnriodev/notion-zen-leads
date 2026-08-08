@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { LeadWithCalculation, calculateLeadPrice } from "@/types/leads";
 import { usePricingConfig } from "@/hooks/usePricingConfig";
+import { useRegion, applyRegion } from "@/contexts/RegionContext";
 import { LeadListItem } from "./LeadListItem";
 import { FilterOptions, FilterConfig } from "./FilterOptions";
 import { SortOptions, SortConfig } from "./SortOptions";
@@ -11,22 +12,23 @@ import { SortOptions, SortConfig } from "./SortOptions";
 type Lead = Tables<"reservations">;
 
 export const LeadsList = () => {
+  const region = useRegion();
   console.log("📋 LeadsList component iniciado!");
-  const { config } = usePricingConfig();
+  const { config } = usePricingConfig(region);
 
   // Estados para filtros e ordenação
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'created', direction: 'desc' });
   const [filterConfig, setFilterConfig] = useState<FilterConfig>({ search: '' });
 
   const { data: leads, isLoading, error: queryError } = useQuery({
-    queryKey: ["leads", config],
+    queryKey: ["leads", region, config],
     queryFn: async () => {
       console.log("🔍 LeadsList fazendo query na tabela reservas...");
 
-      const { data, error } = await supabase
-        .from("reservations")
-        .select("*")
-        .order('created_at', { ascending: false });
+      const { data, error } = await applyRegion(
+        supabase.from("reservations").select("*"),
+        region,
+      ).order('created_at', { ascending: false });
 
       console.log("📊 LeadsList resultado:", { data, error, count: data?.length });
 

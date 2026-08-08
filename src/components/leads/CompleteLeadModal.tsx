@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { LeadWithCalculation, calculateLeadPrice, mapReservaToLegacyFormat } from "@/types/leads";
 import { usePricingConfig } from "@/hooks/usePricingConfig";
+import { useRegion } from "@/contexts/RegionContext";
 import { useKanbanStatuses } from "@/hooks/useKanbanStatuses";
 import {
   Dialog,
@@ -39,7 +40,8 @@ interface CompleteLeadModalProps {
 }
 
 export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalProps) => {
-  const { config } = usePricingConfig();
+  const region = useRegion();
+  const { config } = usePricingConfig(region);
   const { statuses: kanbanStatuses } = useKanbanStatuses();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<LeadWithCalculation>>({});
@@ -174,9 +176,10 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       // Verificar se é criação ou edição
       if (lead.id === 0) {
         // Criação de novo lead
+        // Carimba a região da tela: sem isso o lead nasceria como Rio (region null).
         const { data, error } = await supabase
           .from("reservations")
-          .insert(mappedData)
+          .insert({ ...mappedData, region })
           .select()
           .single();
 

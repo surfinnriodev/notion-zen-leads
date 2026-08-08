@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useRegion, applyRegion } from "@/contexts/RegionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateLeadPrice } from "@/types/leads";
 import { usePricingConfig } from "./usePricingConfig";
@@ -33,18 +34,19 @@ interface DashboardMetrics {
 }
 
 export const useDashboardData = () => {
+  const region = useRegion();
   const { config } = usePricingConfig();
 
   return useQuery({
-    queryKey: ["dashboard-metrics", config],
+    queryKey: ["dashboard-metrics", region, config],
     queryFn: async (): Promise<DashboardMetrics> => {
       console.log("🔍 Buscando dados para dashboard...");
 
       // Buscar todos os leads da tabela reservations
-      const { data: leads, error } = await supabase
-        .from("reservations")
-        .select("*")
-        .order('created_at', { ascending: false });
+      const { data: leads, error } = await applyRegion(
+        supabase.from("reservations").select("*"),
+        region,
+      ).order('created_at', { ascending: false });
 
       if (error) {
         console.error("❌ Erro ao buscar leads:", error);

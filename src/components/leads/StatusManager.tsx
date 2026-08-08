@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRegion, applyRegion } from "@/contexts/RegionContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,7 @@ interface StatusManagerProps {
 }
 
 export const StatusManager = ({ onStatusChange }: StatusManagerProps) => {
+  const region = useRegion();
   const [isOpen, setIsOpen] = useState(false);
   const [statuses, setStatuses] = useState<StatusInfo[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -30,13 +32,13 @@ export const StatusManager = ({ onStatusChange }: StatusManagerProps) => {
 
   // Query para buscar todos os status existentes nos dados
   const { data: statusData, refetch } = useQuery({
-    queryKey: ["status-analysis"],
+    queryKey: ["status-analysis", region],
     queryFn: async () => {
       // Buscar todos os status únicos
-      const { data: statusData, error } = await supabase
-        .from('reservations')
-        .select('status')
-        .not('status', 'is', null);
+      const { data: statusData, error } = await applyRegion(
+        supabase.from('reservations').select('status'),
+        region,
+      ).not('status', 'is', null);
 
       if (error) throw error;
 
@@ -50,10 +52,10 @@ export const StatusManager = ({ onStatusChange }: StatusManagerProps) => {
       });
 
       // Buscar leads sem status
-      const { count: noStatusCount } = await supabase
-        .from('reservations')
-        .select('*', { count: 'exact', head: true })
-        .or('status.is.null,status.eq.');
+      const { count: noStatusCount } = await applyRegion(
+        supabase.from('reservations').select('*', { count: 'exact', head: true }),
+        region,
+      ).or('status.is.null,status.eq.');
 
       return { statusCounts, noStatusCount: noStatusCount || 0 };
     },

@@ -6,6 +6,7 @@ import { LeadWithCalculation, calculateLeadPrice } from "@/types/leads";
 import { DroppableColumn } from "./DroppableColumn";
 import { SortableColumn } from "./SortableColumn";
 import { usePricingConfig } from "@/hooks/usePricingConfig";
+import { useRegion, applyRegion, type Region } from "@/contexts/RegionContext";
 // Componentes removidos: StatusManager e BulkStatusEditor
 import { SortOptions, SortConfig } from "./SortOptions";
 import { FilterOptions, FilterConfig } from "./FilterOptions";
@@ -38,13 +39,13 @@ interface StatusInfo {
 type Lead = Tables<"reservations">;
 
 // Função para gerar configuração padrão baseada nos dados reais
-const generateDefaultColumns = async (): Promise<StatusInfo[]> => {
+const generateDefaultColumns = async (region: Region): Promise<StatusInfo[]> => {
   try {
     // Buscar status únicos dos dados reais
-    const { data: statusData } = await supabase
-      .from('reservations')
-      .select('status')
-      .not('status', 'is', null);
+    const { data: statusData } = await applyRegion(
+      supabase.from('reservations').select('status'),
+      region,
+    ).not('status', 'is', null);
 
     const statusCounts: Record<string, number> = {};
     statusData?.forEach(item => {
@@ -59,10 +60,10 @@ const generateDefaultColumns = async (): Promise<StatusInfo[]> => {
     });
 
     // Buscar leads sem status
-    const { count: noStatusCount } = await supabase
-      .from('reservations')
-      .select('*', { count: 'exact', head: true })
-      .or('status.is.null,status.eq.');
+    const { count: noStatusCount } = await applyRegion(
+      supabase.from('reservations').select('*', { count: 'exact', head: true }),
+      region,
+    ).or('status.is.null,status.eq.');
 
     // Ordem padrão dos status conforme solicitado
     const defaultStatusOrder = [
@@ -153,14 +154,14 @@ const getStatusColor = (index: number) => {
 };
 
 // Função para carregar/salvar configurações de status
-const getStatusConfig = async (): Promise<StatusInfo[]> => {
+const getStatusConfig = async (region: Region): Promise<StatusInfo[]> => {
   try {
     // Sempre gerar nova configuração com ordem padrão
-    const defaultColumns = await generateDefaultColumns();
+    const defaultColumns = await generateDefaultColumns(region);
     localStorage.setItem('leads-status-config', JSON.stringify(defaultColumns));
     return defaultColumns;
   } catch {
-    return await generateDefaultColumns();
+    return await generateDefaultColumns(region);
   }
 };
 
@@ -169,8 +170,9 @@ const saveStatusConfig = (config: StatusInfo[]) => {
 };
 
 export const LeadsBoard = () => {
+  const region = useRegion();
   console.log("🚀 LeadsBoard component iniciado!");
-  const { config } = usePricingConfig();
+  const { config } = usePricingConfig(region);
   const queryClient = useQueryClient();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [columns, setColumns] = useState<StatusInfo[]>([]);
@@ -185,7 +187,7 @@ export const LeadsBoard = () => {
     const loadColumns = async () => {
       setIsLoadingColumns(true);
       try {
-        const loadedColumns = await getStatusConfig();
+        const loadedColumns = await getStatusConfig(region);
         setColumns(loadedColumns);
       } catch (e) {
         console.error('Erro ao carregar colunas:', e);
@@ -240,22 +242,22 @@ export const LeadsBoard = () => {
   );
 
   const { data: leads, isLoading, error: queryError } = useQuery({
-    queryKey: ["leads-board", config],
+    queryKey: ["leads-board", region, config],
     queryFn: async () => {
       console.log("🔍 Fazendo query na tabela reservas...");
 
       // Primeiro, vamos testar uma query simples para ver se há dados
-      const testQuery = await supabase
-        .from("reservations")
-        .select("id, name")
-        .limit(5);
+      const testQuery = await applyRegion(
+        supabase.from("reservations").select("id, name"),
+        region,
+      ).limit(5);
 
       console.log("🧪 Teste simples na tabela:", testQuery);
 
-      const { data, error } = await supabase
-        .from("reservations")
-        .select("*")
-        .order('updated_at', { ascending: false }); // Ordenar por updated_at (mais recentes primeiro)
+      const { data, error } = await applyRegion(
+        supabase.from("reservations").select("*"),
+        region,
+      ).order('updated_at', { ascending: false }); // Ordenar por updated_at (mais recentes primeiro)
 
       console.log("📊 Resultado da query:", { data, error, count: data?.length });
 
