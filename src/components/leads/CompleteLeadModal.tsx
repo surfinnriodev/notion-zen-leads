@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { LeadWithCalculation, calculateLeadPrice, mapReservaToLegacyFormat } from "@/types/leads";
-import { usePricingConfig } from "@/hooks/usePricingConfig";
+import { usePricingConfig, AVAILABLE_PRICING_ITEMS } from "@/hooks/usePricingConfig";
 import { useRegion } from "@/contexts/RegionContext";
 import { useKanbanStatuses } from "@/hooks/useKanbanStatuses";
 import {
@@ -42,6 +42,20 @@ interface CompleteLeadModalProps {
 export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalProps) => {
   const region = useRegion();
   const { config } = usePricingConfig(region);
+
+  // Itens da configuração que NÃO têm campo fixo no formulário — ou seja, os que
+  // o usuário criou em Configurações → Itens de Cobrança. Os fixos (café, aulas,
+  // transfer…) já têm coluna e campo próprios e são tratados acima.
+  const camposFixos = new Set(AVAILABLE_PRICING_ITEMS.map((i) => i.id));
+  const ITENS_COM_CAMPO_PROPRIO = new Set([
+    ...camposFixos,
+    'breakfast', 'unlimited-board-rental', 'yoga-lesson', 'surf-skate',
+    'analise_de_video', 'massage', 'surf-guide', 'transfer', 'hike',
+    'rio-city-tour', 'carioca-experience', 'skate', 'surf-lesson',
+  ]);
+  const customItems = ((config as any)?.items || []).filter(
+    (i: any) => i?.id && !ITENS_COM_CAMPO_PROPRIO.has(i.id),
+  );
   const { statuses: kanbanStatuses } = useKanbanStatuses();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<LeadWithCalculation>>({});
@@ -155,6 +169,15 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
       if (updatedData.massagem_package !== undefined) mappedData.massagem_package = Number(updatedData.massagem_package) || 0;
       if (updatedData.surf_guide_package !== undefined) mappedData.surf_guide_package = Number(updatedData.surf_guide_package) || 0;
       if (updatedData.transfer_extra !== undefined) mappedData.transfer_extra = Number(updatedData.transfer_extra) || 0;
+
+      // Itens criados em Configurações (id -> quantidade). Guarda só os > 0, pra
+      // não acumular zeros no JSON conforme os itens vão e vêm da configuração.
+      if (updatedData.custom_items !== undefined) {
+        const limpos = Object.fromEntries(
+          Object.entries(updatedData.custom_items || {}).filter(([, q]) => Number(q) > 0),
+        );
+        mappedData.custom_items = Object.keys(limpos).length > 0 ? limpos : null;
+      }
       if (updatedData.transfer_package !== undefined) mappedData.transfer_package = Number(updatedData.transfer_package) || 0;
 
       // Booleans fields - mapping to correct database field names
@@ -975,6 +998,44 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 </div>
               </div>
             </div>
+
+            {/* Itens criados em Configurações → Itens de Cobrança.
+                Os campos acima são fixos (cada um tem coluna própria no banco);
+                estes vêm da configuração da região e ficam em custom_items. */}
+            {customItems.length > 0 && (
+              <>
+                <Separator />
+                <div className="space-y-3 sm:space-y-4">
+                  <h3 className="font-medium text-base sm:text-lg">Outros Serviços</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    {customItems.map((item: any) => (
+                      <div key={item.id}>
+                        <Label htmlFor={`custom-${item.id}`}>{item.name}</Label>
+                        <Input
+                          id={`custom-${item.id}`}
+                          type="number"
+                          min="0"
+                          step="1"
+                          className="w-full"
+                          value={(formData.custom_items || {})[item.id] || 0}
+                          onChange={(e) => {
+                            const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                            handleInputChange("custom_items", {
+                              ...(formData.custom_items || {}),
+                              [item.id]: value,
+                            });
+                          }}
+                          onFocus={(e) => e.target.select()}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          R$ {item.price} {item.billingType === 'per_person' ? 'por pessoa' : 'por unidade'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
 
             <Separator />
 

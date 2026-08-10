@@ -132,6 +132,10 @@ export function convertLeadToCalculationInput(lead: NotionReserva, config?: any)
     hike: lead.hike_extra ? (lead.number_of_people || 1) : 0,
     rioCityTour: lead.rio_city_tour ? (lead.number_of_people || 1) : 0,
     cariocaExperience: lead.carioca_experience ? (lead.number_of_people || 1) : 0,
+
+    // Itens criados em Configurações (id -> quantidade). Coluna nullable:
+    // lead antigo vem null e o cálculo simplesmente ignora.
+    customItems: (lead as any).custom_items || undefined,
   };
 }
 

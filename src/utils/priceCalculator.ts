@@ -340,6 +340,27 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
     }
   });
 
+  // Itens criados pelo usuário em Configurações → Itens de Cobrança (não têm campo
+  // fixo no formulário). Só entram os que têm quantidade > 0 E ainda existem na
+  // configuração: se o item for apagado das Configurações, ele some do cálculo
+  // sozinho, sem quebrar o lead que o tinha.
+  if (input.customItems) {
+    Object.entries(input.customItems).forEach(([itemId, qty]) => {
+      if (!qty || qty <= 0) return;
+      const item = config.items.find(i => i.id === itemId);
+      if (!item || !item.price) return;
+      const quantidade = qty * (item.billingType === 'per_person' ? numberOfPeople : 1);
+      const cost = item.price * quantidade;
+      result.fixedItemsCost += cost;
+      result.breakdown.fixedItems.push({
+        name: item.name,
+        quantity: quantidade,
+        unitPrice: item.price,
+        cost,
+      });
+    });
+  }
+
   // Calcular total
   result.totalCost = result.packageCost + result.accommodationCost + result.dailyItemsCost + result.fixedItemsCost;
 

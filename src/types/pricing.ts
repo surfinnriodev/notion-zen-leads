@@ -70,6 +70,10 @@ export interface CalculationInput {
   hike?: number;
   rioCityTour?: number;
   cariocaExperience?: number;
+
+  // Itens criados pelo usuário em Configurações → Itens de Cobrança
+  // (id do item -> quantidade). Os itens fixos acima continuam com campo próprio.
+  customItems?: Record<string, number>;
 }
 
 export interface CalculationResult {
