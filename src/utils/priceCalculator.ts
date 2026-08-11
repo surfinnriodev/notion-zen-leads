@@ -86,7 +86,8 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
       result.dailyItemsCost += cost;
       breakfastOnlyCost = cost; // Salvar custo apenas do café da manhã
       
-      let breakfastName = 'Café da manhã';
+      // Nome da config da região (o Rio tem "Café da Manhã", igual ao de antes).
+      let breakfastName = breakfastItem.name || 'Café da manhã';
       if (packageIncludes.breakfast) {
         breakfastName += ' (incluído no pacote)';
       }
@@ -331,7 +332,10 @@ export const calculatePrice = (input: CalculationInput, config: PricingConfig | 
         const cost = item.price * activity.value * (item.billingType === 'per_person' ? numberOfPeople : 1);
         result.fixedItemsCost += cost;
         result.breakdown.fixedItems.push({
-          name: activity.name,
+          // Nome vem da configuração da região: a Bahia renomeou estes itens
+          // (hike -> "Water Fall by boat", rio-city-tour -> "Rafting"). No Rio
+          // a config tem exatamente os mesmos nomes de antes, então nada muda lá.
+          name: item.name || activity.name,
           quantity: activity.value * (item.billingType === 'per_person' ? numberOfPeople : 1),
           unitPrice: item.price,
           cost,

@@ -220,6 +220,9 @@ const CotacaoPanelView = ({
   lead, nights, people, total, retainedValue, pendingValue,
   accommodationCost, accommodationOverride, dailyItemsCost, fixedItemsCost, extraFee, calculation,
 }: ViewProps) => {
+  // Região da tela: define se mostramos a escolha de Casa e o envio de email
+  // (os 3 templates existentes são todos da operação do Rio).
+  const region = useRegion();
   const [casa, setCasa] = useState<Casa>("axe");
   const [moeda, setMoeda] = useState<Moeda>("BRL");
   const [rate, setRate] = useState<number | null>(1);
@@ -467,17 +470,22 @@ const CotacaoPanelView = ({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Casa</label>
-              <Select value={casa} onValueChange={(v) => setCasa(v as Casa)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="axe">Axé</SelectItem>
-                  <SelectItem value="pontal">Pontal</SelectItem>
-                  <SelectItem value="lbp">LBP</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Casa só existe no Rio (Axé/Pontal/LBP são as casas de lá e os
+                templates de email são todos do Rio). A Bahia não tem template
+                próprio ainda, então nem mostramos a escolha. */}
+            {region !== "bahia" && (
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Casa</label>
+                <Select value={casa} onValueChange={(v) => setCasa(v as Casa)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="axe">Axé</SelectItem>
+                    <SelectItem value="pontal">Pontal</SelectItem>
+                    <SelectItem value="lbp">LBP</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Moeda do cliente</label>
               <Select value={moeda} onValueChange={(v) => setMoeda(v as Moeda)}>
@@ -521,6 +529,15 @@ const CotacaoPanelView = ({
             </div>
           )}
 
+          {/* Bahia ainda não tem template de email próprio — os 3 disponíveis são
+              do Rio (endereço no Recreio, conteúdo do Rio). Enviar um deles pra um
+              hóspede de Itacaré manda informação errada, então bloqueamos. */}
+          {region === "bahia" ? (
+            <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+              Envio de email ainda não disponível para a Bahia — os templates existentes
+              são da operação do Rio. A cotação acima pode ser copiada e enviada à mão.
+            </div>
+          ) : (
           <div className="grid grid-cols-3 gap-2 pt-1">
             <Button size="sm" variant="outline" disabled={!!sending} onClick={() => sendEmail("orcamento")}>
               {sending === TEMPLATE_MAP[casa].orcamento ? (
@@ -547,9 +564,12 @@ const CotacaoPanelView = ({
               <span className="ml-1">Confirmação</span>
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Envio real: o email vai pro endereço do lead, com cópia (BCC) pra <code>surfinnrio@gmail.com</code>.
-          </p>
+          )}
+          {region !== "bahia" && (
+            <p className="text-xs text-muted-foreground">
+              Envio real: o email vai pro endereço do lead, com cópia (BCC) pra <code>surfinnrio@gmail.com</code>.
+            </p>
+          )}
         </div>
 
         {((lead as any).id && (history.length > 0 || historyLoading)) && (
