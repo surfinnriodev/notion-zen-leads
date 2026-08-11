@@ -47,3 +47,27 @@ export function itemAtivo(config: any, itemId: string, quantidadeAtual?: number 
   if (quantidadeAtual && Number(quantidadeAtual) > 0) return true;
   return (config?.items ?? []).some((i: any) => i?.id === itemId);
 }
+
+const brl = (v: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 }).format(v);
+
+// Preço configurado do item, pra mostrar ao lado do campo no lead e o operador
+// conferir sem abrir as Configurações. Ex: "R$ 280 · por pessoa".
+// Retorna "" quando o item não existe na região (aí o campo nem deveria aparecer).
+export function itemPreco(config: any, itemId: string): string {
+  const item = (config?.items ?? []).find((i: any) => i?.id === itemId);
+  if (!item) return "";
+  const preco = Number(item.price) || 0;
+  const cobranca = item.billingType === "per_person" ? "por pessoa"
+    : item.billingType === "per_reservation" ? "por reserva"
+    : "por unidade";
+  return `${brl(preco)} · ${cobranca}`;
+}
+
+// Aulas de surf não têm preço único: o valor por aula cai de faixa conforme o
+// total de aulas (tier1 = 1-3, tier2 = 4-7, tier3 = 8+). Mostramos as três.
+export function precoAulasSurf(config: any): string {
+  const t = config?.surfLessonPricing ?? config?.surf_lesson_pricing;
+  if (!t) return "";
+  return `1-3: ${brl(Number(t.tier1) || 0)} · 4-7: ${brl(Number(t.tier2) || 0)} · 8+: ${brl(Number(t.tier3) || 0)} por aula`;
+}

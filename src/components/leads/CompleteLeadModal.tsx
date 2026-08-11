@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LeadWithCalculation, calculateLeadPrice, mapReservaToLegacyFormat } from "@/types/leads";
 import { usePricingConfig, AVAILABLE_PRICING_ITEMS } from "@/hooks/usePricingConfig";
 import { useRegion } from "@/contexts/RegionContext";
-import { roomOptions, itemLabel, itemAtivo } from "@/utils/configOptions";
+import { roomOptions, itemLabel, itemAtivo, itemPreco, precoAulasSurf } from "@/utils/configOptions";
 import { useKanbanStatuses } from "@/hooks/useKanbanStatuses";
 import {
   Dialog,
@@ -812,6 +812,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="aulas_de_surf">Aulas de Surf</Label>
+                  {precoAulasSurf(config) && <span className="ml-2 text-xs font-normal text-muted-foreground">{precoAulasSurf(config)}</span>}
                     <Input
                       id="aulas_de_surf"
                       type="number"
@@ -833,6 +834,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 {itemAtivo(config, "surf-skate", formData.skate) && (
                 <div>
                   <Label htmlFor="skate">{itemLabel(config, "surf-skate", "Surf-Skate")} (sessões)</Label>
+                  {itemPreco(config, "surf-skate") && <span className="ml-2 text-xs font-normal text-muted-foreground">{itemPreco(config, "surf-skate")}</span>}
                     <Input
                       id="skate"
                       type="number"
@@ -851,6 +853,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="surf_guide_package">{itemLabel(config, "surf-guide", "Surf Guide")} (dias)</Label>
+                  {itemPreco(config, "surf-guide") && <span className="ml-2 text-xs font-normal text-muted-foreground">{itemPreco(config, "surf-guide")}</span>}
                     <Input
                       id="surf_guide_package"
                       type="number"
@@ -873,6 +876,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="aulas_de_yoga">{itemLabel(config, "yoga-lesson", "Aulas de Yoga")}</Label>
+                  {itemPreco(config, "yoga-lesson") && <span className="ml-2 text-xs font-normal text-muted-foreground">{itemPreco(config, "yoga-lesson")}</span>}
                     <Input
                       id="aulas_de_yoga"
                       type="number"
@@ -890,6 +894,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="massagem_extra">Massagem Extra</Label>
+                  {itemPreco(config, "massage") && <span className="ml-2 text-xs font-normal text-muted-foreground">{itemPreco(config, "massage")}</span>}
                     <Input
                       id="massagem_extra"
                       type="number"
@@ -935,6 +940,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="analise_de_video_extra">Análise de Vídeo Extra</Label>
+                  {itemPreco(config, "analise_de_video") && <span className="ml-2 text-xs font-normal text-muted-foreground">{itemPreco(config, "analise_de_video")}</span>}
                     <Input
                       id="analise_de_video_extra"
                       type="number"
@@ -1008,6 +1014,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="transfer_extra">Transfer Extra (quantidade)</Label>
+                  {itemPreco(config, "transfer") && <span className="ml-2 text-xs font-normal text-muted-foreground">{itemPreco(config, "transfer")}</span>}
                     <Input
                       id="transfer_extra"
                       type="number"
@@ -1039,7 +1046,14 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {customItems.map((item: any) => (
                       <div key={item.id}>
-                        <Label htmlFor={`custom-${item.id}`}>{item.name}</Label>
+                        <Label htmlFor={`custom-${item.id}`}>
+                          {item.name}
+                          {itemPreco(config, item.id) && (
+                            <span className="ml-2 text-xs font-normal text-muted-foreground">
+                              {itemPreco(config, item.id)}
+                            </span>
+                          )}
+                        </Label>
                         <Input
                           id={`custom-${item.id}`}
                           type="number"
@@ -1074,6 +1088,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <div>
                   <Label htmlFor="hike_extra">{itemLabel(config, "hike", "Trilha")}</Label>
+                  {itemPreco(config, "hike") && <span className="ml-2 text-xs font-normal text-muted-foreground">{itemPreco(config, "hike")}</span>}
                   <Select
                     value={formData.hike_extra ? "sim" : "nao"}
                     onValueChange={(value) => handleInputChange("hike_extra", value === "sim")}
@@ -1093,6 +1108,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="rio_city_tour">{itemLabel(config, "rio-city-tour", "Rio City Tour")}</Label>
+                  {itemPreco(config, "rio-city-tour") && <span className="ml-2 text-xs font-normal text-muted-foreground">{itemPreco(config, "rio-city-tour")}</span>}
                   <Select
                     value={formData.rio_city_tour ? "sim" : "nao"}
                     onValueChange={(value) => handleInputChange("rio_city_tour", value === "sim")}
@@ -1112,6 +1128,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
                 <div>
                   <Label htmlFor="carioca_experience_extra">{itemLabel(config, "carioca-experience", "Carioca Experience")}</Label>
+                  {itemPreco(config, "carioca-experience") && <span className="ml-2 text-xs font-normal text-muted-foreground">{itemPreco(config, "carioca-experience")}</span>}
                   <Select
                     value={formData.carioca_experience_extra ? "sim" : "nao"}
                     onValueChange={(value) => handleInputChange("carioca_experience_extra", value === "sim")}
