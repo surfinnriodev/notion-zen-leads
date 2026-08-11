@@ -1,5 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
 import { useRegion } from "@/contexts/RegionContext";
+import { montarLinhas, somar, type Momento } from "@/utils/pagamentoItens";
+import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
 import { differenceInDays } from "date-fns";
 import { DollarSign, Home, Calendar, Activity, AlertCircle, Send, ArrowRightLeft, Check } from "lucide-react";
 import {
@@ -223,6 +226,11 @@ const CotacaoPanelView = ({
   // Região da tela: define se mostramos a escolha de Casa e o envio de email
   // (os 3 templates existentes são todos da operação do Rio).
   const region = useRegion();
+  // Marcação por item ("paga na chegada"). Só a Bahia usa; o Rio segue na regra fixa.
+  const [escolhas, setEscolhas] = useState<Record<string, Momento>>(
+    ((lead as any)?.pagamento_por_item as Record<string, Momento>) || {},
+  );
+  const [salvandoEscolha, setSalvandoEscolha] = useState(false);
   const [casa, setCasa] = useState<Casa>("axe");
   const [moeda, setMoeda] = useState<Moeda>("BRL");
   const [rate, setRate] = useState<number | null>(1);
@@ -230,6 +238,25 @@ const CotacaoPanelView = ({
   const [sending, setSending] = useState<string | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Grava a marcação no lead. Só guardamos o que o operador mudou — sem marcação
+  // nenhuma, a divisão continua sendo a regra padrão.
+  const marcarMomento = async (chave: string, chegada: boolean) => {
+    const proximo = { ...escolhas, [chave]: (chegada ? "chegada" : "agora") as Momento };
+    setEscolhas(proximo);
+    const id = (lead as any)?.id;
+    if (!id) return;
+    setSalvandoEscolha(true);
+    try {
+      await supabase.from("reservations")
+        .update({ pagamento_por_item: proximo })
+        .eq("id", id);
+    } catch (e) {
+      console.error("[pagamento_por_item]", e);
+    } finally {
+      setSalvandoEscolha(false);
+    }
+  };
 
   useEffect(() => {
     if (moeda === "BRL") { setRate(1); return; }
@@ -364,6 +391,89 @@ const CotacaoPanelView = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {region === "bahia" ? (() => {
+          // Cotação agrupada pelo MOMENTO do pagamento, não pelo tipo do item —
+          // é o que o operador precisa saber pra passar pro hóspede. O checkbox
+          // move a linha entre "agora" e "na chegada".
+          const linhas = montarLinhas({
+            tipoQuarto: lead.tipo_de_quarto,
+            nights,
+            accommodationCost,
+            accommodationManual: accommodationOverride !== null,
+            dailyItems: calculation.breakdown.dailyItems,
+            fixedItems: calculation.breakdown.fixedItems,
+            extraFee,
+            extraFeeDescricao: lead.extra_fee_description,
+            escolhas,
+          });
+          const agora = somar(linhas, "agora");
+          const chegada = somar(linhas, "chegada");
+
+          const Linha = ({ l }: { l: any }) => (
+            <div className="flex items-center gap-3 border-b py-2 last:border-0">
+              <Checkbox
+                id={`mom-${l.chave}`}
+                checked={l.momento === "chegada"}
+                disabled={salvandoEscolha}
+                onCheckedChange={(v) => marcarMomento(l.chave, v === true)}
+                aria-label={`${l.nome}: marcar como paga na chegada`}
+              />
+              <div className="min-w-0 flex-1">
+                <div className={`text-sm ${l.gratis ? "text-muted-foreground" : ""}`}>{l.nome}</div>
+                <div className="text-xs text-muted-foreground">{l.detalhe}</div>
+              </div>
+              <span className={`whitespace-nowrap text-sm ${l.gratis ? "text-muted-foreground" : "font-medium"}`}>
+                {l.gratis ? "grátis" : brl(l.valor)}
+              </span>
+            </div>
+          );
+
+          const Secao = ({ titulo, momento, subtotal }: { titulo: string; momento: Momento; subtotal: number }) => {
+            const doMomento = linhas.filter((l) => l.momento === momento);
+            if (doMomento.length === 0) return null;
+            return (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold uppercase text-muted-foreground">{titulo}</span>
+                  <span className="h-px flex-1 bg-border" />
+                  <span className="text-xs text-muted-foreground">{brl(subtotal)}</span>
+                </div>
+                <div className="rounded-md border px-3">
+                  {doMomento.map((l) => <Linha key={l.chave} l={l} />)}
+                </div>
+              </div>
+            );
+          };
+
+          return (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-md border bg-blue-50 p-3">
+                  <div className="text-xs text-blue-900/70">Paga agora</div>
+                  <div className="text-base font-bold text-blue-900">{brl(agora)}</div>
+                </div>
+                <div className="rounded-md border bg-amber-50 p-3">
+                  <div className="text-xs text-amber-900/70">Paga na chegada</div>
+                  <div className="text-base font-bold text-amber-900">{brl(chegada)}</div>
+                </div>
+                <div className="rounded-md border bg-muted/30 p-3">
+                  <div className="text-xs text-muted-foreground">Total</div>
+                  <div className="text-base font-bold text-primary">{brl(agora + chegada)}</div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <Secao titulo="Paga agora" momento="agora" subtotal={agora} />
+              <Secao titulo="Paga na chegada" momento="chegada" subtotal={chegada} />
+
+              <p className="text-xs text-muted-foreground">
+                Marque o item pra mover pra <strong>paga na chegada</strong>.
+              </p>
+            </div>
+          );
+        })() : (
+        <>
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-md border bg-muted/30 p-3">
             <div className="text-xs text-muted-foreground">Total</div>
@@ -459,6 +569,8 @@ const CotacaoPanelView = ({
             </div>
           )}
         </div>
+        </>
+        )}
 
         <Separator />
 
