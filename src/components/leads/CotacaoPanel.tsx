@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { useRegion } from "@/contexts/RegionContext";
 import { differenceInDays } from "date-fns";
 import { DollarSign, Home, Calendar, Activity, AlertCircle, Send, ArrowRightLeft, Check } from "lucide-react";
 import {
@@ -60,7 +61,8 @@ const brl = (value: number) =>
 // Painel read-only que recomputa a cotação a partir dos campos do lead
 // e da PricingConfig do Supabase. Não persiste nada.
 export const CotacaoPanel = ({ lead }: CotacaoPanelProps) => {
-  const { config, isLoading, error } = usePricingConfig();
+  const region = useRegion();
+  const { config, isLoading, error } = usePricingConfig(region);
 
   const calculation = useMemo(() => {
     if (!config) return null;

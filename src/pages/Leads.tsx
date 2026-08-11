@@ -16,7 +16,7 @@ export type ViewMode = "list" | "board";
 const Leads = () => {
   const region = useRegion();
   const [viewMode, setViewMode] = useState<ViewMode>("board");
-  const { config } = usePricingConfig();
+  const { config } = usePricingConfig(region);
   const [isCreating, setIsCreating] = useState(false);
   const [newLead, setNewLead] = useState<LeadWithCalculation | null>(null);
 

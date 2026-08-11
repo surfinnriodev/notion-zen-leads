@@ -35,7 +35,7 @@ interface DashboardMetrics {
 
 export const useDashboardData = () => {
   const region = useRegion();
-  const { config } = usePricingConfig();
+  const { config } = usePricingConfig(region);
 
   return useQuery({
     queryKey: ["dashboard-metrics", region, config],

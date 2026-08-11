@@ -173,6 +173,11 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
 
       // Itens criados em Configurações (id -> quantidade). Guarda só os > 0, pra
       // não acumular zeros no JSON conforme os itens vão e vêm da configuração.
+      // Valor da hospedagem digitado (Bahia). null = em branco -> R$ 0 na cotacao.
+      if (updatedData.accommodation_price_override !== undefined) {
+        mappedData.accommodation_price_override = updatedData.accommodation_price_override;
+      }
+
       if (updatedData.custom_items !== undefined) {
         const limpos = Object.fromEntries(
           Object.entries(updatedData.custom_items || {}).filter(([, q]) => Number(q) > 0),
@@ -749,6 +754,32 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                           ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                )}
+
+                {/* Valor da hospedagem digitado, espelhando o campo "Hospedagem (BRL)"
+                    que o Rio já usa no Notion: preço negociado por reserva, não tabela
+                    de diária. Só na Bahia — no Rio esse valor continua vindo do Notion. */}
+                {region === "bahia" && (
+                  <div>
+                    <Label htmlFor="hospedagem_valor">Hospedagem (R$)</Label>
+                    <Input
+                      id="hospedagem_valor"
+                      type="number"
+                      min="0"
+                      step="1"
+                      className="w-full"
+                      placeholder="Digite o valor total da hospedagem"
+                      value={formData.accommodation_price_override ?? ""}
+                      onChange={(e) => {
+                        const v = e.target.value === "" ? null : Number(e.target.value);
+                        handleInputChange("accommodation_price_override", v);
+                      }}
+                      onFocus={(e) => e.target.select()}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Valor total do período, negociado com o hóspede. Em branco = R$ 0.
+                    </p>
                   </div>
                 )}
               </div>
