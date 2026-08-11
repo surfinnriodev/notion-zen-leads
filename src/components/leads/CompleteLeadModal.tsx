@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LeadWithCalculation, calculateLeadPrice, mapReservaToLegacyFormat } from "@/types/leads";
 import { usePricingConfig, AVAILABLE_PRICING_ITEMS } from "@/hooks/usePricingConfig";
 import { useRegion } from "@/contexts/RegionContext";
+import { roomOptions, itemLabel, itemAtivo } from "@/utils/configOptions";
 import { useKanbanStatuses } from "@/hooks/useKanbanStatuses";
 import {
   Dialog,
@@ -737,23 +738,15 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Select">Select</SelectItem>
-                        {formData.room_category === "Private" && (
-                          <>
-                            <SelectItem value="Shared bathroom">Shared bathroom</SelectItem>
-                            <SelectItem value="Double">Double</SelectItem>
-                            <SelectItem value="Sea-View">Sea-View</SelectItem>
-                            <SelectItem value="Triple">Triple</SelectItem>
-                            <SelectItem value="Family">Family</SelectItem>
-                          </>
-                        )}
-                        {formData.room_category === "Shared" && (
-                          <>
-                            <SelectItem value="Mixed Economic">Mixed Economic</SelectItem>
-                            <SelectItem value="Mixed Standard">Mixed Standard</SelectItem>
-                            <SelectItem value="Female Economic">Female Economic</SelectItem>
-                            <SelectItem value="Female Standard">Female Standard</SelectItem>
-                          </>
-                        )}
+                        {/* Opções vêm da configuração DA REGIÃO — antes eram fixas aqui,
+                            por isso apagar um quarto nas Configurações não refletia na
+                            cotação. No Rio o resultado é idêntico à lista antiga (travado
+                            em utils/configOptions_test.ts). O quarto já gravado no lead
+                            continua como opção mesmo se saiu da configuração. */}
+                        {(formData.room_category === "Private" || formData.room_category === "Shared") &&
+                          roomOptions(config, formData.room_category, formData.room_type).map((nome) => (
+                            <SelectItem key={nome} value={nome}>{nome}</SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -803,8 +796,12 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                     />
                 </div>
 
+                {/* Escondido quando o item foi removido das Configurações da região
+                    (ex: não existe Surf-Skate em Itacaré). Se o lead já tiver
+                    quantidade, o campo continua visível pra não sumir com o dado. */}
+                {itemAtivo(config, "surf-skate", formData.skate) && (
                 <div>
-                  <Label htmlFor="skate">Surf-Skate (sessões)</Label>
+                  <Label htmlFor="skate">{itemLabel(config, "surf-skate", "Surf-Skate")} (sessões)</Label>
                     <Input
                       id="skate"
                       type="number"
@@ -819,9 +816,10 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                       onFocus={(e) => e.target.select()}
                     />
                 </div>
+                )}
 
                 <div>
-                  <Label htmlFor="surf_guide_package">Surf Guide (dias)</Label>
+                  <Label htmlFor="surf_guide_package">{itemLabel(config, "surf-guide", "Surf Guide")} (dias)</Label>
                     <Input
                       id="surf_guide_package"
                       type="number"
@@ -843,7 +841,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 <h3 className="font-medium text-base sm:text-lg">Bem-estar</h3>
 
                 <div>
-                  <Label htmlFor="aulas_de_yoga">Aulas de Yoga</Label>
+                  <Label htmlFor="aulas_de_yoga">{itemLabel(config, "yoga-lesson", "Aulas de Yoga")}</Label>
                     <Input
                       id="aulas_de_yoga"
                       type="number"
@@ -1044,7 +1042,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
               <h3 className="font-medium text-base sm:text-lg">Experiências e Tours</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="hike_extra">Trilha</Label>
+                  <Label htmlFor="hike_extra">{itemLabel(config, "hike", "Trilha")}</Label>
                   <Select
                     value={formData.hike_extra ? "sim" : "nao"}
                     onValueChange={(value) => handleInputChange("hike_extra", value === "sim")}
@@ -1063,7 +1061,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 </div>
 
                 <div>
-                  <Label htmlFor="rio_city_tour">Rio City Tour</Label>
+                  <Label htmlFor="rio_city_tour">{itemLabel(config, "rio-city-tour", "Rio City Tour")}</Label>
                   <Select
                     value={formData.rio_city_tour ? "sim" : "nao"}
                     onValueChange={(value) => handleInputChange("rio_city_tour", value === "sim")}
@@ -1082,7 +1080,7 @@ export const CompleteLeadModal = ({ lead, isOpen, onClose }: CompleteLeadModalPr
                 </div>
 
                 <div>
-                  <Label htmlFor="carioca_experience_extra">Carioca Experience</Label>
+                  <Label htmlFor="carioca_experience_extra">{itemLabel(config, "carioca-experience", "Carioca Experience")}</Label>
                   <Select
                     value={formData.carioca_experience_extra ? "sim" : "nao"}
                     onValueChange={(value) => handleInputChange("carioca_experience_extra", value === "sim")}
